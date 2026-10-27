@@ -1,0 +1,47 @@
+{
+  "about": "Concept types for the Atlas GUI (redesign.html). Nodes in graph_data.json refer to a type by its id. An entry with a 'parent' nests under that entry, so groups and sub-types can go to any depth; an entry with no nodes of its own acts as a group. Entries without a color, definition, or summary inherit them from their parent. 'summary' phrases the type in the connection summary ({list} = the concepts, {s} = plural ending). 'connectionSentences' are keyed by two type ids joined with '+', in the order the types appear below; sub-types fall back to their parents' sentences. {n} = paper count, {A}/{B} = the two concepts, {a B} = with 'a'/'an'. A 'schema' block inside graph_data.json, if present, takes precedence over this file.",
+  "types": [
+    {
+      "id": "subject",
+      "label": "Subject",
+      "plural": "Subjects",
+      "color": "#4fc3f7",
+      "definition": "Agents whose behavior the study was designed to observe.",
+      "summary": "study {list}"
+    },
+    {
+      "id": "task",
+      "label": "Task",
+      "plural": "Tasks",
+      "color": "#81c784",
+      "definition": "Activities the subject performs that the study observes.",
+      "summary": "involve {list}"
+    },
+    {
+      "id": "problem",
+      "label": "Problem",
+      "plural": "Problems",
+      "color": "#ffb74d",
+      "definition": "Design briefs or prompts given to the subject.",
+      "summary": "work on {list} design problem{s}"
+    },
+    {
+      "id": "construct",
+      "label": "Construct",
+      "plural": "Constructs",
+      "color": "#ce93d8",
+      "definition": "Cognitive or psychological phenomena the study illuminates.",
+      "summary": "also measure {list}"
+    }
+  ],
+  "connectionSentences": {
+    "subject+task": "{n} observed {A} during {a B}",
+    "subject+problem": "{n} gave {A} {a B} design problem",
+    "subject+construct": "{n} measured {B} in {A}",
+    "task+problem": "{n} used {a A} on {a B} design problem",
+    "task+construct": "{n} measured {B} during {a A}",
+    "problem+construct": "{n} measured {B} on {a A} design problem",
+    "construct+construct": "{n} measured both {A} and {B}",
+    "default": "{n} studied both {A} and {B}"
+  }
+}

@@ -20,10 +20,7 @@
       --faint: #6b7282;
       --bar: #4a5061;
       --accent: #8bc5ff;
-      --subject: #4fc3f7;
-      --task: #81c784;
-      --problem: #ffb74d;
-      --construct: #ce93d8;
+      --highlight: #4fc3f7;
       --r-xl: 28px;
       --r-lg: 22px;
       --r-md: 16px;
@@ -176,7 +173,7 @@
       box-shadow: var(--shadow-soft);
       transition: border-color 0.2s, box-shadow 0.2s;
     }
-    #temporal-toggle.active { border-color: var(--subject); box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.18); }
+    #temporal-toggle.active { border-color: var(--highlight); box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.18); }
     .spacer { flex: 1; }
     #help-btn {
       width: 36px;
@@ -240,7 +237,7 @@
       box-shadow: var(--shadow);
       animation: fadeUp 0.25s var(--ease);
     }
-    #year-slider { flex: 1; accent-color: var(--subject); }
+    #year-slider { flex: 1; accent-color: var(--highlight); }
     #year-label { color: var(--text); font-weight: 600; }
 
     /* ---------- Concept view ---------- */
@@ -402,7 +399,9 @@
     .chart-key { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; font: 11px var(--mono); color: var(--muted); }
     .chart-key i { width: 9px; height: 9px; display: inline-block; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
     .filters { display: grid; gap: 4px; }
+    .frow { display: flex; align-items: center; gap: 2px; }
     .filters label {
+      flex: 1;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -412,8 +411,30 @@
       transition: background 0.2s, opacity 0.2s;
     }
     .filters label:hover { background: var(--surface-3); }
-    .filters label.zero { opacity: 0.35; cursor: not-allowed; }
-    .filters label.zero:hover { background: none; }
+    .frow.zero label { opacity: 0.35; cursor: not-allowed; }
+    .frow.zero label:hover { background: none; }
+    .caret {
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 50%;
+      background: none;
+      color: var(--muted);
+      font-size: 10px;
+      cursor: pointer;
+      transition: transform 0.25s var(--ease), background 0.2s, color 0.2s;
+    }
+    .caret:hover { background: var(--surface-3); color: var(--text); }
+    .caret.open { transform: rotate(90deg); }
+    .caret-spacer { width: 22px; flex: 0 0 auto; }
+    .fchildren {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 0.3s var(--ease), opacity 0.25s;
+    }
+    .fchildren.collapsed { grid-template-rows: 0fr; opacity: 0; }
+    .fchildren > div { overflow: hidden; min-height: 0; padding-left: 16px; display: grid; gap: 4px; }
     .filters input { margin: 0; accent-color: #8a93a6; }
     .filters .n { color: var(--faint); font-family: var(--mono); font-size: 12px; }
     .divider { border: none; border-top: 1px solid var(--line); margin: 16px 0 14px; }
@@ -962,16 +983,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <script>
     (async function init() {
-      const COLORS = { subject: "#4fc3f7", task: "#81c784", problem: "#ffb74d", construct: "#ce93d8" };
-      const TYPES = ["subject", "task", "problem", "construct"];
-      const TYPE_ORDER = { subject: 0, task: 1, problem: 2, construct: 3 };
-      const TYPE_LABELS = { subject: "Subjects", task: "Tasks", problem: "Problems", construct: "Constructs" };
-      const TYPE_DEFS = {
-        subject: "Agents whose behavior the study was designed to observe.",
-        task: "Activities the subject performs that the study observes.",
-        problem: "Design briefs or prompts given to the subject.",
-        construct: "Cognitive or psychological phenomena the study illuminates."
-      };
+      // Colors for types the schema doesn't color (used only for types missing from it).
+      const SPARE_COLORS = ["#f48fb1", "#80cbc4", "#fff176", "#9fa8da", "#ffab91", "#c5e1a5", "#b0bec5", "#e6ee9c", "#4fc3f7", "#81c784", "#ffb74d", "#ce93d8"];
       const PAGE = 20;
       const ORBIT_STEP = 24;
       // Orbit geometry, in viewBox units centered on the selected concept.
@@ -995,12 +1008,17 @@
       const tooltip = $("tooltip");
 
       // ---------- Load data ----------
-      let raw;
+      let raw, schemaFile = null;
       try {
         if (location.protocol === "file:") throw new Error("This page has to be served over http to load graph_data.json.");
-        const response = await fetch("./graph_data.json");
+        const [response, schemaResponse] = await Promise.all([
+          fetch("./graph_data.json"),
+          fetch("./atlas_schema.json").catch(() => null)
+        ]);
         if (!response.ok) throw new Error(`Could not load graph_data.json (HTTP ${response.status}).`);
         raw = await response.json();
+        if (schemaResponse && schemaResponse.ok) schemaFile = await schemaResponse.json();
+        else if (!raw.schema) console.warn("No atlas_schema.json found; type names and colors are generated from the data.");
       } catch (error) {
         $("app").innerHTML = `<div class="error">${esc(error.message)}<br/>From the project folder run <code>python3 -m http.server 8000</code> and open http://localhost:8000/redesign.html</div>`;
         console.error(error);
@@ -1019,6 +1037,86 @@
       }));
       const byId = new Map(nodes.map((n) => [n.id, n]));
 
+      // ---------- Type registry ----------
+      // Types, their labels, colors, definitions and nesting come from the schema: a `schema` block in
+      // graph_data.json if present, otherwise atlas_schema.json. Types that nodes use but the schema
+      // doesn't list still work, with a generated label and color.
+      const schema = raw.schema || schemaFile || {};
+      const typeById = new Map();
+      const addType = (t) => typeById.set(t.id, { children: [], nodeCount: 0, ...t });
+      (schema.types || []).forEach((t) => addType({
+        id: String(t.id),
+        label: t.label || cap(String(t.id)),
+        plural: t.plural || t.label || cap(String(t.id)),
+        color: t.color || null,
+        definition: (t.definition || "").trim(),
+        summary: t.summary || null,
+        parentId: t.parent != null ? String(t.parent) : null
+      }));
+      nodes.forEach((n) => {
+        if (!typeById.has(n.type)) {
+          console.warn(`Type "${n.type}" is not in the schema; using a generated label and color.`);
+          addType({ id: n.type, label: cap(n.type), plural: cap(n.type), color: null, definition: "", summary: null, parentId: null });
+        }
+        typeById.get(n.type).nodeCount += 1;
+      });
+      const typeList = [...typeById.values()];
+      typeList.forEach((t) => {
+        const parent = t.parentId && typeById.get(t.parentId);
+        if (parent && parent !== t) parent.children.push(t);
+        else t.parentId = null;
+      });
+      // Walk the tree from the top-level entries; anything unreachable (a parent loop) becomes top-level.
+      const typeRoots = typeList.filter((t) => !t.parentId);
+      const reached = new Set();
+      const reach = (t, depth) => {
+        reached.add(t.id);
+        t.depth = depth;
+        t.children.forEach((c) => { if (!reached.has(c.id)) reach(c, depth + 1); });
+      };
+      typeRoots.forEach((t) => reach(t, 0));
+      typeList.filter((t) => !reached.has(t.id)).forEach((t) => {
+        if (reached.has(t.id)) return;
+        console.warn(`Type "${t.id}" is part of a parent loop in the schema; showing it at the top level.`);
+        const parent = typeById.get(t.parentId);
+        parent.children = parent.children.filter((c) => c !== t);
+        t.parentId = null;
+        typeRoots.push(t);
+        reach(t, 0);
+      });
+      // Depth-first order is the display order everywhere; each entry also knows the node types beneath it.
+      const typesInOrder = [];
+      const visit = (t) => { typesInOrder.push(t); t.children.forEach(visit); };
+      typeRoots.forEach(visit);
+      const typeRankById = new Map(typesInOrder.map((t, i) => [t.id, i]));
+      const collect = (t) => {
+        t.nodeTypes = [...(t.nodeCount ? [t.id] : []), ...t.children.flatMap(collect)];
+        t.total = t.nodeCount + d3.sum(t.children, (c) => c.total);
+        return t.nodeTypes;
+      };
+      typeRoots.forEach(collect);
+      const usedColors = new Set(typeList.map((t) => t.color).filter(Boolean));
+      const spareColors = SPARE_COLORS.filter((c) => !usedColors.has(c));
+      typesInOrder.forEach((t) => {
+        if (t.color) return;
+        const parent = t.parentId && typeById.get(t.parentId);
+        t.color = parent ? parent.color : spareColors.shift() || "#9aa2b2";
+      });
+
+      const typeOf = (id) => typeById.get(id);
+      const colorOf = (id) => typeById.get(id)?.color || "#9aa2b2";
+      const typeRank = (id) => typeRankById.get(id) ?? Infinity;
+      // The types concepts actually have, in display order (what the old fixed list of four used to be).
+      const nodeTypes = typesInOrder.filter((t) => t.nodeCount > 0).map((t) => t.id);
+      const shownTypeTree = typesInOrder.filter((t) => t.total > 0);
+      const ancestry = (id) => {
+        const chain = [];
+        for (let t = typeById.get(id); t && chain.length < 32; t = t.parentId && typeById.get(t.parentId)) chain.push(t);
+        return chain;
+      };
+      const inherited = (id, key) => ancestry(id).map((t) => t[key]).find(Boolean) || null;
+      const definitionOf = (id) => inherited(id, "definition") || "";
+
       const paperById = new Map();
       const conceptsByPaper = new Map();
       nodes.forEach((n) => {
@@ -1028,7 +1126,7 @@
           conceptsByPaper.get(p.paper_id).push(n.id);
         });
       });
-      conceptsByPaper.forEach((ids) => ids.sort((a, b) => TYPE_ORDER[byId.get(a).type] - TYPE_ORDER[byId.get(b).type] || byId.get(a).label.localeCompare(byId.get(b).label)));
+      conceptsByPaper.forEach((ids) => ids.sort((a, b) => typeRank(byId.get(a).type) - typeRank(byId.get(b).type) || byId.get(a).label.localeCompare(byId.get(b).label)));
 
       // Some node pairs appear more than once in the edge list; their paper lists are identical, so keep one.
       // An edge's papers are exactly the papers its two concepts share, so shared counts come from that list.
@@ -1052,12 +1150,11 @@
 
       const [Y0, Y1] = (raw.meta && raw.meta.year_range) || d3.extent([...paperById.values()], (p) => p.year);
       const nodeR = d3.scaleSqrt().domain([0, d3.max(nodes, (n) => n.paperCount)]).range([3, 20]);
-      const typeCounts = d3.rollup(nodes, (v) => v.length, (n) => n.type);
 
       // ---------- State ----------
       const state = {
         view: "field",
-        types: new Set(TYPES),
+        types: new Set(nodeTypes),
         temporal: false,
         year: Y1,
         center: null,
@@ -1068,7 +1165,9 @@
         papersShown: PAGE,
         connSort: "most",
         connPapersShown: PAGE,
-        showTypes: new Set(TYPES),
+        showTypes: new Set(nodeTypes),
+        // Sub-groups start collapsed; top-level groups start open.
+        collapsedTypes: new Set(typesInOrder.filter((t) => t.depth >= 1 && t.children.length).map((t) => t.id)),
         orbitLimit: ORBIT_STEP,
         range: [Y0, Y1],
         compare: [],
@@ -1086,7 +1185,7 @@
           .replaceAll("\"", "&quot;")
           .replaceAll("'", "&#39;");
       }
-      const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+      function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
       const trunc = (s, n) => (s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, "")}…` : s);
       // Long names wrap onto two lines, split at the space that balances them best.
       function wrapLabel(s) {
@@ -1106,8 +1205,9 @@
         if (items.length <= 1) return items.join("");
         return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
       }
-      const badge = (type) => `<span class="badge" style="background:${COLORS[type]}">${esc(type)}</span>`;
-      const dot = (type) => `<span class="dot" style="background:${COLORS[type]}"></span>`;
+      const badge = (type) => `<span class="badge" style="background:${colorOf(type)}">${esc(typeOf(type)?.label || type)}</span>`;
+      const typeWord = (type) => (typeOf(type)?.label || type).toLowerCase();
+      const dot = (type) => `<span class="dot" style="background:${colorOf(type)}"></span>`;
 
       // Most titles in the data are in all caps; those get title case, everything else is left alone.
       const SMALL_WORDS = new Set("a an and as at but by for from in into nor of on onto or per than the to via vs with within without".split(" "));
@@ -1135,21 +1235,29 @@
       }
       const paperTitle = (p) => titleCase(p.title) || "[title unavailable]";
 
-      // The edge `type` field is unreliable, so the sentence is chosen from the two concepts' own types.
+      // Fills a schema phrase: {key} is replaced by vars[key]; {a key} adds "a"/"an" in front.
+      function fillTemplate(template, vars) {
+        return template.replace(/\{(a )?(\w+)\}/g, (match, article, key) => {
+          if (!(key in vars)) return match;
+          return article ? withArticle(vars[key]) : vars[key];
+        });
+      }
+
+      // The edge `type` field is unreliable, so the sentence is chosen from the two concepts' own types,
+      // using the schema's sentence for that pair of types (or for their parent types).
+      const SENTENCES = schema.connectionSentences || {};
       function connectionSentence(center, neighbor, n) {
-        const [x, y] = TYPE_ORDER[center.type] <= TYPE_ORDER[neighbor.type] ? [center, neighbor] : [neighbor, center];
-        const N = plural(n, "paper");
-        const X = x.label, Y = y.label;
-        switch (`${x.type}-${y.type}`) {
-          case "subject-task": return `${N} observed ${X} during ${withArticle(Y)}`;
-          case "subject-problem": return `${N} gave ${X} ${withArticle(Y)} design problem`;
-          case "subject-construct": return `${N} measured ${Y} in ${X}`;
-          case "task-problem": return `${N} used ${withArticle(X)} on ${withArticle(Y)} design problem`;
-          case "task-construct": return `${N} measured ${Y} during ${withArticle(X)}`;
-          case "problem-construct": return `${N} measured ${Y} on ${withArticle(X)} design problem`;
-          case "construct-construct": return `${N} measured both ${X} and ${Y}`;
-          default: return `${N} studied both ${X} and ${Y}`;
+        const [x, y] = typeRank(center.type) <= typeRank(neighbor.type) ? [center, neighbor] : [neighbor, center];
+        let template = null;
+        for (const tx of ancestry(x.type)) {
+          for (const ty of ancestry(y.type)) {
+            template = SENTENCES[`${tx.id}+${ty.id}`] || null;
+            if (template) break;
+          }
+          if (template) break;
         }
+        template = template || SENTENCES.default || "{n} studied both {A} and {B}";
+        return fillTemplate(template, { n: plural(n, "paper"), A: x.label, B: y.label });
       }
 
       // ---------- Year range ----------
@@ -1211,19 +1319,21 @@
       // ---------- Top bar ----------
       $("crumb-home").addEventListener("click", goField);
 
-      TYPES.forEach((type) => {
+      // One pill per top-level entry; a pill for a group switches every type inside it.
+      shownTypeTree.filter((t) => !t.parentId).forEach((entry) => {
         const pill = document.createElement("button");
         pill.type = "button";
         pill.className = "filter-pill";
-        pill.innerHTML = `${dot(type)}${TYPE_LABELS[type]} <span class="n">${typeCounts.get(type) || 0}</span>`;
+        pill.innerHTML = `${dot(entry.id)}${esc(entry.plural)} <span class="n">${entry.total}</span>`;
         pill.addEventListener("click", () => {
-          if (state.types.has(type)) {
-            if (state.types.size === 1) return;
-            state.types.delete(type);
+          const ids = entry.nodeTypes;
+          if (ids.every((id) => state.types.has(id))) {
+            if (![...state.types].some((id) => !ids.includes(id))) return;
+            ids.forEach((id) => state.types.delete(id));
           } else {
-            state.types.add(type);
+            ids.forEach((id) => state.types.add(id));
           }
-          pill.classList.toggle("off", !state.types.has(type));
+          pill.classList.toggle("off", !ids.some((id) => state.types.has(id)));
           updateField();
         });
         $("type-filters").appendChild(pill);
@@ -1279,7 +1389,7 @@
         searchResults.hidden = !matches.length;
         searchResults.innerHTML = matches.map((n, i) => `
           <div class="search-item ${i === activeResult ? "active" : ""}" data-id="${esc(n.id)}">
-            <span>${dot(n.type)} ${esc(cap(n.label))}</span><span class="t">${esc(n.type)}</span>
+            <span>${dot(n.type)} ${esc(cap(n.label))}</span><span class="t">${esc(typeWord(n.type))}</span>
           </div>`).join("");
         return matches;
       }
@@ -1309,11 +1419,11 @@
 
       // Glossary
       $("glossary-body").innerHTML = `
-        ${TYPES.map((t) => `
-          <div class="gloss-item">
-            ${dot(t)}
-            <div><strong>${TYPE_LABELS[t]}</strong><span class="n">${typeCounts.get(t) || 0} concepts</span></div>
-            <p>${TYPE_DEFS[t]}</p>
+        ${shownTypeTree.map((t) => `
+          <div class="gloss-item" style="margin-left:${t.depth * 20}px">
+            ${dot(t.id)}
+            <div><strong>${esc(t.plural)}</strong><span class="n">${plural(t.total, "concept")}</span></div>
+            ${t.definition ? `<p>${esc(t.definition)}</p>` : ""}
           </div>`).join("")}
         <div class="more">
           <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
@@ -1360,7 +1470,7 @@
         .data(nodes, (d) => d.id)
         .join("circle")
         .attr("r", (d) => nodeR(d.paperCount))
-        .attr("fill", (d) => COLORS[d.type])
+        .attr("fill", (d) => colorOf(d.type))
         .attr("stroke", "#11131a")
         .attr("stroke-width", 1.2)
         .style("cursor", "pointer")
@@ -1398,7 +1508,7 @@
       }
 
       $("field-legend").innerHTML = `
-        ${TYPES.map((t) => `<div class="row">${dot(t)}${TYPE_LABELS[t]} (${typeCounts.get(t) || 0})</div>`).join("")}
+        ${shownTypeTree.filter((t) => !t.parentId).map((t) => `<div class="row">${dot(t.id)}${esc(t.plural)} (${t.total})</div>`).join("")}
         <div class="hint">Size = papers · line = shared papers</div>
         <div class="hint">Hover for a definition · click to explore</div>`;
 
@@ -1513,7 +1623,7 @@
       // Types get their own slice of the circle (with a gap at the top for the ring names);
       // each neighbor sits on the ring for its relevance rank.
       function layoutOrbit(shown) {
-        const groups = TYPES.map((type) => ({ type, items: shown.filter((d) => d.node.type === type) })).filter((g) => g.items.length);
+        const groups = nodeTypes.map((type) => ({ type, items: shown.filter((d) => d.node.type === type) })).filter((g) => g.items.length);
         const avail = 2 * Math.PI - TOP_GAP - SECTOR_PAD * Math.max(0, groups.length - 1);
         const minWeight = shown.length * 0.1;
         const weights = groups.map((g) => Math.max(g.items.length, minWeight));
@@ -1623,7 +1733,7 @@
         // Each type's name sits just outside the outer edge of its slice and is always shown;
         // it slides along that edge if the middle spot is taken (by the legend, say).
         groups.forEach((g) => {
-          const w = TYPE_LABELS[g.type].length * 8 + 4;
+          const w = typeOf(g.type).plural.length * 8 + 4;
           const span = g.end - g.start;
           const spots = [0, -0.25, 0.25, -0.4, 0.4].map((f) => {
             const angle = g.mid + f * span;
@@ -1676,7 +1786,7 @@
         const t = orbitSvg.transition("layout").duration(ms(duration)).ease(d3.easeCubicOut);
         const key = (d) => d.node.id;
 
-        centerCircle.transition(t).attr("r", centerSize).attr("fill", COLORS[center.type]);
+        centerCircle.transition(t).attr("r", centerSize).attr("fill", colorOf(center.type));
         centerLabel.selectAll("tspan").data(orbit.centerLines).join("tspan")
           .attr("x", 0)
           .attr("dy", (l, i) => (i ? 17 : 0))
@@ -1693,8 +1803,8 @@
           (update) => update,
           (exit) => exit.transition(t).style("opacity", 0).remove()
         )
-          .style("fill", (g) => COLORS[g.type])
-          .style("stroke", (g) => COLORS[g.type])
+          .style("fill", (g) => colorOf(g.type))
+          .style("stroke", (g) => colorOf(g.type))
           .transition(t)
           .style("opacity", 1)
           .attrTween("d", function (g) {
@@ -1709,9 +1819,9 @@
           (update) => update,
           (exit) => exit.transition(t).style("opacity", 0).remove()
         )
-          .attr("fill", (g) => COLORS[g.type])
+          .attr("fill", (g) => colorOf(g.type))
           .attr("text-anchor", (g) => g.label.anchor)
-          .text((g) => TYPE_LABELS[g.type])
+          .text((g) => typeOf(g.type).plural)
           .transition(t)
           .style("opacity", 1)
           .attr("x", (g) => g.label.x)
@@ -1756,7 +1866,7 @@
           (exit) => exit.transition(t).attr("transform", "translate(0,0)").style("opacity", 0).remove()
         )
           .call((g) => g.select("circle.hit").attr("r", (d) => Math.max(d.size + 3, 11)))
-          .call((g) => g.select("circle.fill").attr("fill", (d) => COLORS[d.node.type]).transition(t).attr("r", (d) => d.size))
+          .call((g) => g.select("circle.fill").attr("fill", (d) => colorOf(d.node.type)).transition(t).attr("r", (d) => d.size))
           .transition(t)
           .style("opacity", 1)
           .attr("transform", (d) => `translate(${d.x},${d.y})`);
@@ -1797,7 +1907,7 @@
           .classed("sel", (d) => d.node.id === sel)
           .classed("faded", (d) => d.node.id !== sel && faded(d.node.id))
           .classed("lit", (d) => !!inPaper && !faded(d.node.id))
-          .style("stroke", (d) => (d.node.id === sel ? COLORS[d.node.type] : null));
+          .style("stroke", (d) => (d.node.id === sel ? colorOf(d.node.type) : null));
         orbitNodeG.selectAll("g.onode")
           .classed("faded", (d) => faded(d.node.id))
           .classed("sel", (d) => d.node.id === sel)
@@ -1820,6 +1930,18 @@
         }
       }
 
+      // A tiny pie in the colors of the first few types.
+      function sliceIcon() {
+        const colors = nodeTypes.slice(0, 3).map(colorOf);
+        if (colors.length < 2) return `<svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="8" fill="${colors[0] || "#8a93a6"}" fill-opacity="0.5"/></svg>`;
+        const point = (a) => `${(15 + 8 * Math.sin(a)).toFixed(1)} ${(9 - 8 * Math.cos(a)).toFixed(1)}`;
+        const paths = colors.map((c, i) => {
+          const a0 = (i / colors.length) * 2 * Math.PI, a1 = ((i + 1) / colors.length) * 2 * Math.PI;
+          return `<path d="M15 9 L${point(a0)} A8 8 0 0 1 ${point(a1)} Z" fill="${c}" fill-opacity="0.5"/>`;
+        }).join("");
+        return `<svg width="30" height="18" aria-hidden="true">${paths}</svg>`;
+      }
+
       function renderOrbitLegend() {
         const shownCount = orbit.shown.length;
         const more = orbit.typedCount > state.orbitLimit;
@@ -1834,7 +1956,7 @@
             <span>Rings rank relevance: shared papers ÷ papers in either concept</span>
           </div>
           <div class="row">
-            <svg width="30" height="18" aria-hidden="true"><path d="M15 9 L15 1 A8 8 0 0 1 22.6 6.5 Z" fill="#81c784" fill-opacity="0.5"/><path d="M15 9 L22.6 6.5 A8 8 0 0 1 10 15.2 Z" fill="#ffb74d" fill-opacity="0.5"/><path d="M15 9 L10 15.2 A8 8 0 0 1 15 1 Z" fill="#ce93d8" fill-opacity="0.5"/></svg>
+            ${sliceIcon()}
             <span>Slices group the concept types</span>
           </div>
           ${orbit.typedCount ? `<div class="legend-more">
@@ -1900,7 +2022,7 @@
             </div>
             <div class="cmp-pair">${dot(A.type)}${esc(cap(A.label))}<span class="arrow">↔</span>${dot(B.type)}${esc(cap(B.label))}</div>
             <div class="cmp-stats"><strong>${plural(n, "paper")}</strong> · ${pct(j)} overlap${range}</div>
-            ${compareMiniChart(link, COLORS[B.type])}
+            ${compareMiniChart(link, colorOf(B.type))}
           </div>`).join("");
         lastCompared = null;
 
@@ -1994,6 +2116,26 @@
         return `<div class="chart-wrap"><svg class="year-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Papers per year">${bars}</svg></div>`;
       }
 
+      // "Show connections to": one row per type, nested under its group; groups collapse.
+      function filterTreeHtml() {
+        const nested = shownTypeTree.some((t) => t.children.some((c) => c.total > 0));
+        const row = (t) => {
+          const kids = t.children.filter((c) => c.total > 0);
+          const open = !state.collapsedTypes.has(t.id);
+          const caret = kids.length
+            ? `<button type="button" class="caret ${open ? "open" : ""}" data-action="toggle-group" data-tid="${esc(t.id)}" aria-expanded="${open}" aria-label="Show or hide ${esc(t.plural)}">▶</button>`
+            : nested ? `<span class="caret-spacer"></span>` : "";
+          return `<div class="fnode" data-tid="${esc(t.id)}">
+            <div class="frow">
+              ${caret}
+              <label><input type="checkbox" data-tid="${esc(t.id)}" />${dot(t.id)} ${esc(t.plural)} <span class="n" data-count></span></label>
+            </div>
+            ${kids.length ? `<div class="fchildren ${open ? "" : "collapsed"}"><div>${kids.map(row).join("")}</div></div>` : ""}
+          </div>`;
+        };
+        return shownTypeTree.filter((t) => !t.parentId).map(row).join("");
+      }
+
       function renderLeft(animate) {
         const center = byId.get(state.center);
         const link = selectedLink();
@@ -2013,7 +2155,7 @@
               <p class="label">Papers per year</p>
               <span class="range-text" id="range-text"></span>
             </div>
-            ${yearChart(center.papers, link && link.papers, neighbor && COLORS[neighbor.type])}
+            ${yearChart(center.papers, link && link.papers, neighbor && colorOf(neighbor.type))}
             <div class="range-slider">
               <div class="track"><div class="fill" id="range-fill"></div></div>
               <input type="range" id="range-lo" min="${Y0}" max="${Y1}" step="1" value="${state.range[0]}" aria-label="First year" />
@@ -2024,16 +2166,10 @@
               <button type="button" class="link-btn" id="range-reset">Reset years</button>
               <span>${Y1}</span>
             </div>
-            ${neighbor ? `<div class="chart-key"><span><i style="background:var(--bar)"></i>All papers</span><span><i style="background:${COLORS[neighbor.type]}"></i>Shared with ${esc(cap(neighbor.label))}</span></div>` : ""}
+            ${neighbor ? `<div class="chart-key"><span><i style="background:var(--bar)"></i>All papers</span><span><i style="background:${colorOf(neighbor.type)}"></i>Shared with ${esc(cap(neighbor.label))}</span></div>` : ""}
             <hr class="divider" />
             <p class="label">Show connections to</p>
-            <div class="filters">
-              ${TYPES.map((t) => `
-                <label data-type-row="${t}">
-                  <input type="checkbox" data-type="${t}" ${state.showTypes.has(t) ? "checked" : ""} />
-                  ${dot(t)} ${TYPE_LABELS[t]} <span class="n" data-count="${t}"></span>
-                </label>`).join("")}
-            </div>
+            <div class="filters">${filterTreeHtml()}</div>
           </div>
         </div>`;
         refreshLeftLive();
@@ -2062,12 +2198,18 @@
           const y = Number(g.dataset.year);
           g.classList.toggle("out", y < lo || y > hi);
         });
+        // A group counts the connections of every type inside it, and is partly checked when only some of them are on.
         const counts = d3.rollup(neighborData(), (v) => v.length, (d) => d.node.type);
-        TYPES.forEach((t) => {
-          const c = counts.get(t) || 0;
-          document.querySelector(`#left [data-count="${t}"]`).textContent = `(${c})`;
-          document.querySelector(`#left [data-type-row="${t}"]`).classList.toggle("zero", c === 0);
-          document.querySelector(`#left input[data-type="${t}"]`).disabled = c === 0;
+        shownTypeTree.forEach((t) => {
+          const row = document.querySelector(`#left .fnode[data-tid="${CSS.escape(t.id)}"] > .frow`);
+          const c = d3.sum(t.nodeTypes, (id) => counts.get(id) || 0);
+          const on = t.nodeTypes.filter((id) => state.showTypes.has(id)).length;
+          const box = row.querySelector("input");
+          row.querySelector("[data-count]").textContent = `(${c})`;
+          row.classList.toggle("zero", c === 0);
+          box.disabled = c === 0;
+          box.checked = on === t.nodeTypes.length;
+          box.indeterminate = on > 0 && on < t.nodeTypes.length;
         });
       }
 
@@ -2086,7 +2228,16 @@
       }
 
       $("left").addEventListener("click", (event) => {
-        if (event.target.closest('[data-action="field"]')) goField();
+        const caret = event.target.closest('[data-action="toggle-group"]');
+        if (caret) {
+          const id = caret.dataset.tid;
+          const open = state.collapsedTypes.has(id);
+          if (open) state.collapsedTypes.delete(id);
+          else state.collapsedTypes.add(id);
+          caret.classList.toggle("open", open);
+          caret.setAttribute("aria-expanded", String(open));
+          caret.closest(".fnode").querySelector(":scope > .fchildren").classList.toggle("collapsed", !open);
+        } else if (event.target.closest('[data-action="field"]')) goField();
         else if (event.target.id === "range-reset") setRange(Y0, Y1);
       });
       $("left").addEventListener("input", (event) => {
@@ -2101,10 +2252,14 @@
         setRange(lo, hi);
       });
       $("left").addEventListener("change", (event) => {
-        const type = event.target.dataset.type;
-        if (!type) return;
-        if (event.target.checked) state.showTypes.add(type);
-        else state.showTypes.delete(type);
+        const tid = event.target.dataset.tid;
+        if (!tid) return;
+        // Checking a group switches every type inside it.
+        typeOf(tid).nodeTypes.forEach((id) => {
+          if (event.target.checked) state.showTypes.add(id);
+          else state.showTypes.delete(id);
+        });
+        refreshLeftLive();
         updateOrbit();
         renderRight({ keepScroll: true });
       });
@@ -2146,7 +2301,7 @@
         const list = papersListForTab();
         const shown = list.slice(0, state.papersShown);
         const remaining = list.length - shown.length;
-        const chips = `${neighbor ? `<div class="chip-filter" style="border-color:${COLORS[neighbor.type]}">
+        const chips = `${neighbor ? `<div class="chip-filter" style="border-color:${colorOf(neighbor.type)}">
             <span>Shared with ${esc(cap(neighbor.label))}</span>
             <button type="button" data-action="clear-conn" aria-label="Show all papers">×</button>
           </div>` : ""}${rangeChip()}`;
@@ -2188,7 +2343,7 @@
                 ${dot(d.node.type)}
                 <span class="body">
                   <span class="name">${esc(cap(d.node.label))}</span>
-                  <span class="sub">${esc(d.node.type)} · ${pct(d.j)} overlap</span>
+                  <span class="sub">${esc(typeWord(d.node.type))} · ${pct(d.j)} overlap</span>
                 </span>
                 <span class="conn-side">
                   <span class="count">${plural(d.shared, "paper")}</span>
@@ -2215,7 +2370,7 @@
             <div class="pair">
               ${esc(cap(center.label))}
               <span class="arrow">↔</span>
-              <span class="nb" style="text-decoration-color:${COLORS[neighbor.type]}">${esc(cap(neighbor.label))}</span>
+              <span class="nb" style="text-decoration-color:${colorOf(neighbor.type)}">${esc(cap(neighbor.label))}</span>
             </div>
             ${badge(neighbor.type)}
             ${n
@@ -2241,7 +2396,7 @@
         const n = papers.length;
         const conceptRef = (id, count) => {
           const c = byId.get(id);
-          return `<span role="button" tabindex="0" class="ref" data-action="open-concept" data-id="${esc(id)}" style="--c:${COLORS[c.type]}">${esc(c.label)}</span>${count ? ` (${count})` : ""}`;
+          return `<span role="button" tabindex="0" class="ref" data-action="open-concept" data-id="${esc(id)}" style="--c:${colorOf(c.type)}">${esc(c.label)}</span>${count ? ` (${count})` : ""}`;
         };
         // Spans rather than buttons, so long titles wrap with the sentence instead of breaking out of it.
         const paperRef = (p) => `“<span role="button" tabindex="0" class="ref plain" data-action="paper" data-id="${p.paper_id}">${esc(paperTitle(p))}</span>” (${esc(p.authors || "Unknown authors")}, ${p.year})`;
@@ -2257,18 +2412,17 @@
         }
 
         const minCount = n >= 5 ? 2 : 1;
-        const VERBS = {
-          subject: (list) => `study ${list}`,
-          task: (list) => `involve ${list}`,
-          problem: (list, k) => `work on ${list} design problem${k > 1 ? "s" : ""}`,
-          construct: (list) => `also measure ${list}`
-        };
-        const phrases = TYPES.map((type) => {
+        // Concepts are grouped under the type that owns the phrasing, so sub-types share their parent's phrase.
+        const phraseOwner = (type) => ancestry(type).find((t) => t.summary)?.id || type;
+        const owners = [...new Set(nodeTypes.map(phraseOwner))];
+        const phrases = owners.map((owner) => {
           const top = [...counts.entries()]
-            .filter(([id, c]) => byId.get(id).type === type && c >= minCount)
+            .filter(([id, c]) => phraseOwner(byId.get(id).type) === owner && c >= minCount)
             .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
             .slice(0, 2);
-          return top.length ? VERBS[type](listJoin(top.map(([id, c]) => conceptRef(id, c))), top.length) : null;
+          if (!top.length) return null;
+          const template = typeOf(owner).summary || "also involve {list}";
+          return fillTemplate(template, { list: listJoin(top.map(([id, c]) => conceptRef(id, c))), s: top.length > 1 ? "s" : "" });
         }).filter(Boolean);
         const recurring = phrases.length
           ? `Alongside both concepts, these ${n} papers most often ${listJoin(phrases)}.`
@@ -2499,7 +2653,7 @@
         state.papersShown = PAGE;
         state.connSort = "most";
         state.connPapersShown = PAGE;
-        state.showTypes = new Set(TYPES);
+        state.showTypes = new Set(nodeTypes);
         state.orbitLimit = ORBIT_STEP;
         state.hover = null;
         $("field-view").hidden = true;
