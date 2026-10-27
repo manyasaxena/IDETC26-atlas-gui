@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Redesign</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0e12;
+      --surface: #15171e;
+      --surface-2: #1b1e27;
+      --surface-3: #232735;
+      --line: rgba(255, 255, 255, 0.07);
+      --line-strong: rgba(255, 255, 255, 0.14);
+      --text: #eceff4;
+      --muted: #9aa2b2;
+      --faint: #6b7282;
+      --bar: #4a5061;
+      --accent: #8bc5ff;
+      --subject: #4fc3f7;
+      --task: #81c784;
+      --problem: #ffb74d;
+      --construct: #ce93d8;
+      --r-xl: 28px;
+      --r-lg: 22px;
+      --r-md: 16px;
+      --r-sm: 12px;
+      --shadow: 0 22px 48px -22px rgba(0, 0, 0, 0.75), 0 2px 10px rgba(0, 0, 0, 0.25);
+      --shadow-soft: 0 10px 26px -14px rgba(0, 0, 0, 0.6);
+      --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+      --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      overflow: hidden;
+    }
+    button { font: inherit; color: inherit; }
+    select {
+      font: 12px var(--mono);
+      color: var(--text);
+      background: var(--surface-3);
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 5px 10px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+    @keyframes slideFromLeft { from { opacity: 0; transform: translateX(-24px) scale(0.98); } to { opacity: 1; transform: none; } }
+    @keyframes slideFromRight { from { opacity: 0; transform: translateX(24px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+    #app {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 62px 1fr;
+    }
+
+    /* ---------- Top bar ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      font-family: var(--mono);
+      font-size: 12px;
+      min-width: 0;
+    }
+    .crumbs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      min-width: 0;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 14px;
+      box-shadow: var(--shadow-soft);
+    }
+    .crumbs button {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .crumbs button:hover { color: var(--accent); }
+    #crumb-node { overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+    #crumb-node:empty { display: none; }
+
+    .search-wrap { position: relative; width: 240px; flex: 0 0 auto; }
+    #search-input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 9px 16px;
+      font: 12px var(--mono);
+      outline: none;
+      box-shadow: var(--shadow-soft);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #search-input:focus { border-color: var(--line-strong); box-shadow: 0 0 0 4px rgba(139, 197, 255, 0.12); }
+    #search-results {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--surface-2);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-md);
+      padding: 6px;
+      z-index: 40;
+      box-shadow: var(--shadow);
+      animation: pop 0.18s var(--ease);
+      transform-origin: top center;
+    }
+    .search-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .search-item:hover, .search-item.active { background: var(--surface-3); }
+    .search-item .t { color: var(--faint); text-transform: capitalize; }
+
+    .field-controls { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 7px 12px;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      box-shadow: var(--shadow-soft);
+      transition: opacity 0.2s, transform 0.15s var(--ease);
+    }
+    .filter-pill:active { transform: scale(0.96); }
+    .filter-pill.off { opacity: 0.35; }
+    .filter-pill .n { color: var(--faint); }
+    #temporal-toggle {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 7px 14px;
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      box-shadow: var(--shadow-soft);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #temporal-toggle.active { border-color: var(--subject); box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.18); }
+    .spacer { flex: 1; }
+    #help-btn {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      border: 1px solid var(--line-strong);
+      background: var(--surface);
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.15s var(--ease), border-color 0.2s;
+    }
+    #help-btn:hover { border-color: var(--muted); transform: scale(1.06); }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    main { min-height: 0; position: relative; }
+
+    /* ---------- Field view ---------- */
+    #field-view { position: absolute; inset: 0; animation: fadeIn 0.35s var(--ease); }
+    #field { width: 100%; height: 100%; display: block; cursor: grab; }
+    #field:active { cursor: grabbing; }
+    .field-legend {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      background: rgba(21, 23, 30, 0.92);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 12px 16px;
+      font: 12px var(--mono);
+      color: var(--muted);
+      display: grid;
+      gap: 5px;
+      box-shadow: var(--shadow);
+    }
+    .field-legend .row { display: flex; align-items: center; gap: 8px; }
+    .field-legend .hint { color: var(--faint); margin-top: 4px; }
+    .temporal-bar {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 16px;
+      width: min(600px, calc(100% - 360px));
+      background: rgba(21, 23, 30, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font: 12px var(--mono);
+      color: var(--muted);
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.25s var(--ease);
+    }
+    #year-slider { flex: 1; accent-color: var(--subject); }
+    #year-label { color: var(--text); font-weight: 600; }
+
+    /* ---------- Concept view ---------- */
+    #concept-view {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr) 372px;
+      gap: 12px;
+      padding: 0 14px 14px;
+    }
+    #concept-view.enter .left { animation: slideFromLeft 0.5s var(--ease); }
+    #concept-view.enter .right { animation: slideFromRight 0.5s var(--ease); }
+    #concept-view.enter .orbit-wrap { animation: fadeIn 0.6s var(--ease); }
+    .bubble-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow);
+      min-height: 0;
+    }
+    .left { overflow-y: auto; padding: 14px; }
+    .pane { display: flex; flex-direction: column; gap: 12px; }
+    .swap { animation: fadeUp 0.32s var(--ease); }
+    .back-link {
+      align-self: flex-start;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 12px;
+      color: var(--muted);
+      font: 12px var(--mono);
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, transform 0.15s var(--ease);
+    }
+    .back-link:hover { color: var(--text); background: var(--surface-3); }
+    .back-link:active { transform: scale(0.96); }
+    .card {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 16px;
+    }
+    .concept-name {
+      margin: 0 0 10px;
+      font-size: 22px;
+      line-height: 1.15;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font: 600 11px var(--mono);
+      color: #0a0b0f;
+      text-transform: capitalize;
+    }
+    .label {
+      font: 500 11px var(--mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin: 0 0 8px;
+    }
+    .definition { margin: 12px 0 0; line-height: 1.5; color: #cfd5e0; }
+    .definition.empty { color: var(--faint); font-style: italic; }
+    .stats { margin: 12px 0 0; font: 12px var(--mono); color: var(--muted); line-height: 1.55; }
+    .stats strong { color: var(--text); font-weight: 600; }
+
+    .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .range-text {
+      font: 600 12px var(--mono);
+      color: var(--text);
+      background: var(--surface-3);
+      border-radius: 999px;
+      padding: 3px 10px;
+      transition: background 0.2s;
+    }
+    .range-text.active { background: rgba(139, 197, 255, 0.18); color: #d8ebff; }
+    .chart-wrap { padding: 0 8px; }
+    .year-chart { width: 100%; height: 64px; display: block; }
+    .year-chart g { transition: opacity 0.2s; }
+    .year-chart g.out { opacity: 0.18; }
+    .range-slider { position: relative; height: 24px; margin-top: 4px; }
+    .range-slider .track {
+      position: absolute;
+      top: 10px;
+      left: 8px;
+      right: 8px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--surface-3);
+    }
+    .range-slider .fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+    .range-slider input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 24px;
+      margin: 0;
+      background: none;
+      pointer-events: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .range-slider input::-webkit-slider-runnable-track { background: none; height: 24px; }
+    .range-slider input::-moz-range-track { background: none; }
+    .range-slider input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      pointer-events: auto;
+      width: 16px;
+      height: 16px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      cursor: grab;
+      transition: transform 0.15s var(--ease);
+    }
+    .range-slider input::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    .range-slider input:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.2); }
+    .range-slider input::-moz-range-thumb {
+      pointer-events: auto;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      cursor: grab;
+    }
+    .year-axis {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font: 11px var(--mono);
+      color: var(--faint);
+      margin-top: 2px;
+      padding: 0 2px;
+    }
+    .link-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--accent);
+      font: 11px var(--mono);
+      cursor: pointer;
+    }
+    .link-btn:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .chart-key { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; font: 11px var(--mono); color: var(--muted); }
+    .chart-key i { width: 9px; height: 9px; display: inline-block; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+    .filters { display: grid; gap: 4px; }
+    .filters label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: 999px;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .filters label:hover { background: var(--surface-3); }
+    .filters label.zero { opacity: 0.35; cursor: not-allowed; }
+    .filters label.zero:hover { background: none; }
+    .filters input { margin: 0; accent-color: #8a93a6; }
+    .filters .n { color: var(--faint); font-family: var(--mono); font-size: 12px; }
+    .divider { border: none; border-top: 1px solid var(--line); margin: 16px 0 14px; }
+
+    .orbit-wrap { position: relative; min-width: 0; min-height: 0; overflow: hidden; border-radius: var(--r-xl); }
+    #orbit { width: 100%; height: 100%; display: block; cursor: grab; }
+    #orbit:active { cursor: grabbing; }
+    #orbit .ring { fill: none; stroke: #343947; stroke-dasharray: 5 7; }
+    #orbit .ring-label {
+      fill: var(--muted);
+      font: 500 10px var(--mono);
+      letter-spacing: 0.4px;
+      paint-order: stroke;
+      stroke: var(--bg);
+      stroke-width: 5px;
+    }
+    #orbit .wedge { fill-opacity: 0.05; stroke-opacity: 0.22; stroke-width: 1; }
+    #orbit .sector-label {
+      font: 600 11px var(--mono);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      paint-order: stroke;
+      stroke: var(--bg);
+      stroke-width: 4px;
+    }
+    #orbit .spoke {
+      stroke: #5a6070;
+      stroke-opacity: 0.35;
+      stroke-width: 1;
+      stroke-linecap: round;
+      transition: stroke 0.3s, stroke-opacity 0.3s, stroke-width 0.3s;
+    }
+    #orbit .spoke.lit { stroke-opacity: 0.75; }
+    #orbit .spoke.faded { stroke-opacity: 0.06; }
+    #orbit .spoke.sel { stroke-opacity: 1; stroke-width: 3.5; }
+    #orbit .onode { cursor: pointer; }
+    #orbit .hit { fill: transparent; }
+    #orbit .onode .fill { stroke: #11131a; stroke-width: 1; transition: opacity 0.3s, stroke 0.2s, stroke-width 0.2s; }
+    #orbit .onode.faded .fill { opacity: 0.12; }
+    #orbit .onode.hov .fill { stroke: #fff; stroke-width: 2; }
+    #orbit .onode.sel .fill { stroke: #fff; stroke-width: 2.5; }
+    #orbit .center-node { transition: opacity 0.3s; }
+    #orbit .center-node.faded { opacity: 0.3; }
+    #orbit text.name {
+      font: 12px var(--mono);
+      fill: var(--text);
+      paint-order: stroke;
+      stroke: var(--bg);
+      stroke-width: 4px;
+      pointer-events: none;
+    }
+    #orbit text.nb-name { opacity: 0; transition: opacity 0.25s; }
+    #orbit text.nb-name.show { opacity: 1; }
+    #orbit text.center-name { font-weight: 600; font-size: 14px; }
+    .orbit-legend {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      background: rgba(21, 23, 30, 0.94);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 12px 14px;
+      font: 11.5px var(--mono);
+      color: var(--muted);
+      display: grid;
+      gap: 7px;
+      max-width: 300px;
+      box-shadow: var(--shadow);
+    }
+    .orbit-legend .row { display: flex; align-items: center; gap: 8px; }
+    .orbit-legend svg { flex: 0 0 auto; }
+    .legend-more { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+    .legend-more span { margin-right: 4px; color: var(--text); }
+    .pill-btn {
+      border: 1px solid var(--line-strong);
+      background: var(--surface-3);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 4px 11px;
+      font: 11.5px var(--mono);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s var(--ease);
+    }
+    .pill-btn:hover { background: #2c3142; }
+    .pill-btn:active { transform: scale(0.95); }
+    .orbit-top {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .orbit-top > * { pointer-events: auto; }
+    .compare-tray { display: flex; flex-direction: column; gap: 6px; align-self: flex-start; max-width: 100%; }
+    .cmp-cards { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cmp-card {
+      width: 184px;
+      background: rgba(27, 30, 39, 0.96);
+      border: 1px solid var(--line-strong);
+      border-radius: 20px;
+      padding: 10px 12px 9px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.2s var(--ease), border-color 0.2s, opacity 0.18s, scale 0.18s;
+    }
+    .cmp-card:hover { transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.24); }
+    .cmp-card.pop { animation: pop 0.3s var(--ease); }
+    .cmp-card.leaving { opacity: 0; scale: 0.9; }
+    .cmp-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .cmp-num {
+      display: inline-grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      font: 600 10.5px var(--mono);
+      color: var(--muted);
+    }
+    .cmp-x {
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: var(--surface-3);
+      color: var(--muted);
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.15s var(--ease);
+    }
+    .cmp-x:hover { background: #343a4c; color: var(--text); transform: scale(1.08); }
+    .cmp-pair { font-size: 12.5px; line-height: 1.35; font-weight: 600; }
+    .cmp-pair .dot { width: 7px; height: 7px; margin-right: 4px; vertical-align: 1px; }
+    .cmp-pair .arrow { display: block; color: var(--muted); font-weight: 400; font-size: 11px; margin: 1px 0; }
+    .cmp-stats { font: 11px var(--mono); color: var(--muted); margin-top: 7px; }
+    .cmp-stats strong { color: var(--text); font-weight: 600; }
+    .cmp-chart { display: block; width: 100%; height: 22px; margin-top: 6px; }
+    .cmp-chart rect.out { opacity: 0.2; }
+    .cmp-overlap {
+      align-self: flex-start;
+      font: 11.5px var(--mono);
+      color: var(--text);
+      background: rgba(21, 23, 30, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 13px;
+      box-shadow: var(--shadow-soft);
+      animation: fadeUp 0.3s var(--ease);
+    }
+    .cmp-overlap.none { color: var(--muted); }
+    .compare-btn {
+      border: 1px dashed var(--line-strong);
+      background: none;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 2px 9px;
+      font: 11px var(--mono);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.15s var(--ease);
+    }
+    .compare-btn:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+    .compare-btn:active:not(:disabled) { transform: scale(0.94); }
+    .compare-btn.on { border-style: solid; border-color: rgba(139, 197, 255, 0.6); background: rgba(139, 197, 255, 0.14); color: #d8ebff; }
+    .compare-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .compare-btn.big { padding: 8px 14px; font-size: 12px; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .btn-row .btn { margin-top: 0; }
+    .conn-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .orbit-note {
+      align-self: center;
+      max-width: 100%;
+      background: rgba(21, 23, 30, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font: 12px var(--mono);
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: var(--shadow-soft);
+      animation: fadeUp 0.3s var(--ease);
+    }
+    .orbit-empty {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, 64px);
+      color: var(--faint);
+      font: 12px var(--mono);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 6px 14px;
+    }
+
+    .right { display: flex; flex-direction: column; overflow: hidden; }
+    .tabs {
+      position: relative;
+      display: flex;
+      gap: 2px;
+      margin: 14px 14px 4px;
+      padding: 4px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+    }
+    .tab-indicator {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      border-radius: 999px;
+      background: var(--surface-3);
+      box-shadow: var(--shadow-soft);
+      transition: transform 0.35s var(--ease), width 0.35s var(--ease);
+    }
+    .tab {
+      position: relative;
+      flex: 1;
+      border: none;
+      background: none;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: 12px var(--mono);
+      cursor: pointer;
+      transition: color 0.25s;
+    }
+    .tab.active { color: var(--text); }
+    .right-body { flex: 1; overflow-y: auto; padding: 10px 14px 16px; }
+    .right-body .pane { gap: 0; }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 10px;
+    }
+    .panel-head h2 { margin: 0; font-size: 20px; }
+    .panel-head h2 .count { color: var(--muted); font-weight: 400; }
+    .sort { display: flex; align-items: center; gap: 6px; font: 11px var(--mono); color: var(--muted); }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .chip-filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      border-radius: 999px;
+      padding: 4px 5px 4px 12px;
+      font: 12px var(--mono);
+      max-width: 100%;
+      animation: pop 0.25s var(--ease);
+    }
+    .chip-filter span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .chip-filter button {
+      border: none;
+      background: var(--surface-3);
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      line-height: 1;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: background 0.2s, transform 0.15s var(--ease);
+    }
+    .chip-filter button:hover { background: #343a4c; transform: scale(1.08); }
+
+    .rows { display: flex; flex-direction: column; gap: 4px; }
+    .paper-row, .conn-row, .related {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--r-md);
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s var(--ease);
+    }
+    .paper-row:hover, .conn-row:hover, .related:hover, .conn-row.hovered {
+      background: var(--surface-2);
+      border-color: var(--line);
+    }
+    .paper-row:active, .conn-row:active, .related:active { transform: scale(0.985); }
+    .rows .pop-in { animation: fadeUp 0.35s var(--ease) both; }
+    .p-title { display: block; line-height: 1.35; font-weight: 500; }
+    .p-meta { display: block; margin-top: 4px; color: var(--muted); font-size: 12.5px; }
+    .p-meta .k { color: var(--faint); font-family: var(--mono); font-size: 11.5px; }
+    .conn-row { display: flex; align-items: flex-start; gap: 10px; }
+    .conn-row .dot { margin-top: 5px; }
+    .conn-row .body { flex: 1; min-width: 0; }
+    .conn-row .name { display: block; font-weight: 500; }
+    .conn-row .sub { display: block; color: var(--muted); font: 11.5px var(--mono); margin-top: 3px; }
+    .conn-row .count {
+      font: 12px var(--mono);
+      white-space: nowrap;
+      color: var(--text);
+      background: var(--surface-3);
+      border-radius: 999px;
+      padding: 2px 9px;
+    }
+    .load-more {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 999px;
+      background: none;
+      color: var(--muted);
+      font: 12px var(--mono);
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s, transform 0.15s var(--ease);
+    }
+    .load-more:hover { color: var(--text); background: var(--surface-2); }
+    .load-more:active { transform: scale(0.98); }
+    .empty-note { color: var(--faint); font: 12px var(--mono); padding: 12px 4px; }
+
+    .eyebrow { font: 500 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 16px 0 8px; }
+    .detail-card {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 16px;
+      margin-top: 12px;
+    }
+    .pair { font-size: 19px; font-weight: 700; line-height: 1.3; margin: 0 0 10px; }
+    .pair .arrow { display: block; color: var(--muted); font-weight: 400; font-size: 15px; margin: 2px 0; }
+    .pair .nb { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 5px; }
+    .sentence {
+      margin: 14px 0 0;
+      padding: 14px 16px;
+      border-radius: var(--r-md);
+      background: var(--surface-3);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .conn-stats { margin: 10px 0 0; font: 12px var(--mono); color: var(--muted); line-height: 1.5; }
+    .common { margin: 0; line-height: 1.6; color: #d5dbe6; }
+    .common-note { margin: 8px 0 0; font-size: 12px; color: var(--faint); font-style: italic; }
+    .ref {
+      color: var(--text);
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-color: var(--c, var(--line-strong));
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+      transition: color 0.2s;
+    }
+    .ref:hover { color: var(--accent); }
+    .ref.plain { text-decoration-thickness: 1px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #35527a;
+      background: #182335;
+      color: #d8e6ff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 12px var(--mono);
+      cursor: pointer;
+      margin-top: 14px;
+      transition: background 0.2s, transform 0.15s var(--ease);
+    }
+    .btn:hover:not(:disabled) { background: #1f2e47; }
+    .btn:active:not(:disabled) { transform: scale(0.96); }
+    .btn:disabled { border-color: var(--line); background: var(--surface-3); color: var(--faint); cursor: not-allowed; }
+
+    .paper-title { margin: 0 0 10px; font-size: 19px; line-height: 1.3; }
+    .byline {
+      display: inline-block;
+      background: var(--surface-3);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font: 12px var(--mono);
+      color: #cfd5e0;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s var(--ease);
+    }
+    .chip:hover { background: var(--surface-3); }
+    .chip:active { transform: scale(0.95); }
+    .chip.current { cursor: default; border-style: dashed; }
+    .chip.current:hover { background: var(--surface-2); }
+    .placeholder { color: var(--faint); font-style: italic; margin: 0; }
+    .related .why { display: block; margin-top: 6px; color: #b9c1cf; font-size: 12.5px; line-height: 1.45; }
+
+    /* ---------- Tooltip & glossary ---------- */
+    .tooltip {
+      position: fixed;
+      pointer-events: none;
+      z-index: 60;
+      max-width: 300px;
+      background: rgba(27, 30, 39, 0.98);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-lg);
+      padding: 12px 14px;
+      box-shadow: var(--shadow);
+    }
+    .tooltip.show { animation: pop 0.16s var(--ease); }
+    .tooltip .tt-name { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .tooltip .tt-def { margin: 8px 0 0; color: #cfd5e0; line-height: 1.45; font-size: 12.5px; }
+    .tooltip .tt-meta { margin-top: 8px; font: 11.5px var(--mono); color: var(--muted); line-height: 1.5; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeIn 0.2s var(--ease);
+    }
+    .modal {
+      width: min(560px, 100%);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-xl);
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      animation: pop 0.28s var(--ease);
+    }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .modal-head h2 { margin: 0; font-size: 20px; }
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--surface-3);
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .gloss-item {
+      display: grid;
+      grid-template-columns: 14px 1fr;
+      gap: 4px 10px;
+      padding: 12px 14px;
+      margin-bottom: 6px;
+      background: var(--surface-2);
+      border-radius: var(--r-md);
+    }
+    .gloss-item .dot { margin-top: 5px; }
+    .gloss-item strong { font-size: 14px; }
+    .gloss-item p { grid-column: 2; margin: 0; color: #cfd5e0; line-height: 1.45; }
+    .gloss-item .n { color: var(--faint); font: 12px var(--mono); margin-left: 6px; }
+    .modal .more { margin-top: 14px; color: #cfd5e0; line-height: 1.55; }
+    .modal .more p { margin: 0 0 8px; }
+
+    .error { padding: 24px; color: #ff8a80; font: 13px var(--mono); line-height: 1.6; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="crumbs">
+        <button type="button" id="crumb-home">Design Engineering Atlas</button>
+        <span id="crumb-node"></span>
+      </div>
+      <div class="search-wrap">
+        <input id="search-input" type="text" placeholder="Search concepts…" autocomplete="off" />
+        <div id="search-results" hidden></div>
+      </div>
+      <div class="field-controls" id="field-controls">
+        <div id="type-filters" class="field-controls"></div>
+        <button id="temporal-toggle" type="button">TEMPORAL MODE</button>
+      </div>
+      <div class="spacer"></div>
+      <button id="help-btn" type="button" title="Glossary of concept types" aria-label="Open glossary">?</button>
+    </header>
+
+    <main>
+      <section id="field-view">
+        <svg id="field" aria-label="Field view of all concepts"></svg>
+        <div class="field-legend" id="field-legend"></div>
+        <div class="temporal-bar" id="temporal-bar" hidden>
+          <span>Year</span>
+          <input id="year-slider" type="range" />
+          <span id="year-label"></span>
+          <span id="year-counts"></span>
+        </div>
+      </section>
+
+      <section id="concept-view" hidden>
+        <aside class="left bubble-panel" id="left"></aside>
+        <div class="orbit-wrap" id="orbit-wrap">
+          <svg id="orbit" aria-label="Concepts orbiting the selected concept"></svg>
+          <div class="orbit-top">
+            <div class="compare-tray" id="compare-tray" hidden></div>
+            <div class="orbit-note" id="orbit-note" hidden></div>
+          </div>
+          <div class="orbit-empty" id="orbit-empty" hidden></div>
+          <div class="orbit-legend" id="orbit-legend"></div>
+        </div>
+        <aside class="right bubble-panel">
+          <div class="tabs" id="tabs">
+            <span class="tab-indicator" id="tab-indicator"></span>
+            <button type="button" class="tab" data-tab="papers"></button>
+            <button type="button" class="tab" data-tab="connections"></button>
+          </div>
+          <div class="right-body" id="right-body"></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <div class="tooltip" id="tooltip" hidden></div>
+
+  <div class="modal-backdrop" id="glossary" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="glossary-title">
+      <div class="modal-head">
+        <h2 id="glossary-title">Glossary</h2>
+        <button type="button" class="modal-close" id="glossary-close" aria-label="Close">×</button>
+      </div>
+      <div id="glossary-body"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script>
+    (async function init() {
+      const COLORS = { subject: "#4fc3f7", task: "#81c784", problem: "#ffb74d", construct: "#ce93d8" };
+      const TYPES = ["subject", "task", "problem", "construct"];
+      const TYPE_ORDER = { subject: 0, task: 1, problem: 2, construct: 3 };
+      const TYPE_LABELS = { subject: "Subjects", task: "Tasks", problem: "Problems", construct: "Constructs" };
+      const TYPE_DEFS = {
+        subject: "Agents whose behavior the study was designed to observe.",
+        task: "Activities the subject performs that the study observes.",
+        problem: "Design briefs or prompts given to the subject.",
+        construct: "Cognitive or psychological phenomena the study illuminates."
+      };
+      const PAGE = 20;
+      const ORBIT_STEP = 24;
+      // Orbit geometry, in viewBox units centered on the selected concept.
+      const OR_R = 440;
+      const RINGS = [112, 198, 284];
+      const RING_BAND = 34;
+      const RING_NAMES = ["Very related", "Related", "Loosely related"];
+      const RING_OFFSET = [0, -0.25, 0.25];
+      const WEDGE_IN = 62;
+      const WEDGE_OUT = 330;
+      const SECTOR_LABEL_R = WEDGE_OUT + 14;
+      const TOP_GAP = (40 * Math.PI) / 180;
+      const SECTOR_PAD = (5 * Math.PI) / 180;
+      const WRAP_AT = 18;
+      const CHAR_W = 7.2;
+      const LINE_H = 14;
+      const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const ms = (d) => (REDUCED_MOTION ? 0 : d);
+
+      const $ = (id) => document.getElementById(id);
+      const tooltip = $("tooltip");
+
+      // ---------- Load data ----------
+      let raw;
+      try {
+        if (location.protocol === "file:") throw new Error("This page has to be served over http to load graph_data.json.");
+        const response = await fetch("./graph_data.json");
+        if (!response.ok) throw new Error(`Could not load graph_data.json (HTTP ${response.status}).`);
+        raw = await response.json();
+      } catch (error) {
+        $("app").innerHTML = `<div class="error">${esc(error.message)}<br/>From the project folder run <code>python3 -m http.server 8000</code> and open http://localhost:8000/redesign.html</div>`;
+        console.error(error);
+        return;
+      }
+
+      // ---------- Prepare data ----------
+      const nodes = raw.nodes.map((n) => ({
+        id: String(n.id),
+        label: n.label,
+        type: n.type,
+        description: (n.description || "").trim(),
+        papers: n.papers || [],
+        paperCount: (n.papers || []).length,
+        firstYear: Number(n.first_year) || null
+      }));
+      const byId = new Map(nodes.map((n) => [n.id, n]));
+
+      const paperById = new Map();
+      const conceptsByPaper = new Map();
+      nodes.forEach((n) => {
+        n.papers.forEach((p) => {
+          paperById.set(p.paper_id, p);
+          if (!conceptsByPaper.has(p.paper_id)) conceptsByPaper.set(p.paper_id, []);
+          conceptsByPaper.get(p.paper_id).push(n.id);
+        });
+      });
+      conceptsByPaper.forEach((ids) => ids.sort((a, b) => TYPE_ORDER[byId.get(a).type] - TYPE_ORDER[byId.get(b).type] || byId.get(a).label.localeCompare(byId.get(b).label)));
+
+      // Some node pairs appear more than once in the edge list; their paper lists are identical, so keep one.
+      // An edge's papers are exactly the papers its two concepts share, so shared counts come from that list.
+      const linkByPair = new Map();
+      const pairKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+      raw.edges.forEach((e) => {
+        const a = String(e.source), b = String(e.target);
+        if (!byId.has(a) || !byId.has(b)) return;
+        const key = pairKey(a, b);
+        if (linkByPair.has(key)) return;
+        linkByPair.set(key, { a, b, papers: e.papers || [], shared: (e.papers || []).length });
+      });
+      const links = [...linkByPair.values()];
+      const adjacency = new Map();
+      links.forEach((l) => {
+        if (!adjacency.has(l.a)) adjacency.set(l.a, []);
+        if (!adjacency.has(l.b)) adjacency.set(l.b, []);
+        adjacency.get(l.a).push({ id: l.b, link: l });
+        adjacency.get(l.b).push({ id: l.a, link: l });
+      });
+
+      const [Y0, Y1] = (raw.meta && raw.meta.year_range) || d3.extent([...paperById.values()], (p) => p.year);
+      const nodeR = d3.scaleSqrt().domain([0, d3.max(nodes, (n) => n.paperCount)]).range([3, 20]);
+      const typeCounts = d3.rollup(nodes, (v) => v.length, (n) => n.type);
+
+      // ---------- State ----------
+      const state = {
+        view: "field",
+        types: new Set(TYPES),
+        temporal: false,
+        year: Y1,
+        center: null,
+        tab: "papers",
+        connection: null,
+        paperStack: [],
+        papersSort: "newest",
+        papersShown: PAGE,
+        connSort: "most",
+        connPapersShown: PAGE,
+        showTypes: new Set(TYPES),
+        orbitLimit: ORBIT_STEP,
+        range: [Y0, Y1],
+        compare: [],
+        pendingConnection: null,
+        hover: null
+      };
+      const MAX_COMPARE = 3;
+
+      // ---------- Helpers ----------
+      function esc(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll("\"", "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+      const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+      const trunc = (s, n) => (s.length > n ? `${s.slice(0, n).replace(/\s+\S*$/, "")}…` : s);
+      // Long names wrap onto two lines, split at the space that balances them best.
+      function wrapLabel(s) {
+        if (s.length <= WRAP_AT) return [s];
+        let best = null;
+        for (let i = s.indexOf(" "); i !== -1; i = s.indexOf(" ", i + 1)) {
+          const lines = [s.slice(0, i), s.slice(i + 1)];
+          const width = Math.max(lines[0].length, lines[1].length);
+          if (!best || width < best.width) best = { lines, width };
+        }
+        return best ? best.lines : [s];
+      }
+      const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+      const pct = d3.format(".1~%");
+      const withArticle = (s) => `${/^[aeiou]/i.test(s) ? "an" : "a"} ${s}`;
+      function listJoin(items) {
+        if (items.length <= 1) return items.join("");
+        return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+      }
+      const badge = (type) => `<span class="badge" style="background:${COLORS[type]}">${esc(type)}</span>`;
+      const dot = (type) => `<span class="dot" style="background:${COLORS[type]}"></span>`;
+
+      // Most titles in the data are in all caps; those get title case, everything else is left alone.
+      const SMALL_WORDS = new Set("a an and as at but by for from in into nor of on onto or per than the to via vs with within without".split(" "));
+      const ACRONYMS = new Map("AI CAD CAE CFD DDC EEG ECG FEA FMEA FMRI FNIRS GPT HCI HRV IOT LLM ML NASA NLP PSS QFD STEM TRIZ UI UX VR AR XR MBSE AHP AUT II III IV".split(" ").map((w) => [w, w]));
+      [["LLMS", "LLMs"], ["IOT", "IoT"], ["FMRI", "fMRI"], ["FNIRS", "fNIRS"], ["AIS", "AIs"]].forEach(([k, v]) => ACRONYMS.set(k, v));
+      function titleCase(title) {
+        const t = (title || "").trim();
+        const letters = t.replace(/[^A-Za-z]/g, "");
+        if (!letters || letters.replace(/[^A-Z]/g, "").length / letters.length < 0.7) return t;
+        let forceCap = true;
+        return t.replace(/[A-Za-z0-9][A-Za-z0-9'’]*|[^A-Za-z0-9]+/g, (token) => {
+          if (!/[A-Za-z0-9]/.test(token[0])) {
+            if (/[:?!—–]/.test(token)) forceCap = true;
+            return token;
+          }
+          const upper = token.toUpperCase();
+          const first = forceCap;
+          forceCap = false;
+          if (ACRONYMS.has(upper)) return ACRONYMS.get(upper);
+          if (/^\d+[A-Z]$/.test(upper)) return upper;
+          const lower = token.toLowerCase();
+          if (!first && SMALL_WORDS.has(lower)) return lower;
+          return lower.charAt(0).toUpperCase() + lower.slice(1);
+        });
+      }
+      const paperTitle = (p) => titleCase(p.title) || "[title unavailable]";
+
+      // The edge `type` field is unreliable, so the sentence is chosen from the two concepts' own types.
+      function connectionSentence(center, neighbor, n) {
+        const [x, y] = TYPE_ORDER[center.type] <= TYPE_ORDER[neighbor.type] ? [center, neighbor] : [neighbor, center];
+        const N = plural(n, "paper");
+        const X = x.label, Y = y.label;
+        switch (`${x.type}-${y.type}`) {
+          case "subject-task": return `${N} observed ${X} during ${withArticle(Y)}`;
+          case "subject-problem": return `${N} gave ${X} ${withArticle(Y)} design problem`;
+          case "subject-construct": return `${N} measured ${Y} in ${X}`;
+          case "task-problem": return `${N} used ${withArticle(X)} on ${withArticle(Y)} design problem`;
+          case "task-construct": return `${N} measured ${Y} during ${withArticle(X)}`;
+          case "problem-construct": return `${N} measured ${Y} on ${withArticle(X)} design problem`;
+          case "construct-construct": return `${N} measured both ${X} and ${Y}`;
+          default: return `${N} studied both ${X} and ${Y}`;
+        }
+      }
+
+      // ---------- Year range ----------
+      const rangeActive = () => state.range[0] > Y0 || state.range[1] < Y1;
+      const rangeText = () => `${state.range[0]}–${state.range[1]}`;
+      const inRange = (p) => p.year >= state.range[0] && p.year <= state.range[1];
+      const papersIn = (list) => (rangeActive() ? list.filter(inRange) : list);
+      const papersOf = (node) => papersIn(node.papers);
+
+      // ---------- Tooltip (kept inside the graph area it belongs to) ----------
+      let tipBounds = null;
+      function showTip(html, event, boundsEl) {
+        const wasHidden = tooltip.hidden;
+        tipBounds = boundsEl;
+        tooltip.innerHTML = html;
+        tooltip.hidden = false;
+        if (wasHidden) {
+          tooltip.classList.remove("show");
+          void tooltip.offsetWidth;
+          tooltip.classList.add("show");
+        }
+        moveTip(event);
+      }
+      function moveTip(event) {
+        const r = tooltip.getBoundingClientRect();
+        const b = (tipBounds || document.body).getBoundingClientRect();
+        let x = event.clientX + 16, y = event.clientY + 16;
+        if (x + r.width > b.right - 10) x = event.clientX - r.width - 16;
+        if (y + r.height > b.bottom - 10) y = event.clientY - r.height - 16;
+        x = Math.min(Math.max(b.left + 10, x), b.right - r.width - 10);
+        y = Math.min(Math.max(b.top + 10, y), b.bottom - r.height - 10);
+        tooltip.style.left = `${x}px`;
+        tooltip.style.top = `${y}px`;
+      }
+      function hideTip() { tooltip.hidden = true; }
+
+      function conceptTip(n, extra) {
+        const def = n.description
+          ? `<p class="tt-def">${esc(trunc(n.description, 240))}</p>`
+          : `<p class="tt-def" style="color:var(--faint);font-style:italic">No definition in the data yet.</p>`;
+        return `<div class="tt-name">${esc(cap(n.label))}</div>${badge(n.type)}${def}<div class="tt-meta">${extra}</div>`;
+      }
+
+      // ---------- Routing ----------
+      function navigate(hash) {
+        if (location.hash !== hash) location.hash = hash;
+        else route();
+      }
+      const openConcept = (id) => navigate(`#/concept/${encodeURIComponent(id)}`);
+      const goField = () => navigate("#/");
+      function route() {
+        const m = location.hash.match(/^#\/concept\/(.+)$/);
+        const id = m && decodeURIComponent(m[1]);
+        if (id && byId.has(id)) showConcept(id);
+        else showField();
+      }
+      window.addEventListener("hashchange", route);
+
+      // ---------- Top bar ----------
+      $("crumb-home").addEventListener("click", goField);
+
+      TYPES.forEach((type) => {
+        const pill = document.createElement("button");
+        pill.type = "button";
+        pill.className = "filter-pill";
+        pill.innerHTML = `${dot(type)}${TYPE_LABELS[type]} <span class="n">${typeCounts.get(type) || 0}</span>`;
+        pill.addEventListener("click", () => {
+          if (state.types.has(type)) {
+            if (state.types.size === 1) return;
+            state.types.delete(type);
+          } else {
+            state.types.add(type);
+          }
+          pill.classList.toggle("off", !state.types.has(type));
+          updateField();
+        });
+        $("type-filters").appendChild(pill);
+      });
+
+      const yearSlider = $("year-slider");
+      yearSlider.min = String(Y0);
+      yearSlider.max = String(Y1);
+      yearSlider.value = String(Y1);
+      $("year-label").textContent = String(Y1);
+      $("temporal-toggle").addEventListener("click", () => {
+        state.temporal = !state.temporal;
+        $("temporal-toggle").classList.toggle("active", state.temporal);
+        $("temporal-bar").hidden = !state.temporal;
+        updateField();
+      });
+      yearSlider.addEventListener("input", () => {
+        state.year = Number(yearSlider.value);
+        $("year-label").textContent = String(state.year);
+        updateField();
+      });
+
+      // Search
+      const searchInput = $("search-input");
+      const searchResults = $("search-results");
+      let activeResult = -1;
+      function fuzzyMatch(label, query) {
+        const q = query.toLowerCase().trim();
+        const l = label.toLowerCase();
+        if (l.includes(q)) return true;
+        let i = 0;
+        for (const ch of l) {
+          if (ch === q[i]) i += 1;
+          if (i === q.length) return true;
+        }
+        return false;
+      }
+      function searchMatches() {
+        const q = searchInput.value.trim();
+        if (!q) return [];
+        const lower = q.toLowerCase();
+        return nodes
+          .filter((n) => fuzzyMatch(n.label, q))
+          .sort((a, b) => {
+            const ai = a.label.toLowerCase().indexOf(lower), bi = b.label.toLowerCase().indexOf(lower);
+            if ((ai === -1) !== (bi === -1)) return ai === -1 ? 1 : -1;
+            return b.paperCount - a.paperCount;
+          })
+          .slice(0, 8);
+      }
+      function renderSearch() {
+        const matches = searchMatches();
+        searchResults.hidden = !matches.length;
+        searchResults.innerHTML = matches.map((n, i) => `
+          <div class="search-item ${i === activeResult ? "active" : ""}" data-id="${esc(n.id)}">
+            <span>${dot(n.type)} ${esc(cap(n.label))}</span><span class="t">${esc(n.type)}</span>
+          </div>`).join("");
+        return matches;
+      }
+      function chooseSearch(id) {
+        searchInput.value = "";
+        searchResults.hidden = true;
+        activeResult = -1;
+        searchInput.blur();
+        openConcept(id);
+      }
+      searchInput.addEventListener("input", () => { activeResult = -1; renderSearch(); });
+      searchInput.addEventListener("keydown", (event) => {
+        const matches = searchMatches();
+        if (event.key === "Escape") { searchResults.hidden = true; activeResult = -1; return; }
+        if (!matches.length) return;
+        if (event.key === "ArrowDown") { event.preventDefault(); activeResult = Math.min(matches.length - 1, activeResult + 1); renderSearch(); }
+        else if (event.key === "ArrowUp") { event.preventDefault(); activeResult = Math.max(0, activeResult - 1); renderSearch(); }
+        else if (event.key === "Enter") { event.preventDefault(); chooseSearch(matches[Math.max(0, activeResult)].id); }
+      });
+      searchResults.addEventListener("click", (event) => {
+        const item = event.target.closest(".search-item");
+        if (item) chooseSearch(item.dataset.id);
+      });
+      document.addEventListener("click", (event) => {
+        if (!searchResults.contains(event.target) && event.target !== searchInput) searchResults.hidden = true;
+      });
+
+      // Glossary
+      $("glossary-body").innerHTML = `
+        ${TYPES.map((t) => `
+          <div class="gloss-item">
+            ${dot(t)}
+            <div><strong>${TYPE_LABELS[t]}</strong><span class="n">${typeCounts.get(t) || 0} concepts</span></div>
+            <p>${TYPE_DEFS[t]}</p>
+          </div>`).join("")}
+        <div class="more">
+          <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
+          <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
+          <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
+        </div>`;
+      const glossary = $("glossary");
+      $("help-btn").addEventListener("click", () => { glossary.hidden = false; });
+      $("glossary-close").addEventListener("click", () => { glossary.hidden = true; });
+      glossary.addEventListener("click", (event) => { if (event.target === glossary) glossary.hidden = true; });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape") glossary.hidden = true; });
+
+      // ---------- Field view ----------
+      const fieldSvg = d3.select("#field");
+      const fieldEl = fieldSvg.node();
+      const fieldDims = { w: fieldEl.clientWidth || innerWidth, h: fieldEl.clientHeight || innerHeight - 62 };
+      fieldSvg.attr("viewBox", [0, 0, fieldDims.w, fieldDims.h]);
+      const fieldRoot = fieldSvg.append("g");
+      const fieldLinkG = fieldRoot.append("g");
+      const fieldNodeG = fieldRoot.append("g");
+      const fieldZoom = d3.zoom().scaleExtent([0.2, 6]).on("zoom", (event) => fieldRoot.attr("transform", event.transform));
+      fieldSvg.call(fieldZoom);
+
+      const fieldLinks = links.map((l) => ({ source: l.a, target: l.b, link: l }));
+      const maxShared = d3.max(links, (l) => l.shared) || 1;
+      const widthScale = d3.scaleLinear().domain([0, maxShared]).range([0.6, 5]);
+      const opacityScale = d3.scaleLinear().domain([0, maxShared]).range([0.08, 0.7]);
+
+      const fieldSim = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(fieldLinks).id((d) => d.id).distance((d) => 120 - Math.min(90, d.link.shared * 1.8)))
+        .force("charge", d3.forceManyBody().strength(-140))
+        .force("center", d3.forceCenter(fieldDims.w / 2, fieldDims.h / 2))
+        .force("x", d3.forceX(fieldDims.w / 2).strength((d) => (adjacency.has(d.id) ? 0.03 : 0.15)))
+        .force("y", d3.forceY(fieldDims.h / 2).strength((d) => (adjacency.has(d.id) ? 0.03 : 0.15)))
+        .force("collision", d3.forceCollide().radius((d) => nodeR(d.paperCount) + 2));
+
+      const fieldLinkSel = fieldLinkG.selectAll("line")
+        .data(fieldLinks)
+        .join("line")
+        .attr("stroke", "#f0f2f5")
+        .attr("stroke-linecap", "round");
+
+      const fieldNodeSel = fieldNodeG.selectAll("circle")
+        .data(nodes, (d) => d.id)
+        .join("circle")
+        .attr("r", (d) => nodeR(d.paperCount))
+        .attr("fill", (d) => COLORS[d.type])
+        .attr("stroke", "#11131a")
+        .attr("stroke-width", 1.2)
+        .style("cursor", "pointer")
+        .on("mouseenter", (event, d) => showTip(conceptTip(d, `${plural(d.paperCount, "paper")} · click to explore`), event, $("field-view")))
+        .on("mousemove", moveTip)
+        .on("mouseleave", hideTip)
+        .on("click", (event, d) => { event.stopPropagation(); hideTip(); openConcept(d.id); })
+        .call(d3.drag()
+          .on("start", (event, d) => { if (!event.active) fieldSim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+          .on("drag", (event, d) => { d.fx = event.x; d.fy = event.y; })
+          .on("end", (event, d) => { if (!event.active) fieldSim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+      fieldSim.on("tick", () => {
+        fieldLinkSel
+          .attr("x1", (d) => d.source.x).attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x).attr("y2", (d) => d.target.y);
+        fieldNodeSel.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+      });
+
+      const fieldNodeOn = (n) => state.types.has(n.type) && (!state.temporal || (n.firstYear && n.firstYear <= state.year));
+      const fieldLinkCount = (l) => (state.temporal ? l.papers.filter((p) => p.year <= state.year).length : l.shared);
+
+      function updateField() {
+        fieldNodeSel.attr("display", (d) => (fieldNodeOn(d) ? null : "none"));
+        let visibleLinks = 0;
+        fieldLinkSel
+          .attr("display", (d) => {
+            const on = fieldNodeOn(d.source) && fieldNodeOn(d.target) && fieldLinkCount(d.link) > 0;
+            if (on) visibleLinks += 1;
+            return on ? null : "none";
+          })
+          .attr("stroke-width", (d) => widthScale(fieldLinkCount(d.link)))
+          .attr("stroke-opacity", (d) => opacityScale(fieldLinkCount(d.link)));
+        $("year-counts").textContent = `${nodes.filter(fieldNodeOn).length} concepts · ${visibleLinks} connections`;
+      }
+
+      $("field-legend").innerHTML = `
+        ${TYPES.map((t) => `<div class="row">${dot(t)}${TYPE_LABELS[t]} (${typeCounts.get(t) || 0})</div>`).join("")}
+        <div class="hint">Size = papers · line = shared papers</div>
+        <div class="hint">Hover for a definition · click to explore</div>`;
+
+      function resizeField() {
+        const w = fieldEl.clientWidth, h = fieldEl.clientHeight;
+        if (!w || !h || (w === fieldDims.w && h === fieldDims.h)) return;
+        fieldDims.w = w;
+        fieldDims.h = h;
+        fieldSvg.attr("viewBox", [0, 0, w, h]);
+        fieldSim.force("center", d3.forceCenter(w / 2, h / 2));
+        fieldSim.force("x").x(w / 2);
+        fieldSim.force("y").y(h / 2);
+        fieldSim.alpha(0.25).restart();
+      }
+      window.addEventListener("resize", resizeField);
+
+      function showField() {
+        state.view = "field";
+        state.center = null;
+        hideTip();
+        $("concept-view").hidden = true;
+        $("field-view").hidden = false;
+        $("field-controls").hidden = false;
+        $("crumb-node").textContent = "";
+        resizeField();
+        updateField();
+      }
+
+      // ---------- Concept view: shared data ----------
+      const byRelevance = (a, b) => b.j - a.j || b.shared - a.shared || a.node.label.localeCompare(b.node.label);
+
+      // Every neighbor of the current concept, with counts and relevance limited to the selected year range.
+      function neighborData() {
+        const center = byId.get(state.center);
+        const centerCount = papersOf(center).length;
+        return (adjacency.get(center.id) || []).map(({ id, link }) => {
+          const node = byId.get(id);
+          const sharedPapers = papersIn(link.papers);
+          const shared = sharedPapers.length;
+          const total = papersOf(node).length;
+          return { node, link, sharedPapers, shared, total, either: centerCount + total - shared, j: shared ? shared / (centerCount + total - shared) : 0 };
+        }).filter((d) => d.shared > 0);
+      }
+      const visibleNeighbors = () => neighborData().filter((d) => state.showTypes.has(d.node.type));
+      const selectedLink = () => (state.connection ? linkByPair.get(pairKey(state.center, state.connection)) : null);
+
+      function currentPaper() {
+        return state.tab === "papers" && state.paperStack.length
+          ? paperById.get(state.paperStack[state.paperStack.length - 1])
+          : null;
+      }
+
+      // ---------- Concept view: orbit ----------
+      const orbitSvg = d3.select("#orbit");
+      const orbitRoot = orbitSvg.append("g");
+      const wedgeG = orbitRoot.append("g");
+      const ringG = orbitRoot.append("g");
+      const wedgeArc = d3.arc().innerRadius(WEDGE_IN).outerRadius(WEDGE_OUT).cornerRadius(18);
+      // d3.arc measures angles clockwise from 12 o'clock; the layout measures them from 3 o'clock.
+      const arcAngles = (g) => ({ startAngle: g.start + Math.PI / 2, endAngle: g.end + Math.PI / 2 });
+      const spokeG = orbitRoot.append("g");
+      const orbitNodeG = orbitRoot.append("g");
+      const centerG = orbitRoot.append("g").attr("class", "center-node");
+      const labelG = orbitRoot.append("g");
+      const sectorLabelG = orbitRoot.append("g");
+      const ringLabelG = orbitRoot.append("g");
+      const orbitZoom = d3.zoom().scaleExtent([0.5, 5]).on("zoom", (event) => orbitRoot.attr("transform", event.transform));
+      orbitSvg.call(orbitZoom).on("dblclick.zoom", null);
+      orbitSvg.on("click", () => { if (state.connection) clearConnection(); });
+
+      ringG.selectAll("circle").data(RINGS).join("circle").attr("class", "ring").attr("r", (r) => r);
+      ringLabelG.selectAll("text").data(RINGS).join("text")
+        .attr("class", "ring-label")
+        .attr("text-anchor", "middle")
+        .attr("y", (r) => -r + 3.5)
+        .text((r, i) => RING_NAMES[i]);
+      const centerCircle = centerG.append("circle").attr("stroke", "#ffffff").attr("stroke-width", 2.5).style("filter", "drop-shadow(0 0 10px rgba(255,255,255,0.35))");
+      const centerLabel = labelG.append("text").attr("class", "name center-name").attr("text-anchor", "middle");
+
+      let orbit = { center: null, shown: [], inPaper: null, typedCount: 0, box: null, unit: 0, vb: { x0: -OR_R, x1: OR_R, y0: -OR_R, y1: OR_R } };
+
+      // Match the viewBox to the panel's shape so labels can use the extra width or height.
+      // When the compare tray is showing, the orbit is fitted into the space below it.
+      function fitOrbitViewBox(animate) {
+        const el = $("orbit-wrap");
+        const w = el.clientWidth, h = el.clientHeight;
+        if (!w || !h) return false;
+        const tray = $("compare-tray");
+        const top = tray.hidden ? 0 : tray.offsetHeight + 16;
+        const h2 = Math.max(160, h - top);
+        const vw = 2 * OR_R * Math.max(1, w / h2), vh = 2 * OR_R * Math.max(1, h2 / w);
+        const unit = vw / w;
+        const box = [-vw / 2, -vh / 2 - top * unit, vw, vh + top * unit];
+        if (animate && !REDUCED_MOTION && orbit.box) {
+          orbitSvg.transition("viewbox").duration(450).ease(d3.easeCubicOut).attrTween("viewBox", () => {
+            const interp = d3.interpolate(orbit.box, box);
+            return (k) => interp(k).join(" ");
+          });
+        } else {
+          orbitSvg.interrupt("viewbox").attr("viewBox", box.join(" "));
+        }
+        const changed = JSON.stringify(box) !== JSON.stringify(orbit.box);
+        orbit.box = box;
+        orbit.unit = unit;
+        orbit.vb = { x0: -vw / 2 + 6, x1: vw / 2 - 6, y0: -vh / 2 + 6, y1: vh / 2 - 6 };
+        return changed;
+      }
+      new ResizeObserver(() => {
+        if (fitOrbitViewBox(false) && state.view === "concept") updateOrbit(0);
+      }).observe($("orbit-wrap"));
+
+      // Types get their own slice of the circle (with a gap at the top for the ring names);
+      // each neighbor sits on the ring for its relevance rank.
+      function layoutOrbit(shown) {
+        const groups = TYPES.map((type) => ({ type, items: shown.filter((d) => d.node.type === type) })).filter((g) => g.items.length);
+        const avail = 2 * Math.PI - TOP_GAP - SECTOR_PAD * Math.max(0, groups.length - 1);
+        const minWeight = shown.length * 0.1;
+        const weights = groups.map((g) => Math.max(g.items.length, minWeight));
+        const totalWeight = d3.sum(weights) || 1;
+        let a = -Math.PI / 2 + TOP_GAP / 2;
+        groups.forEach((g, gi) => {
+          const span = (avail * weights[gi]) / totalWeight;
+          g.start = a;
+          g.end = a + span;
+          g.mid = a + span / 2;
+          [0, 1, 2].forEach((k) => {
+            const onRing = g.items.filter((d) => d.ring === k).sort(byRelevance);
+            onRing.forEach((d, i) => {
+              const frac = (i + 0.5 + RING_OFFSET[k]) / onRing.length;
+              d.angle = a + span * Math.min(0.96, Math.max(0.04, frac));
+              d.group = g;
+            });
+          });
+          a += span + SECTOR_PAD;
+        });
+        shown.forEach((d) => {
+          d.r = RINGS[d.ring];
+          d.size = nodeR(d.total);
+          d.x = d.r * Math.cos(d.angle);
+          d.y = d.r * Math.sin(d.angle);
+        });
+        if (shown.length > 1) {
+          const sim = d3.forceSimulation(shown)
+            .force("radial", d3.forceRadial((d) => d.r, 0, 0).strength(0.5))
+            .force("collide", d3.forceCollide((d) => d.size + 4).strength(0.8))
+            .stop();
+          for (let i = 0; i < 160; i += 1) {
+            sim.tick();
+            shown.forEach(keepInWedge);
+          }
+        }
+        shown.forEach(keepInWedge);
+        return groups;
+      }
+
+      // A node never leaves its type's slice, and collisions can only nudge it a little off its ring.
+      function keepInWedge(d) {
+        const g = d.group;
+        let angle = Math.atan2(d.y, d.x);
+        if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+        const r = Math.min(d.r + RING_BAND, Math.max(d.r - RING_BAND, Math.hypot(d.x, d.y) || d.r));
+        const margin = Math.min((d.size + 6) / r, (g.end - g.start) / 2);
+        angle = Math.min(g.end - margin, Math.max(g.start + margin, angle));
+        d.x = r * Math.cos(angle);
+        d.y = r * Math.sin(angle);
+      }
+
+      const boxesOverlap = (a, b) => a.x0 < b.x1 + 2 && a.x1 + 2 > b.x0 && a.y0 < b.y1 + 2 && a.y1 + 2 > b.y0;
+      function circleHitsBox(c, b) {
+        const nx = Math.max(b.x0, Math.min(c.x, b.x1)), ny = Math.max(b.y0, Math.min(c.y, b.y1));
+        return (c.x - nx) ** 2 + (c.y - ny) ** 2 < c.r * c.r;
+      }
+      function textAt(box) {
+        const x = box.anchor === "start" ? box.x0 : box.anchor === "end" ? box.x1 : (box.x0 + box.x1) / 2;
+        return { x, y: box.y0 + 11, anchor: box.anchor };
+      }
+      // Spots to try for a label, best first: beside the node on its outer side, then above/below, then the other side.
+      function labelCandidates(d, w, h) {
+        const s = d.size;
+        const angle = Math.atan2(d.y, d.x), cos = Math.cos(angle), sin = Math.sin(angle);
+        const box = (x0, y0, anchor) => ({ x0, y0, x1: x0 + w, y1: y0 + h, anchor });
+        const right = (dy) => box(d.x + s + 5, d.y - h / 2 + dy, "start");
+        const left = (dy) => box(d.x - s - 5 - w, d.y - h / 2 + dy, "end");
+        const below = (dx) => box(d.x - w / 2 + dx, d.y + s + 3, "middle");
+        const above = (dx) => box(d.x - w / 2 + dx, d.y - s - 3 - h, "middle");
+        const nudge = h / 2 + 4;
+        const dir = cos >= 0 ? 1 : -1;
+        const shift = Math.max(0, w / 2 - s);
+        const sides = dir > 0 ? [right(0), right(-nudge), right(nudge)] : [left(0), left(-nudge), left(nudge)];
+        const other = dir > 0 ? [left(0), left(-nudge), left(nudge)] : [right(0), right(-nudge), right(nudge)];
+        const outV = sin < 0 ? above : below, inV = sin < 0 ? below : above;
+        const vert = (fn) => [fn(0), fn(dir * shift), fn(-dir * shift)];
+        if (Math.abs(cos) > 0.35) return [...sides, ...vert(outV), ...vert(inV), ...other];
+        return [...vert(outV), ...sides, ...other, ...vert(inV)];
+      }
+
+      // Greedy placement: the selected and highlighted neighbors pick first, then by relevance.
+      // A label that can't fit without overlapping stays hidden until its node is hovered.
+      function placeLabels(shown, groups, center, centerSize, inPaper) {
+        const { vb } = orbit;
+        const inBounds = (b) => b.x0 >= vb.x0 && b.x1 <= vb.x1 && b.y0 >= vb.y0 && b.y1 <= vb.y1;
+        const boxes = RINGS.map((r, i) => {
+          const w = RING_NAMES[i].length * 6 + 6;
+          return { x0: -w / 2, x1: w / 2, y0: -r - 6, y1: -r + 6 };
+        });
+        orbit.centerLines = wrapLabel(cap(center.label));
+        const cw = d3.max(orbit.centerLines, (l) => l.length) * 8.4;
+        boxes.push({ x0: -cw / 2, x1: cw / 2, y0: centerSize + 5, y1: centerSize + 8 + orbit.centerLines.length * 17 });
+        // The legend floats over the orbit, so labels treat its footprint as taken.
+        // (Mapped through the target viewBox, since the svg may still be animating toward it.)
+        const legendRect = $("orbit-legend").getBoundingClientRect();
+        const wrapRect = $("orbit-wrap").getBoundingClientRect();
+        if (orbit.box && legendRect.width) {
+          const toVb = (px, py) => ({ x: orbit.box[0] + (px - wrapRect.left) * orbit.unit, y: orbit.box[1] + (py - wrapRect.top) * orbit.unit });
+          const p1 = toVb(legendRect.left - 8, legendRect.top - 8);
+          const p2 = toVb(legendRect.right + 8, legendRect.bottom + 8);
+          boxes.push({ x0: p1.x, y0: p1.y, x1: p2.x, y1: p2.y });
+        }
+        const circles = shown.map((d) => ({ id: d.node.id, x: d.x, y: d.y, r: d.size + 2 }));
+        circles.push({ id: center.id, x: 0, y: 0, r: centerSize + 3 });
+
+        // Each type's name sits just outside the outer edge of its slice and is always shown;
+        // it slides along that edge if the middle spot is taken (by the legend, say).
+        groups.forEach((g) => {
+          const w = TYPE_LABELS[g.type].length * 8 + 4;
+          const span = g.end - g.start;
+          const spots = [0, -0.25, 0.25, -0.4, 0.4].map((f) => {
+            const angle = g.mid + f * span;
+            const cos = Math.cos(angle), sin = Math.sin(angle);
+            const anchor = cos > 0.3 ? "start" : cos < -0.3 ? "end" : "middle";
+            const x = SECTOR_LABEL_R * cos;
+            const y = SECTOR_LABEL_R * sin + (sin > 0.5 ? 11 : sin < -0.5 ? 0 : 4);
+            const x0 = anchor === "start" ? x : anchor === "end" ? x - w : x - w / 2;
+            return { label: { x, y, anchor }, box: { x0, x1: x0 + w, y0: y - 11, y1: y + 3 } };
+          });
+          const spot = spots.find((s) => inBounds(s.box) && !boxes.some((o) => boxesOverlap(o, s.box))) || spots[0];
+          g.label = spot.label;
+          boxes.push(spot.box);
+        });
+
+        const priority = (d) => (d.node.id === state.connection ? 2 : inPaper && inPaper.has(d.node.id) ? 1 : 0);
+        shown.slice().sort((a, b) => priority(b) - priority(a) || byRelevance(a, b)).forEach((d) => {
+          d.lines = wrapLabel(cap(d.node.label));
+          const cands = labelCandidates(d, d3.max(d.lines, (l) => l.length) * CHAR_W, d.lines.length * LINE_H);
+          d.lab = { ...textAt(cands[0]), placed: false };
+          if (inPaper && !inPaper.has(d.node.id)) return;
+          const fit = cands.find((b) => inBounds(b) && !boxes.some((o) => boxesOverlap(o, b)) && !circles.some((c) => c.id !== d.node.id && circleHitsBox(c, b)));
+          if (fit) {
+            d.lab = { ...textAt(fit), placed: true };
+            boxes.push(fit);
+          }
+        });
+      }
+
+      function updateOrbit(duration = 650) {
+        const center = byId.get(state.center);
+        const typed = visibleNeighbors().sort(byRelevance);
+        const base = typed.slice(0, state.orbitLimit);
+        const baseIds = new Set(base.map((d) => d.node.id));
+        const paper = currentPaper();
+        const inPaper = paper ? new Set(conceptsByPaper.get(paper.paper_id)) : null;
+        // The selected connection and the open paper's concepts always appear, even outside the top N.
+        const extras = typed.filter((d) => !baseIds.has(d.node.id) && (d.node.id === state.connection || (inPaper && inPaper.has(d.node.id))));
+        base.forEach((d, i) => { d.ring = Math.min(2, Math.floor((i * 3) / base.length)); });
+        extras.forEach((d) => { d.ring = 2; });
+        const shown = base.concat(extras);
+        const centerSize = Math.max(12, nodeR(papersOf(center).length));
+        Object.assign(orbit, { center, shown, inPaper, typedCount: typed.length, centerSize });
+        // The legend is drawn first so label placement sees its final size.
+        renderOrbitLegend();
+
+        const groups = layoutOrbit(shown);
+        placeLabels(shown, groups, center, centerSize, inPaper);
+
+        const t = orbitSvg.transition("layout").duration(ms(duration)).ease(d3.easeCubicOut);
+        const key = (d) => d.node.id;
+
+        centerCircle.transition(t).attr("r", centerSize).attr("fill", COLORS[center.type]);
+        centerLabel.selectAll("tspan").data(orbit.centerLines).join("tspan")
+          .attr("x", 0)
+          .attr("dy", (l, i) => (i ? 17 : 0))
+          .text((l) => l);
+        centerLabel.transition(t).attr("y", centerSize + 18);
+
+        wedgeG.selectAll("path").data(groups, (g) => g.type).join(
+          (enter) => enter.append("path").attr("class", "wedge")
+            .each(function (g) {
+              const a = arcAngles(g);
+              this._arc = { startAngle: a.startAngle, endAngle: a.startAngle };
+            })
+            .attr("d", function () { return wedgeArc(this._arc); }),
+          (update) => update,
+          (exit) => exit.transition(t).style("opacity", 0).remove()
+        )
+          .style("fill", (g) => COLORS[g.type])
+          .style("stroke", (g) => COLORS[g.type])
+          .transition(t)
+          .style("opacity", 1)
+          .attrTween("d", function (g) {
+            const target = arcAngles(g);
+            const interp = d3.interpolate(this._arc || target, target);
+            this._arc = target;
+            return (k) => wedgeArc(interp(k));
+          });
+
+        sectorLabelG.selectAll("text").data(groups, (g) => g.type).join(
+          (enter) => enter.append("text").attr("class", "sector-label").style("opacity", 0),
+          (update) => update,
+          (exit) => exit.transition(t).style("opacity", 0).remove()
+        )
+          .attr("fill", (g) => COLORS[g.type])
+          .attr("text-anchor", (g) => g.label.anchor)
+          .text((g) => TYPE_LABELS[g.type])
+          .transition(t)
+          .style("opacity", 1)
+          .attr("x", (g) => g.label.x)
+          .attr("y", (g) => g.label.y);
+
+        spokeG.selectAll("line").data(shown, key).join(
+          (enter) => enter.append("line").attr("class", "spoke").attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 0),
+          (update) => update,
+          (exit) => exit.transition(t).attr("x2", 0).attr("y2", 0).style("opacity", 0).remove()
+        ).transition(t)
+          .style("opacity", null)
+          .attr("x2", (d) => d.x)
+          .attr("y2", (d) => d.y);
+
+        orbitNodeG.selectAll("g.onode").data(shown, key).join(
+          (enter) => {
+            const g = enter.append("g").attr("class", "onode").attr("transform", "translate(0,0)").style("opacity", 0);
+            g.append("circle").attr("class", "hit");
+            g.append("circle").attr("class", "fill").attr("r", 0);
+            g.on("mouseenter", (event, d) => {
+              state.hover = d.node.id;
+              styleOrbit();
+              highlightRow(d.node.id, true);
+              const range = rangeActive() ? ` in ${rangeText()}` : "";
+              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · click to see the connection`), event, $("orbit-wrap"));
+            })
+              .on("mousemove", moveTip)
+              .on("mouseleave", (event, d) => {
+                state.hover = null;
+                styleOrbit();
+                highlightRow(d.node.id, false);
+                hideTip();
+              })
+              .on("click", (event, d) => {
+                event.stopPropagation();
+                hideTip();
+                selectConnection(d.node.id);
+              });
+            return g;
+          },
+          (update) => update,
+          (exit) => exit.transition(t).attr("transform", "translate(0,0)").style("opacity", 0).remove()
+        )
+          .call((g) => g.select("circle.hit").attr("r", (d) => Math.max(d.size + 3, 11)))
+          .call((g) => g.select("circle.fill").attr("fill", (d) => COLORS[d.node.type]).transition(t).attr("r", (d) => d.size))
+          .transition(t)
+          .style("opacity", 1)
+          .attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+        labelG.selectAll("text.nb-name").data(shown, key).join(
+          (enter) => enter.append("text").attr("class", "name nb-name").attr("transform", "translate(0,0)"),
+          (update) => update,
+          (exit) => exit.remove()
+        )
+          .attr("text-anchor", (d) => d.lab.anchor)
+          .each(function (d) {
+            d3.select(this).selectAll("tspan").data(d.lines).join("tspan")
+              .attr("x", 0)
+              .attr("dy", (l, i) => (i ? LINE_H : 0))
+              .text((l) => l);
+          })
+          .transition(t)
+          .attr("transform", (d) => `translate(${d.lab.x},${d.lab.y})`);
+        centerLabel.raise();
+
+        const empty = $("orbit-empty");
+        empty.hidden = shown.length > 0;
+        if (!shown.length) {
+          empty.textContent = !neighborData().length
+            ? rangeActive() ? `No connections in ${rangeText()}.` : "No connections for this concept in the graph."
+            : "No connections of the selected types.";
+        }
+        styleOrbit();
+      }
+
+      function styleOrbit() {
+        const { center, inPaper } = orbit;
+        if (!center) return;
+        const sel = state.connection, hov = state.hover;
+        const faded = (id) => !!inPaper && !inPaper.has(id);
+
+        spokeG.selectAll("line.spoke")
+          .classed("sel", (d) => d.node.id === sel)
+          .classed("faded", (d) => d.node.id !== sel && faded(d.node.id))
+          .classed("lit", (d) => !!inPaper && !faded(d.node.id))
+          .style("stroke", (d) => (d.node.id === sel ? COLORS[d.node.type] : null));
+        orbitNodeG.selectAll("g.onode")
+          .classed("faded", (d) => faded(d.node.id))
+          .classed("sel", (d) => d.node.id === sel)
+          .classed("hov", (d) => d.node.id === hov);
+        labelG.selectAll("text.nb-name")
+          .classed("show", (d) => !faded(d.node.id) && (d.lab.placed || d.node.id === hov || d.node.id === sel));
+        centerG.classed("faded", faded(center.id));
+
+        orbitNodeG.selectAll("g.onode").filter((d) => d.node.id === hov || d.node.id === sel).raise();
+        labelG.selectAll("text.nb-name").filter((d) => d.node.id === hov).raise();
+
+        const paper = currentPaper();
+        const note = $("orbit-note");
+        if (paper) {
+          const count = (conceptsByPaper.get(paper.paper_id) || []).length;
+          note.textContent = `Highlighting the ${plural(count, "concept")} in “${paperTitle(paper)}”`;
+          note.hidden = false;
+        } else {
+          note.hidden = true;
+        }
+      }
+
+      function renderOrbitLegend() {
+        const shownCount = orbit.shown.length;
+        const more = orbit.typedCount > state.orbitLimit;
+        const fewer = state.orbitLimit > ORBIT_STEP;
+        $("orbit-legend").innerHTML = `
+          <div class="row">
+            <svg width="30" height="16" aria-hidden="true"><circle cx="6" cy="9" r="4" fill="#8a93a6"/><circle cx="21" cy="8" r="7" fill="#8a93a6"/></svg>
+            <span>Size = the concept's papers${rangeActive() ? ` in ${rangeText()}` : ""}</span>
+          </div>
+          <div class="row">
+            <svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="2.5" fill="#8a93a6"/><circle cx="15" cy="9" r="5.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/><circle cx="15" cy="9" r="8.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/></svg>
+            <span>Rings rank relevance: shared papers ÷ papers in either concept</span>
+          </div>
+          <div class="row">
+            <svg width="30" height="18" aria-hidden="true"><path d="M15 9 L15 1 A8 8 0 0 1 22.6 6.5 Z" fill="#81c784" fill-opacity="0.5"/><path d="M15 9 L22.6 6.5 A8 8 0 0 1 10 15.2 Z" fill="#ffb74d" fill-opacity="0.5"/><path d="M15 9 L10 15.2 A8 8 0 0 1 15 1 Z" fill="#ce93d8" fill-opacity="0.5"/></svg>
+            <span>Slices group the concept types</span>
+          </div>
+          ${orbit.typedCount ? `<div class="legend-more">
+            <span>Showing ${shownCount} of ${orbit.typedCount}</span>
+            ${more ? `<button type="button" class="pill-btn" data-action="orbit-more">Show more</button>` : ""}
+            ${fewer ? `<button type="button" class="pill-btn" data-action="orbit-fewer">Show fewer</button>` : ""}
+          </div>` : ""}`;
+      }
+      $("orbit-legend").addEventListener("click", (event) => {
+        const el = event.target.closest("[data-action]");
+        if (!el) return;
+        state.orbitLimit = el.dataset.action === "orbit-more" ? state.orbitLimit + ORBIT_STEP : ORBIT_STEP;
+        updateOrbit();
+      });
+
+      // ---------- Compare tray ----------
+      let lastCompared = null;
+      const compareKey = (c) => pairKey(c.a, c.b);
+      const isCompared = (a, b) => state.compare.some((c) => compareKey(c) === pairKey(a, b));
+
+      function compareButton(a, b, extraClass = "") {
+        const on = isCompared(a, b);
+        const full = !on && state.compare.length >= MAX_COMPARE;
+        return `<button type="button" class="compare-btn ${on ? "on" : ""} ${extraClass}" data-action="compare" data-a="${esc(a)}" data-b="${esc(b)}"
+          ${full ? `disabled title="You can compare up to ${MAX_COMPARE} connections"` : ""}>${on ? "✓ Comparing" : "+ Compare"}</button>`;
+      }
+
+      function compareMiniChart(link, color) {
+        const years = d3.range(Y0, Y1 + 1);
+        const counts = d3.rollup(link.papers, (v) => v.length, (p) => p.year);
+        const max = d3.max(years, (y) => counts.get(y) || 0) || 1;
+        const W = 160, H = 22, bw = W / years.length;
+        return `<svg class="cmp-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${years.map((y, i) => {
+          const v = counts.get(y) || 0;
+          if (!v) return "";
+          const h = Math.max(1.5, (v / max) * H);
+          const out = y < state.range[0] || y > state.range[1];
+          return `<rect class="${out ? "out" : ""}" x="${i * bw + 0.4}" y="${H - h}" width="${bw - 0.8}" height="${h}" rx="1" fill="${color}"/>`;
+        }).join("")}</svg>`;
+      }
+
+      function renderCompare() {
+        const tray = $("compare-tray");
+        if (!state.compare.length) {
+          tray.hidden = true;
+          tray.innerHTML = "";
+          return;
+        }
+        const items = state.compare.map((c) => {
+          const A = byId.get(c.a), B = byId.get(c.b);
+          const link = linkByPair.get(compareKey(c));
+          const papers = papersIn(link.papers);
+          const n = papers.length;
+          const either = papersOf(A).length + papersOf(B).length - n;
+          return { c, A, B, link, n, j: either ? n / either : 0, ids: new Set(papers.map((p) => p.paper_id)) };
+        });
+        const range = rangeActive() ? ` · ${rangeText()}` : "";
+        const cards = items.map(({ c, A, B, link, n, j }, i) => `
+          <div class="cmp-card ${compareKey(c) === lastCompared ? "pop" : ""}" role="button" tabindex="0" data-action="cmp-open" data-i="${i}" title="Open this connection">
+            <div class="cmp-head">
+              <span class="cmp-num">${i + 1}</span>
+              <button type="button" class="cmp-x" data-action="cmp-remove" data-i="${i}" aria-label="Remove from comparison">×</button>
+            </div>
+            <div class="cmp-pair">${dot(A.type)}${esc(cap(A.label))}<span class="arrow">↔</span>${dot(B.type)}${esc(cap(B.label))}</div>
+            <div class="cmp-stats"><strong>${plural(n, "paper")}</strong> · ${pct(j)} overlap${range}</div>
+            ${compareMiniChart(link, COLORS[B.type])}
+          </div>`).join("");
+        lastCompared = null;
+
+        // How many papers the compared connections have in common with each other.
+        let overlap = "";
+        const both = (x, y) => [...x.ids].filter((id) => y.ids.has(id)).length;
+        const papersPhrase = (k, verb) => `${plural(k, "paper")} ${k === 1 ? `${verb}s` : verb}`;
+        if (items.length === 2) {
+          const k = both(items[0], items[1]);
+          overlap = k ? `${papersPhrase(k, "appear")} in both` : "No papers appear in both";
+        } else if (items.length === 3) {
+          const pairs = [[0, 1], [0, 2], [1, 2]].map(([x, y]) => ({ x, y, k: both(items[x], items[y]) }));
+          const all = [...items[0].ids].filter((id) => items[1].ids.has(id) && items[2].ids.has(id)).length;
+          overlap = pairs.some((p) => p.k)
+            ? `Papers in both — ${pairs.map((p) => `${p.x + 1} & ${p.y + 1}: ${p.k}`).join(" · ")} · all three: ${all}`
+            : "No papers appear in more than one";
+        }
+        tray.innerHTML = `<div class="cmp-cards">${cards}</div>${overlap ? `<div class="cmp-overlap ${/^No /.test(overlap) ? "none" : ""}">${overlap}</div>` : ""}`;
+        tray.hidden = false;
+      }
+
+      function refreshCompare() {
+        renderCompare();
+        if (state.view === "concept" && fitOrbitViewBox(true)) updateOrbit(450);
+      }
+
+      function toggleCompare(a, b) {
+        const i = state.compare.findIndex((c) => compareKey(c) === pairKey(a, b));
+        if (i >= 0) state.compare.splice(i, 1);
+        else if (state.compare.length < MAX_COMPARE) {
+          state.compare.push({ a, b });
+          lastCompared = pairKey(a, b);
+        }
+        refreshCompare();
+        renderRight({ keepScroll: true });
+      }
+
+      function removeCompared(i, card) {
+        const finish = () => {
+          state.compare.splice(i, 1);
+          refreshCompare();
+          renderRight({ keepScroll: true });
+        };
+        if (REDUCED_MOTION || !card) return finish();
+        card.classList.add("leaving");
+        setTimeout(finish, 180);
+      }
+
+      // Opens a compared connection, switching to one of its concepts first if needed.
+      function openConnection(a, b) {
+        if (state.center === a) selectConnection(b);
+        else if (state.center === b) selectConnection(a);
+        else {
+          state.pendingConnection = b;
+          openConcept(a);
+        }
+      }
+
+      $("compare-tray").addEventListener("click", (event) => {
+        const el = event.target.closest("[data-action]");
+        if (!el) return;
+        const i = Number(el.dataset.i);
+        if (el.dataset.action === "cmp-remove") removeCompared(i, el.closest(".cmp-card"));
+        else if (el.dataset.action === "cmp-open") openConnection(state.compare[i].a, state.compare[i].b);
+      });
+      $("compare-tray").addEventListener("keydown", (event) => {
+        if ((event.key === "Enter" || event.key === " ") && event.target.matches('[role="button"]')) {
+          event.preventDefault();
+          event.target.click();
+        }
+      });
+
+      // ---------- Concept view: left panel ----------
+      function yearChart(papers, overlay, overlayColor) {
+        const years = d3.range(Y0, Y1 + 1);
+        const counts = d3.rollup(papers, (v) => v.length, (p) => p.year);
+        const overlayCounts = overlay ? d3.rollup(overlay, (v) => v.length, (p) => p.year) : null;
+        const max = d3.max(years, (y) => counts.get(y) || 0) || 1;
+        const W = 260, H = 64, bw = W / years.length;
+        const bars = years.map((y, i) => {
+          const v = counts.get(y) || 0;
+          const o = overlayCounts ? overlayCounts.get(y) || 0 : 0;
+          const h = (v / max) * H, oh = (o / max) * H;
+          const tip = `${y}: ${plural(v, "paper")}${overlayCounts ? ` · ${o} shared` : ""}`;
+          return `<g data-year="${y}"><title>${tip}</title>
+            <rect x="${i * bw}" y="0" width="${bw}" height="${H}" fill="transparent"/>
+            ${v ? `<rect x="${i * bw + 0.6}" y="${H - h}" width="${bw - 1.2}" height="${h}" rx="1.5" fill="var(--bar)"/>` : ""}
+            ${o ? `<rect x="${i * bw + 0.6}" y="${H - oh}" width="${bw - 1.2}" height="${oh}" rx="1.5" fill="${overlayColor}"/>` : ""}
+          </g>`;
+        }).join("");
+        return `<div class="chart-wrap"><svg class="year-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Papers per year">${bars}</svg></div>`;
+      }
+
+      function renderLeft(animate) {
+        const center = byId.get(state.center);
+        const link = selectedLink();
+        const neighbor = link ? byId.get(state.connection) : null;
+        $("left").innerHTML = `<div class="pane ${animate ? "swap" : ""}">
+          <button type="button" class="back-link" data-action="field">‹ Back to Field</button>
+          <div class="card">
+            <h1 class="concept-name">${esc(cap(center.label))}</h1>
+            ${badge(center.type)}
+            ${center.description
+              ? `<p class="definition"><span class="label">Definition</span><br/>${esc(center.description)}</p>`
+              : `<p class="definition empty">No definition in the data yet.</p>`}
+            <p class="stats" id="concept-stats"></p>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <p class="label">Papers per year</p>
+              <span class="range-text" id="range-text"></span>
+            </div>
+            ${yearChart(center.papers, link && link.papers, neighbor && COLORS[neighbor.type])}
+            <div class="range-slider">
+              <div class="track"><div class="fill" id="range-fill"></div></div>
+              <input type="range" id="range-lo" min="${Y0}" max="${Y1}" step="1" value="${state.range[0]}" aria-label="First year" />
+              <input type="range" id="range-hi" min="${Y0}" max="${Y1}" step="1" value="${state.range[1]}" aria-label="Last year" />
+            </div>
+            <div class="year-axis">
+              <span>${Y0}</span>
+              <button type="button" class="link-btn" id="range-reset">Reset years</button>
+              <span>${Y1}</span>
+            </div>
+            ${neighbor ? `<div class="chart-key"><span><i style="background:var(--bar)"></i>All papers</span><span><i style="background:${COLORS[neighbor.type]}"></i>Shared with ${esc(cap(neighbor.label))}</span></div>` : ""}
+            <hr class="divider" />
+            <p class="label">Show connections to</p>
+            <div class="filters">
+              ${TYPES.map((t) => `
+                <label data-type-row="${t}">
+                  <input type="checkbox" data-type="${t}" ${state.showTypes.has(t) ? "checked" : ""} />
+                  ${dot(t)} ${TYPE_LABELS[t]} <span class="n" data-count="${t}"></span>
+                </label>`).join("")}
+            </div>
+          </div>
+        </div>`;
+        refreshLeftLive();
+      }
+
+      // Updates the parts of the left panel that follow the year range, without rebuilding it (so slider drags keep working).
+      function refreshLeftLive() {
+        const center = byId.get(state.center);
+        const [lo, hi] = state.range;
+        const active = rangeActive();
+        $("concept-stats").innerHTML = `Appears in ${plural(center.paperCount, "paper")}${center.firstYear ? ` · first seen ${center.firstYear}` : ""}`
+          + (active ? `<br/><strong>${papersOf(center).length}</strong> in ${rangeText()}` : "");
+        $("range-text").textContent = active ? rangeText() : "All years";
+        $("range-text").classList.toggle("active", active);
+        $("range-reset").style.visibility = active ? "visible" : "hidden";
+        const span = Y1 - Y0 || 1;
+        $("range-fill").style.left = `${((lo - Y0) / span) * 100}%`;
+        $("range-fill").style.right = `${((Y1 - hi) / span) * 100}%`;
+        const loInput = $("range-lo"), hiInput = $("range-hi");
+        if (Number(loInput.value) !== lo) loInput.value = lo;
+        if (Number(hiInput.value) !== hi) hiInput.value = hi;
+        // When both handles meet at the far right, keep the first-year handle on top so it can still be dragged.
+        loInput.style.zIndex = lo >= Y1 - 1 ? 3 : 1;
+        hiInput.style.zIndex = 2;
+        document.querySelectorAll("#left .year-chart g[data-year]").forEach((g) => {
+          const y = Number(g.dataset.year);
+          g.classList.toggle("out", y < lo || y > hi);
+        });
+        const counts = d3.rollup(neighborData(), (v) => v.length, (d) => d.node.type);
+        TYPES.forEach((t) => {
+          const c = counts.get(t) || 0;
+          document.querySelector(`#left [data-count="${t}"]`).textContent = `(${c})`;
+          document.querySelector(`#left [data-type-row="${t}"]`).classList.toggle("zero", c === 0);
+          document.querySelector(`#left input[data-type="${t}"]`).disabled = c === 0;
+        });
+      }
+
+      let rangeFrame = null;
+      function setRange(lo, hi) {
+        state.range = [lo, hi];
+        refreshLeftLive();
+        if (rangeFrame) return;
+        rangeFrame = requestAnimationFrame(() => {
+          rangeFrame = null;
+          renderCompare();
+          fitOrbitViewBox(false);
+          updateOrbit(260);
+          renderRight({ keepScroll: true });
+        });
+      }
+
+      $("left").addEventListener("click", (event) => {
+        if (event.target.closest('[data-action="field"]')) goField();
+        else if (event.target.id === "range-reset") setRange(Y0, Y1);
+      });
+      $("left").addEventListener("input", (event) => {
+        const id = event.target.id;
+        if (id !== "range-lo" && id !== "range-hi") return;
+        let lo = Number($("range-lo").value), hi = Number($("range-hi").value);
+        if (lo > hi) {
+          if (id === "range-lo") lo = hi;
+          else hi = lo;
+          event.target.value = id === "range-lo" ? lo : hi;
+        }
+        setRange(lo, hi);
+      });
+      $("left").addEventListener("change", (event) => {
+        const type = event.target.dataset.type;
+        if (!type) return;
+        if (event.target.checked) state.showTypes.add(type);
+        else state.showTypes.delete(type);
+        updateOrbit();
+        renderRight({ keepScroll: true });
+      });
+
+      // ---------- Concept view: right panel ----------
+      let appendFrom = null;
+
+      function papersListForTab() {
+        const center = byId.get(state.center);
+        const link = selectedLink();
+        const list = papersIn(link ? link.papers : center.papers).slice();
+        const conceptCount = (p) => (conceptsByPaper.get(p.paper_id) || []).length;
+        if (state.papersSort === "oldest") list.sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
+        else if (state.papersSort === "concepts") list.sort((a, b) => conceptCount(b) - conceptCount(a) || b.year - a.year);
+        else list.sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+        return list;
+      }
+
+      function paperRow(p, showConcepts, isNew) {
+        const k = (conceptsByPaper.get(p.paper_id) || []).length;
+        return `<button type="button" class="paper-row ${isNew ? "pop-in" : ""}" data-action="paper" data-id="${p.paper_id}">
+          <span class="p-title">${esc(paperTitle(p))}</span>
+          <span class="p-meta">${esc(p.authors || "Unknown authors")} · ${esc(p.year)}${showConcepts ? ` <span class="k">· ${plural(k, "concept")}</span>` : ""}</span>
+        </button>`;
+      }
+      const rangeChip = () => (rangeActive()
+        ? `<div class="chip-filter"><span>Years ${rangeText()}</span><button type="button" data-action="clear-range" aria-label="Show all years">×</button></div>`
+        : "");
+      function rowsWithStagger(items, render) {
+        return items.map((item, i) => {
+          const isNew = appendFrom !== null && i >= appendFrom;
+          const html = render(item, isNew);
+          return isNew ? html.replace('class="paper-row pop-in"', `class="paper-row pop-in" style="animation-delay:${(i - appendFrom) * 25}ms"`) : html;
+        }).join("");
+      }
+
+      function renderPapersList() {
+        const neighbor = state.connection ? byId.get(state.connection) : null;
+        const list = papersListForTab();
+        const shown = list.slice(0, state.papersShown);
+        const remaining = list.length - shown.length;
+        const chips = `${neighbor ? `<div class="chip-filter" style="border-color:${COLORS[neighbor.type]}">
+            <span>Shared with ${esc(cap(neighbor.label))}</span>
+            <button type="button" data-action="clear-conn" aria-label="Show all papers">×</button>
+          </div>` : ""}${rangeChip()}`;
+        return `
+          <div class="panel-head">
+            <h2>Papers <span class="count">(${list.length})</span></h2>
+            <label class="sort">Sort
+              <select data-change="papers-sort">
+                <option value="newest" ${state.papersSort === "newest" ? "selected" : ""}>Newest</option>
+                <option value="oldest" ${state.papersSort === "oldest" ? "selected" : ""}>Oldest</option>
+                <option value="concepts" ${state.papersSort === "concepts" ? "selected" : ""}>Most concepts</option>
+              </select>
+            </label>
+          </div>
+          ${chips ? `<div class="chip-row">${chips}</div>` : ""}
+          <div class="rows">${rowsWithStagger(shown, (p, isNew) => paperRow(p, state.papersSort === "concepts", isNew)) || `<div class="empty-note">No papers${rangeActive() ? ` in ${rangeText()}` : ""}.</div>`}</div>
+          ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-papers">Load more · ${remaining} remaining</button>` : ""}`;
+      }
+
+      function renderConnectionsList() {
+        const list = visibleNeighbors();
+        if (state.connSort === "least") list.sort((a, b) => a.shared - b.shared || a.node.label.localeCompare(b.node.label));
+        else list.sort((a, b) => b.shared - a.shared || a.node.label.localeCompare(b.node.label));
+        const chip = rangeChip();
+        return `
+          <div class="panel-head">
+            <h2>Connections <span class="count">(${list.length})</span></h2>
+            <label class="sort">Sort
+              <select data-change="conn-sort">
+                <option value="most" ${state.connSort === "most" ? "selected" : ""}>Most connected</option>
+                <option value="least" ${state.connSort === "least" ? "selected" : ""}>Least connected</option>
+              </select>
+            </label>
+          </div>
+          ${chip ? `<div class="chip-row">${chip}</div>` : ""}
+          <div class="rows">
+            ${list.map((d) => `
+              <div class="conn-row" role="button" tabindex="0" data-action="conn" data-id="${esc(d.node.id)}" data-hover="${esc(d.node.id)}">
+                ${dot(d.node.type)}
+                <span class="body">
+                  <span class="name">${esc(cap(d.node.label))}</span>
+                  <span class="sub">${esc(d.node.type)} · ${pct(d.j)} overlap</span>
+                </span>
+                <span class="conn-side">
+                  <span class="count">${plural(d.shared, "paper")}</span>
+                  ${compareButton(state.center, d.node.id)}
+                </span>
+              </div>`).join("") || `<div class="empty-note">No connections${rangeActive() ? ` in ${rangeText()}` : ""} of the selected types.</div>`}
+          </div>`;
+      }
+
+      function renderConnectionDetail() {
+        const center = byId.get(state.center);
+        const neighbor = byId.get(state.connection);
+        const link = selectedLink();
+        const papers = papersIn(link.papers).slice().sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+        const n = papers.length;
+        const either = papersOf(center).length + papersOf(neighbor).length - n;
+        const shown = papers.slice(0, state.connPapersShown);
+        const remaining = papers.length - shown.length;
+        const range = rangeActive() ? ` between ${state.range[0]} and ${state.range[1]}` : "";
+        return `
+          <button type="button" class="back-link" data-action="back-conns">← All connections</button>
+          <div class="detail-card">
+            <p class="eyebrow" style="margin-top:0">Connection</p>
+            <div class="pair">
+              ${esc(cap(center.label))}
+              <span class="arrow">↔</span>
+              <span class="nb" style="text-decoration-color:${COLORS[neighbor.type]}">${esc(cap(neighbor.label))}</span>
+            </div>
+            ${badge(neighbor.type)}
+            ${n
+              ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>
+                 <p class="conn-stats">${pct(n / either)} overlap · ${n} shared of ${plural(either, "paper")} in either concept${rangeActive() ? ` (${rangeText()})` : ""}</p>
+                 <p class="eyebrow">What these papers have in common</p>
+                 <p class="common">${commonGround(center, neighbor, papers)}</p>
+                 <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>`
+              : `<p class="sentence">No shared papers in ${rangeText()}.</p>`}
+            <div class="btn-row">
+              <button type="button" class="btn" data-action="open-concept" data-id="${esc(neighbor.id)}">Open ${esc(cap(neighbor.label))} →</button>
+              ${compareButton(center.id, neighbor.id, "big")}
+            </div>
+          </div>
+          <p class="eyebrow" style="margin-top:20px">Papers (${n})</p>
+          <div class="rows">${shown.map((p) => paperRow(p, false, false)).join("")}</div>
+          ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-conn-papers">Load more · ${remaining} remaining</button>` : ""}`;
+      }
+
+      // A 2–3 sentence summary of the shared papers, built only from extracted concepts and years:
+      // which other concepts recur, how the count changed over time, and the earliest and latest paper.
+      function commonGround(center, neighbor, papers) {
+        const n = papers.length;
+        const conceptRef = (id, count) => {
+          const c = byId.get(id);
+          return `<span role="button" tabindex="0" class="ref" data-action="open-concept" data-id="${esc(id)}" style="--c:${COLORS[c.type]}">${esc(c.label)}</span>${count ? ` (${count})` : ""}`;
+        };
+        // Spans rather than buttons, so long titles wrap with the sentence instead of breaking out of it.
+        const paperRef = (p) => `“<span role="button" tabindex="0" class="ref plain" data-action="paper" data-id="${p.paper_id}">${esc(paperTitle(p))}</span>” (${esc(p.authors || "Unknown authors")}, ${p.year})`;
+
+        const counts = new Map();
+        papers.forEach((p) => (conceptsByPaper.get(p.paper_id) || []).forEach((id) => {
+          if (id !== center.id && id !== neighbor.id) counts.set(id, (counts.get(id) || 0) + 1);
+        }));
+
+        if (n === 1) {
+          const others = [...counts.keys()];
+          return `The one shared paper, ${paperRef(papers[0])}, ${others.length ? `also covers ${listJoin(others.map((id) => conceptRef(id)))}` : "covers no other concepts"}.`;
+        }
+
+        const minCount = n >= 5 ? 2 : 1;
+        const VERBS = {
+          subject: (list) => `study ${list}`,
+          task: (list) => `involve ${list}`,
+          problem: (list, k) => `work on ${list} design problem${k > 1 ? "s" : ""}`,
+          construct: (list) => `also measure ${list}`
+        };
+        const phrases = TYPES.map((type) => {
+          const top = [...counts.entries()]
+            .filter(([id, c]) => byId.get(id).type === type && c >= minCount)
+            .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
+            .slice(0, 2);
+          return top.length ? VERBS[type](listJoin(top.map(([id, c]) => conceptRef(id, c))), top.length) : null;
+        }).filter(Boolean);
+        const recurring = phrases.length
+          ? `Alongside both concepts, these ${n} papers most often ${listJoin(phrases)}.`
+          : `No other concept comes up in more than one of these papers.`;
+
+        const years = papers.map((p) => p.year);
+        const [minY, maxY] = d3.extent(years);
+        let trend;
+        if (minY === maxY) {
+          trend = `All ${n} were published in ${minY}.`;
+        } else {
+          const mid = Math.floor((minY + maxY) / 2);
+          const early = years.filter((y) => y <= mid).length, late = n - early;
+          const [peakYear, peakCount] = d3.greatest(d3.rollups(years, (v) => v.length, (y) => y), ([y, c]) => c * 10000 + y);
+          const shape = late >= early * 1.5 ? "The count has grown over time" : early >= late * 1.5 ? "Most of them are older" : "They are spread fairly evenly over time";
+          trend = `${shape}: ${early} from ${minY}–${mid} and ${late} from ${mid + 1}–${maxY}${peakCount > 1 ? `, peaking in ${peakYear} with ${peakCount}` : ""}.`;
+        }
+
+        const byYear = papers.slice().sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
+        const ends = `The earliest is ${paperRef(byYear[0])} and the most recent is ${paperRef(byYear[byYear.length - 1])}.`;
+        return `${recurring} ${trend} ${ends}`;
+      }
+
+      function relatedPapers(paperId) {
+        const mine = conceptsByPaper.get(paperId) || [];
+        const counts = new Map();
+        mine.forEach((cid) => {
+          papersOf(byId.get(cid)).forEach((p) => {
+            if (p.paper_id !== paperId) counts.set(p.paper_id, (counts.get(p.paper_id) || 0) + 1);
+          });
+        });
+        return [...counts.entries()]
+          .sort((a, b) => b[1] - a[1] || paperById.get(b[0]).year - paperById.get(a[0]).year)
+          .slice(0, 5)
+          .map(([id]) => {
+            const theirs = new Set(conceptsByPaper.get(id));
+            return { paper: paperById.get(id), shared: mine.filter((cid) => theirs.has(cid)).map((cid) => byId.get(cid)) };
+          });
+      }
+
+      function relatedSentence(shared) {
+        const names = shared.map((n) => n.label);
+        const listed = names.length > 4 ? [...names.slice(0, 3), `${names.length - 3} more`] : names;
+        return `Shares ${plural(shared.length, "concept")} with this paper: ${listJoin(listed)}.`;
+      }
+
+      function renderPaperDetail() {
+        const paper = currentPaper();
+        const concepts = (conceptsByPaper.get(paper.paper_id) || []).map((id) => byId.get(id));
+        const backLabel = state.paperStack.length > 1 ? "← Previous paper" : state.connection ? "← Shared papers" : "← All papers";
+        const related = relatedPapers(paper.paper_id);
+        return `
+          <button type="button" class="back-link" data-action="back-paper">${backLabel}</button>
+          <div class="detail-card">
+            <p class="eyebrow" style="margin-top:0">Paper</p>
+            <h2 class="paper-title">${esc(paperTitle(paper))}</h2>
+            <span class="byline">${esc(paper.authors || "Unknown authors")} · ${esc(paper.year)}</span>
+          </div>
+
+          <p class="eyebrow" style="margin-top:20px">Concepts in this paper (${concepts.length})</p>
+          <div class="chips">
+            ${concepts.map((n) => n.id === state.center
+              ? `<span class="chip current" title="The concept you're viewing">${dot(n.type)}${esc(cap(n.label))}</span>`
+              : `<button type="button" class="chip" data-action="open-concept" data-id="${esc(n.id)}" title="Open ${esc(cap(n.label))}">${dot(n.type)}${esc(cap(n.label))}</button>`).join("")}
+          </div>
+
+          <div class="detail-card" style="margin-top:18px">
+            <p class="eyebrow" style="margin-top:0">Summary</p>
+            <p class="placeholder">Summary coming soon.</p>
+            <button type="button" class="btn" disabled title="No link to the original paper in the data yet">Original paper ↗</button>
+          </div>
+
+          <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
+          <div class="rows">
+            ${related.map(({ paper: p, shared }) => `
+              <button type="button" class="related" data-action="paper-push" data-id="${p.paper_id}">
+                <span class="p-title">${esc(paperTitle(p))}</span>
+                <span class="p-meta">${esc(p.authors || "Unknown authors")} · ${esc(p.year)}</span>
+                <span class="why">${esc(relatedSentence(shared))}</span>
+              </button>`).join("") || `<div class="empty-note">No other papers share concepts with this one.</div>`}
+          </div>`;
+      }
+
+      function updateTabs() {
+        const counts = { papers: papersListForTab().length, connections: visibleNeighbors().length };
+        let active = null;
+        $("tabs").querySelectorAll(".tab").forEach((btn) => {
+          const tab = btn.dataset.tab;
+          btn.textContent = `${tab === "papers" ? "Papers" : "Connections"} (${counts[tab]})`;
+          btn.classList.toggle("active", tab === state.tab);
+          if (tab === state.tab) active = btn;
+        });
+        const indicator = $("tab-indicator");
+        indicator.style.width = `${active.offsetWidth}px`;
+        indicator.style.transform = `translateX(${active.offsetLeft}px)`;
+      }
+
+      function renderRight({ keepScroll = false } = {}) {
+        updateTabs();
+        const body = $("right-body");
+        const scroll = body.scrollTop;
+        const html = state.tab === "papers"
+          ? state.paperStack.length ? renderPaperDetail() : renderPapersList()
+          : state.connection ? renderConnectionDetail() : renderConnectionsList();
+        body.innerHTML = `<div class="pane ${keepScroll ? "" : "swap"}">${html}</div>`;
+        body.scrollTop = keepScroll ? scroll : 0;
+        appendFrom = null;
+      }
+
+      function highlightRow(id, on) {
+        $("right-body").querySelectorAll(".conn-row").forEach((row) => {
+          if (row.dataset.id === id) row.classList.toggle("hovered", on);
+        });
+      }
+
+      $("tabs").addEventListener("click", (event) => {
+        const tab = event.target.closest("[data-tab]");
+        if (!tab || tab.dataset.tab === state.tab) return;
+        state.tab = tab.dataset.tab;
+        renderRight();
+        updateOrbit();
+      });
+
+      $("right-body").addEventListener("click", (event) => {
+        const el = event.target.closest("[data-action]");
+        if (!el) return;
+        const id = el.dataset.id;
+        switch (el.dataset.action) {
+          case "paper":
+            state.tab = "papers";
+            state.paperStack = [Number(id)];
+            renderRight();
+            updateOrbit();
+            break;
+          case "paper-push":
+            state.paperStack.push(Number(id));
+            renderRight();
+            updateOrbit();
+            break;
+          case "back-paper":
+            state.paperStack.pop();
+            renderRight();
+            updateOrbit();
+            break;
+          case "conn":
+            selectConnection(id);
+            break;
+          case "compare":
+            toggleCompare(el.dataset.a, el.dataset.b);
+            break;
+          case "back-conns":
+          case "clear-conn":
+            clearConnection();
+            break;
+          case "clear-range":
+            setRange(Y0, Y1);
+            break;
+          case "open-concept":
+            openConcept(id);
+            break;
+          case "more-papers":
+            appendFrom = state.papersShown;
+            state.papersShown += PAGE;
+            renderRight({ keepScroll: true });
+            break;
+          case "more-conn-papers":
+            state.connPapersShown += PAGE;
+            renderRight({ keepScroll: true });
+            break;
+        }
+      });
+      $("right-body").addEventListener("keydown", (event) => {
+        if ((event.key === "Enter" || event.key === " ") && event.target.matches('[role="button"]')) {
+          event.preventDefault();
+          event.target.click();
+        }
+      });
+      $("right-body").addEventListener("change", (event) => {
+        const which = event.target.dataset.change;
+        if (which === "papers-sort") { state.papersSort = event.target.value; state.papersShown = PAGE; }
+        else if (which === "conn-sort") state.connSort = event.target.value;
+        else return;
+        renderRight();
+      });
+      $("right-body").addEventListener("mouseover", (event) => {
+        const row = event.target.closest("[data-hover]");
+        const id = row ? row.dataset.hover : null;
+        if (id === state.hover) return;
+        state.hover = id;
+        styleOrbit();
+      });
+      $("right-body").addEventListener("mouseleave", () => {
+        if (state.hover === null) return;
+        state.hover = null;
+        styleOrbit();
+      });
+
+      function selectConnection(id) {
+        state.connection = id;
+        state.tab = "connections";
+        state.paperStack = [];
+        state.papersShown = PAGE;
+        state.connPapersShown = PAGE;
+        renderLeft(false);
+        renderRight();
+        updateOrbit();
+      }
+
+      function clearConnection() {
+        state.connection = null;
+        state.paperStack = [];
+        state.papersShown = PAGE;
+        renderLeft(false);
+        renderRight();
+        updateOrbit();
+      }
+
+      // The year range carries over from concept to concept; everything else starts fresh.
+      function showConcept(id) {
+        hideTip();
+        const fromField = state.view !== "concept";
+        state.view = "concept";
+        state.center = id;
+        state.tab = "papers";
+        state.connection = null;
+        state.paperStack = [];
+        state.papersSort = "newest";
+        state.papersShown = PAGE;
+        state.connSort = "most";
+        state.connPapersShown = PAGE;
+        state.showTypes = new Set(TYPES);
+        state.orbitLimit = ORBIT_STEP;
+        state.hover = null;
+        $("field-view").hidden = true;
+        $("field-controls").hidden = true;
+        const view = $("concept-view");
+        view.hidden = false;
+        if (fromField && !REDUCED_MOTION) {
+          view.classList.remove("enter");
+          void view.offsetWidth;
+          view.classList.add("enter");
+          setTimeout(() => view.classList.remove("enter"), 700);
+        }
+        $("crumb-node").textContent = `/ ${cap(byId.get(id).label)}`;
+        renderCompare();
+        fitOrbitViewBox(false);
+        if (fromField) orbitSvg.call(orbitZoom.transform, d3.zoomIdentity);
+        renderLeft(!fromField);
+        renderRight();
+        updateOrbit(fromField ? 750 : 650);
+        // Arriving from a compare card opens that card's connection.
+        const pending = state.pendingConnection;
+        state.pendingConnection = null;
+        if (pending && linkByPair.has(pairKey(id, pending))) selectConnection(pending);
+      }
+
+      route();
+    })();
+  </script>
+</body>
+</html>
