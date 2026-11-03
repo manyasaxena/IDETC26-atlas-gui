@@ -66,7 +66,7 @@
       width: 100%;
       height: 100%;
       display: grid;
-      grid-template-rows: 62px 1fr;
+      grid-template-rows: 62px auto 1fr;
     }
 
     /* ---------- Top bar ---------- */
@@ -150,7 +150,160 @@
     .search-item:hover, .search-item.active { background: var(--surface-3); }
     .search-item .t { color: var(--faint); text-transform: capitalize; }
 
-    .field-controls { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+    .filters-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: 12px var(--mono);
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: var(--shadow-soft);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .filters-btn:hover, .filters-btn.open { border-color: var(--line-strong); background: var(--surface-2); }
+    .filters-btn .n {
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #0a0b0f;
+      font-weight: 600;
+      font-size: 11px;
+      display: inline-grid;
+      place-items: center;
+    }
+
+    /* Active filters, under the top bar, on every page */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 0 16px 10px;
+      font: 12px var(--mono);
+      animation: fadeUp 0.25s var(--ease);
+    }
+    .filter-bar .scope {
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .filter-bar .scope strong { color: var(--text); font-weight: 600; }
+    .filter-bar .scope.gap { color: #ffcf8a; }
+    .filter-bar .chip-filter { animation: none; }
+    .filter-bar .chip-filter .dot { width: 7px; height: 7px; }
+    .filter-bar .clear-all { margin-left: 4px; }
+
+    /* Filter panel: one shared panel, slides over the left side */
+    .filter-panel {
+      position: absolute;
+      top: 0;
+      left: 14px;
+      bottom: 14px;
+      width: 330px;
+      z-index: 30;
+      overflow-y: auto;
+      padding: 16px;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-xl);
+      box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.85), var(--shadow);
+      animation: slideFromLeft 0.32s var(--ease);
+    }
+    .fp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .fp-head h2 { margin: 0; font-size: 18px; }
+    .fp-head .actions { display: flex; align-items: center; gap: 10px; }
+    .fp-section { border-top: 1px solid var(--line); padding: 14px 0 4px; margin-top: 12px; }
+    .fp-section:first-of-type { border-top: none; margin-top: 4px; }
+    .fp-section > .label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .fp-hint { margin: -2px 0 10px; color: var(--faint); font-size: 12px; line-height: 1.45; }
+    .pin-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .pin-list .and { color: var(--faint); font: 11px var(--mono); align-self: center; }
+    .pin-search { position: relative; }
+    .pin-search input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text);
+      padding: 8px 14px;
+      font: 12px var(--mono);
+      outline: none;
+    }
+    .pin-search input:focus { border-color: var(--line-strong); }
+    .pin-results {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 5;
+      background: var(--surface-2);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--r-md);
+      padding: 4px;
+      box-shadow: var(--shadow);
+    }
+    .scope-meter { margin-top: 12px; }
+    .scope-meter .bar { height: 6px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+    .scope-meter .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.35s var(--ease); }
+    .scope-meter .txt { margin-top: 6px; font: 12px var(--mono); color: var(--muted); }
+    .scope-meter .txt strong { color: var(--text); }
+    .gap-box {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: var(--r-md);
+      border: 1px dashed rgba(255, 207, 138, 0.55);
+      background: rgba(255, 183, 77, 0.07);
+    }
+    .gap-box strong { color: #ffcf8a; }
+    .gap-box p { margin: 6px 0 0; color: #d5dbe6; font-size: 12.5px; line-height: 1.5; }
+    .gap-box .sugg { display: grid; gap: 4px; margin-top: 8px; }
+    .gap-box .sugg button {
+      text-align: left;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font: 12px var(--mono);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .gap-box .sugg button:hover { border-color: var(--line-strong); }
+    .stepper { display: flex; align-items: center; gap: 8px; font: 12px var(--mono); }
+    .stepper button {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      cursor: pointer;
+    }
+    .stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .stepper .val { min-width: 24px; text-align: center; font-weight: 600; font-size: 14px; }
+    .stepper .note { color: var(--faint); }
+    .pin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      border: 1px dashed var(--line-strong);
+      background: none;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font: 12px var(--mono);
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .pin-btn:hover { color: var(--text); border-color: var(--muted); }
+    .pin-btn.on { border-style: solid; border-color: rgba(139, 197, 255, 0.6); background: rgba(139, 197, 255, 0.14); color: #d8ebff; }
+    .gaps-list { margin-top: 18px; padding-top: 12px; border-top: 1px dashed var(--line-strong); }
+    .gaps-list .conn-row { opacity: 0.85; }
+    .gaps-list .count.zero { background: rgba(255, 183, 77, 0.12); color: #ffcf8a; }
     .filter-pill {
       display: inline-flex;
       align-items: center;
@@ -168,18 +321,6 @@
     .filter-pill:active { transform: scale(0.96); }
     .filter-pill.off { opacity: 0.35; }
     .filter-pill .n { color: var(--faint); }
-    #temporal-toggle {
-      border: 1px solid var(--line);
-      background: var(--surface);
-      border-radius: 999px;
-      padding: 7px 14px;
-      cursor: pointer;
-      letter-spacing: 0.4px;
-      white-space: nowrap;
-      box-shadow: var(--shadow-soft);
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    #temporal-toggle.active { border-color: var(--highlight); box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.18); }
     .spacer { flex: 1; }
     #help-btn {
       width: 36px;
@@ -225,26 +366,6 @@
     }
     .field-legend .row { display: flex; align-items: center; gap: 8px; }
     .field-legend .hint { color: var(--faint); margin-top: 4px; }
-    .temporal-bar {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 16px;
-      width: min(600px, calc(100% - 360px));
-      background: rgba(21, 23, 30, 0.95);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 18px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font: 12px var(--mono);
-      color: var(--muted);
-      box-shadow: var(--shadow);
-      animation: fadeUp 0.25s var(--ease);
-    }
-    #year-slider { flex: 1; accent-color: var(--highlight); }
-    #year-label { color: var(--text); font-weight: 600; }
 
     /* ---------- Concept view ---------- */
     #concept-view {
@@ -931,24 +1052,17 @@
         <input id="search-input" type="text" placeholder="Search concepts…" autocomplete="off" />
         <div id="search-results" hidden></div>
       </div>
-      <div class="field-controls" id="field-controls">
-        <div id="type-filters" class="field-controls"></div>
-        <button id="temporal-toggle" type="button">TEMPORAL MODE</button>
-      </div>
+      <button id="filters-btn" class="filters-btn" type="button" aria-expanded="false" aria-controls="filter-panel">Filters <span class="n" id="filters-count" hidden></span></button>
       <div class="spacer"></div>
       <button id="help-btn" type="button" title="Glossary of concept types" aria-label="Open glossary">?</button>
     </header>
+    <div class="filter-bar" id="filter-bar" hidden></div>
 
     <main>
+      <aside class="filter-panel" id="filter-panel" hidden aria-label="Filters"></aside>
       <section id="field-view">
         <svg id="field" aria-label="Field view of all concepts"></svg>
         <div class="field-legend" id="field-legend"></div>
-        <div class="temporal-bar" id="temporal-bar" hidden>
-          <span>Year</span>
-          <input id="year-slider" type="range" />
-          <span id="year-label"></span>
-          <span id="year-counts"></span>
-        </div>
       </section>
 
       <section id="concept-view" hidden>
@@ -1160,9 +1274,11 @@
       // ---------- State ----------
       const state = {
         view: "field",
+        // Filters: shared by every view and kept as you move around.
         types: new Set(nodeTypes),
-        temporal: false,
-        year: Y1,
+        minPapers: 1,
+        pins: [],
+        filtersOpen: false,
         center: null,
         tab: "papers",
         connection: null,
@@ -1171,7 +1287,6 @@
         papersShown: PAGE,
         connSort: "most",
         connPapersShown: PAGE,
-        showTypes: new Set(nodeTypes),
         // Sub-groups start collapsed; top-level groups start open.
         collapsedTypes: new Set(typesInOrder.filter((t) => t.depth >= 1 && t.children.length).map((t) => t.id)),
         orbitLimit: ORBIT_STEP,
@@ -1269,7 +1384,20 @@
       const rangeActive = () => state.range[0] > Y0 || state.range[1] < Y1;
       const rangeText = () => `${state.range[0]}–${state.range[1]}`;
       const inRange = (p) => p.year >= state.range[0] && p.year <= state.range[1];
-      const papersIn = (list) => (rangeActive() ? list.filter(inRange) : list);
+      // The papers in view: inside the year range and, when concepts are pinned, covering every pinned concept.
+      let pinnedPapers = null;
+      function recomputeScope() {
+        if (!state.pins.length) { pinnedPapers = null; return; }
+        const sets = state.pins.map((id) => new Set(byId.get(id).papers.map((p) => p.paper_id)));
+        sets.sort((a, b) => a.size - b.size);
+        pinnedPapers = new Set([...sets[0]].filter((id) => sets.every((set) => set.has(id))));
+      }
+      const scopeActive = () => rangeActive() || !!pinnedPapers;
+      const inScope = (p) => inRange(p) && (!pinnedPapers || pinnedPapers.has(p.paper_id));
+      const papersIn = (list) => (scopeActive() ? list.filter(inScope) : list);
+      const papersInRange = (list) => (rangeActive() ? list.filter(inRange) : list);
+      // A concept is shown when its type is on and it has enough papers in the year range.
+      const conceptOn = (n) => state.types.has(n.type) && papersInRange(n.papers).length >= state.minPapers;
       const papersOf = (node) => papersIn(node.papers);
 
       // ---------- Tooltip (kept inside the graph area it belongs to) ----------
@@ -1347,42 +1475,6 @@
       // ---------- Top bar ----------
       $("crumb-home").addEventListener("click", goField);
 
-      // One pill per top-level entry; a pill for a group switches every type inside it.
-      shownTypeTree.filter((t) => !t.parentId).forEach((entry) => {
-        const pill = document.createElement("button");
-        pill.type = "button";
-        pill.className = "filter-pill";
-        pill.innerHTML = `${dot(entry.id)}${esc(entry.plural)} <span class="n">${entry.total}</span>`;
-        pill.addEventListener("click", () => {
-          const ids = entry.nodeTypes;
-          if (ids.every((id) => state.types.has(id))) {
-            if (![...state.types].some((id) => !ids.includes(id))) return;
-            ids.forEach((id) => state.types.delete(id));
-          } else {
-            ids.forEach((id) => state.types.add(id));
-          }
-          pill.classList.toggle("off", !ids.some((id) => state.types.has(id)));
-          updateField();
-        });
-        $("type-filters").appendChild(pill);
-      });
-
-      const yearSlider = $("year-slider");
-      yearSlider.min = String(Y0);
-      yearSlider.max = String(Y1);
-      yearSlider.value = String(Y1);
-      $("year-label").textContent = String(Y1);
-      $("temporal-toggle").addEventListener("click", () => {
-        state.temporal = !state.temporal;
-        $("temporal-toggle").classList.toggle("active", state.temporal);
-        $("temporal-bar").hidden = !state.temporal;
-        updateField();
-      });
-      yearSlider.addEventListener("input", () => {
-        state.year = Number(yearSlider.value);
-        $("year-label").textContent = String(state.year);
-        updateField();
-      });
 
       // Search
       const searchInput = $("search-input");
@@ -1465,6 +1557,7 @@
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
         if (!glossary.hidden) { glossary.hidden = true; return; }
+        if (state.filtersOpen) { setFiltersOpen(false); return; }
         if (event.target === searchInput || !searchResults.hidden) return;
         goUp();
       });
@@ -1523,8 +1616,8 @@
         fieldNodeSel.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
       });
 
-      const fieldNodeOn = (n) => state.types.has(n.type) && (!state.temporal || (n.firstYear && n.firstYear <= state.year));
-      const fieldLinkCount = (l) => (state.temporal ? l.papers.filter((p) => p.year <= state.year).length : l.shared);
+      const fieldNodeOn = (n) => conceptOn(n) && papersIn(n.papers).length > 0;
+      const fieldLinkCount = (l) => papersIn(l.papers).length;
 
       function updateField() {
         fieldNodeSel.attr("display", (d) => (fieldNodeOn(d) ? null : "none"));
@@ -1537,7 +1630,6 @@
           })
           .attr("stroke-width", (d) => widthScale(fieldLinkCount(d.link)))
           .attr("stroke-opacity", (d) => opacityScale(fieldLinkCount(d.link)));
-        $("year-counts").textContent = `${nodes.filter(fieldNodeOn).length} concepts · ${visibleLinks} connections`;
       }
 
       $("field-legend").innerHTML = `
@@ -1564,7 +1656,6 @@
         hideTip();
         $("concept-view").hidden = true;
         $("field-view").hidden = false;
-        $("field-controls").hidden = false;
         renderCrumbs();
         resizeField();
         updateField();
@@ -1585,7 +1676,8 @@
           return { node, link, sharedPapers, shared, total, either: centerCount + total - shared, j: shared ? shared / (centerCount + total - shared) : 0 };
         }).filter((d) => d.shared > 0);
       }
-      const visibleNeighbors = () => neighborData().filter((d) => state.showTypes.has(d.node.type));
+      // Pinned concepts are left out: every paper in view covers them, so they'd only add noise.
+      const visibleNeighbors = () => neighborData().filter((d) => conceptOn(d.node) && !state.pins.includes(d.node.id));
       const selectedLink = () => (state.connection ? linkByPair.get(pairKey(state.center, state.connection)) : null);
 
       function currentPaper() {
@@ -1946,9 +2038,11 @@
         const empty = $("orbit-empty");
         empty.hidden = shown.length > 0;
         if (!shown.length) {
-          empty.textContent = !neighborData().length
-            ? rangeActive() ? `No connections in ${rangeText()}.` : "No connections for this concept in the graph."
-            : "No connections of the selected types.";
+          empty.textContent = !papersOf(center).length && scopeActive()
+            ? "No papers match your filters."
+            : !neighborData().length
+              ? scopeActive() ? "No connections that match your filters." : "No connections for this concept in the graph."
+              : "No connections that match your filters.";
         }
         styleOrbit();
       }
@@ -2168,26 +2262,6 @@
         return `<div class="chart-wrap"><svg class="year-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Papers per year">${bars}</svg></div>`;
       }
 
-      // "Show connections to": one row per type, nested under its group; groups collapse.
-      function filterTreeHtml() {
-        const nested = shownTypeTree.some((t) => t.children.some((c) => c.total > 0));
-        const row = (t) => {
-          const kids = t.children.filter((c) => c.total > 0);
-          const open = !state.collapsedTypes.has(t.id);
-          const caret = kids.length
-            ? `<button type="button" class="caret ${open ? "open" : ""}" data-action="toggle-group" data-tid="${esc(t.id)}" aria-expanded="${open}" aria-label="Show or hide ${esc(t.plural)}">▶</button>`
-            : nested ? `<span class="caret-spacer"></span>` : "";
-          return `<div class="fnode" data-tid="${esc(t.id)}">
-            <div class="frow">
-              ${caret}
-              <label><input type="checkbox" data-tid="${esc(t.id)}" />${dot(t.id)} ${esc(t.plural)} <span class="n" data-count></span></label>
-            </div>
-            ${kids.length ? `<div class="fchildren ${open ? "" : "collapsed"}"><div>${kids.map(row).join("")}</div></div>` : ""}
-          </div>`;
-        };
-        return shownTypeTree.filter((t) => !t.parentId).map(row).join("");
-      }
-
       function renderLeft(animate) {
         const center = byId.get(state.center);
         const link = selectedLink();
@@ -2201,6 +2275,7 @@
               ? `<p class="definition"><span class="label">Definition</span><br/>${esc(center.description)}</p>`
               : `<p class="definition empty">No definition in the data yet.</p>`}
             <p class="stats" id="concept-stats"></p>
+            ${pinButton([center.id], "this concept")}
           </div>
           <div class="card">
             <div class="card-head">
@@ -2219,9 +2294,6 @@
               <span>${Y1}</span>
             </div>
             ${neighbor ? `<div class="chart-key"><span><i style="background:var(--bar)"></i>All papers</span><span><i style="background:${colorOf(neighbor.type)}"></i>Shared with ${esc(cap(neighbor.label))}</span></div>` : ""}
-            <hr class="divider" />
-            <p class="label">Show connections to</p>
-            <div class="filters">${filterTreeHtml()}</div>
           </div>
         </div>`;
         refreshLeftLive();
@@ -2233,7 +2305,7 @@
         const [lo, hi] = state.range;
         const active = rangeActive();
         $("concept-stats").innerHTML = `Appears in ${plural(center.paperCount, "paper")}${center.firstYear ? ` · first seen ${center.firstYear}` : ""}`
-          + (active ? `<br/><strong>${papersOf(center).length}</strong> in ${rangeText()}` : "");
+          + (scopeActive() ? `<br/><strong>${papersOf(center).length}</strong> ${pinnedPapers ? "match your filters" : `in ${rangeText()}`}` : "");
         $("range-text").textContent = active ? rangeText() : "All years";
         $("range-text").classList.toggle("active", active);
         $("range-reset").style.visibility = active ? "visible" : "hidden";
@@ -2250,47 +2322,20 @@
           const y = Number(g.dataset.year);
           g.classList.toggle("out", y < lo || y > hi);
         });
-        // A group counts the connections of every type inside it, and is partly checked when only some of them are on.
-        const counts = d3.rollup(neighborData(), (v) => v.length, (d) => d.node.type);
-        shownTypeTree.forEach((t) => {
-          const row = document.querySelector(`#left .fnode[data-tid="${CSS.escape(t.id)}"] > .frow`);
-          const c = d3.sum(t.nodeTypes, (id) => counts.get(id) || 0);
-          const on = t.nodeTypes.filter((id) => state.showTypes.has(id)).length;
-          const box = row.querySelector("input");
-          row.querySelector("[data-count]").textContent = `(${c})`;
-          row.classList.toggle("zero", c === 0);
-          box.disabled = c === 0;
-          box.checked = on === t.nodeTypes.length;
-          box.indeterminate = on > 0 && on < t.nodeTypes.length;
-        });
       }
 
-      let rangeFrame = null;
       function setRange(lo, hi) {
         state.range = [lo, hi];
-        refreshLeftLive();
-        if (rangeFrame) return;
-        rangeFrame = requestAnimationFrame(() => {
-          rangeFrame = null;
-          renderCompare();
-          fitOrbitViewBox(false);
-          updateOrbit(260);
-          renderRight({ keepScroll: true });
-        });
+        applyFilters({ live: true });
       }
 
       $("left").addEventListener("click", (event) => {
-        const caret = event.target.closest('[data-action="toggle-group"]');
-        if (caret) {
-          const id = caret.dataset.tid;
-          const open = state.collapsedTypes.has(id);
-          if (open) state.collapsedTypes.delete(id);
-          else state.collapsedTypes.add(id);
-          caret.classList.toggle("open", open);
-          caret.setAttribute("aria-expanded", String(open));
-          caret.closest(".fnode").querySelector(":scope > .fchildren").classList.toggle("collapsed", !open);
-        } else if (event.target.closest('[data-action="field"]')) goField();
+        if (event.target.closest('[data-action="field"]')) goField();
         else if (event.target.id === "range-reset") setRange(Y0, Y1);
+        else {
+          const pin = event.target.closest("[data-pin]");
+          if (pin) togglePins(pin.dataset.pin.split(","));
+        }
       });
       $("left").addEventListener("input", (event) => {
         const id = event.target.id;
@@ -2302,18 +2347,6 @@
           event.target.value = id === "range-lo" ? lo : hi;
         }
         setRange(lo, hi);
-      });
-      $("left").addEventListener("change", (event) => {
-        const tid = event.target.dataset.tid;
-        if (!tid) return;
-        // Checking a group switches every type inside it.
-        typeOf(tid).nodeTypes.forEach((id) => {
-          if (event.target.checked) state.showTypes.add(id);
-          else state.showTypes.delete(id);
-        });
-        refreshLeftLive();
-        updateOrbit();
-        renderRight({ keepScroll: true });
       });
 
       // ---------- Concept view: right panel ----------
@@ -2401,8 +2434,33 @@
                   <span class="count">${plural(d.shared, "paper")}</span>
                   ${compareButton(state.center, d.node.id)}
                 </span>
-              </div>`).join("") || `<div class="empty-note">No connections${rangeActive() ? ` in ${rangeText()}` : ""} of the selected types.</div>`}
-          </div>`;
+              </div>`).join("") || `<div class="empty-note">No connections${scopeActive() ? " that match your filters" : ""} of the selected types.</div>`}
+          </div>
+          ${gapsListHtml()}`;
+      }
+
+      // When concepts are pinned: concepts often studied with this one overall, but never in the narrowed papers.
+      function gapsListHtml() {
+        const center = byId.get(state.center);
+        if (!pinnedPapers || !papersOf(center).length) return "";
+        const shownIds = new Set(visibleNeighbors().map((d) => d.node.id));
+        const missing = (adjacency.get(center.id) || [])
+          .filter(({ id }) => !shownIds.has(id) && !state.pins.includes(id) && conceptOn(byId.get(id)))
+          .map(({ id, link }) => ({ node: byId.get(id), overall: papersInRange(link.papers).length }))
+          .filter((d) => d.overall >= 2)
+          .sort((a, b) => b.overall - a.overall)
+          .slice(0, 8);
+        if (!missing.length) return "";
+        return `<div class="gaps-list">
+          <p class="eyebrow" style="margin-top:0">Possible gaps</p>
+          <p class="fp-hint" style="margin:0 0 8px">Studied with ${esc(cap(center.label))} elsewhere, but in none of the ${plural(pinnedPapers.size, "paper")} that include ${listJoin(state.pins.map((id) => esc(cap(byId.get(id).label))))}.</p>
+          <div class="rows">${missing.map((d) => `
+            <div class="conn-row" role="button" tabindex="0" data-action="open-concept" data-id="${esc(d.node.id)}">
+              ${dot(d.node.type)}
+              <span class="body"><span class="name">${esc(cap(d.node.label))}</span><span class="sub">${esc(typeWord(d.node.type))} · ${plural(d.overall, "paper")} with ${esc(cap(center.label))} overall</span></span>
+              <span class="conn-side"><span class="count zero">0 here</span></span>
+            </div>`).join("")}</div>
+        </div>`;
       }
 
       function renderConnectionDetail() {
@@ -2436,6 +2494,7 @@
               <button type="button" class="btn" data-action="open-concept" data-id="${esc(neighbor.id)}">Open ${esc(cap(neighbor.label))} →</button>
               ${compareButton(center.id, neighbor.id, "big")}
             </div>
+            ${pinButton([center.id, neighbor.id], "both")}
           </div>
           <p class="eyebrow" style="margin-top:20px">Papers (${n})</p>
           <div class="rows">${shown.map((p) => paperRow(p, false, false)).join("")}</div>
@@ -2623,6 +2682,9 @@
           case "clear-range":
             setRange(Y0, Y1);
             break;
+          case "pin":
+            togglePins(el.dataset.ids.split(","));
+            break;
           case "open-concept":
             openConcept(id);
             break;
@@ -2663,6 +2725,261 @@
         styleOrbit();
       });
 
+      // ---------- Filters: one shared panel, and the active filters under the top bar ----------
+      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0);
+
+      function pinButton(ids, what) {
+        const on = ids.every((id) => state.pins.includes(id));
+        return `<button type="button" class="pin-btn ${on ? "on" : ""}" data-action="pin" data-pin="${esc(ids.join(","))}" data-ids="${esc(ids.join(","))}"
+          title="Only count papers that include ${esc(what)}">${on ? "✓ Narrowed to papers with " + esc(what) : "＋ Narrow to papers with " + esc(what)}</button>`;
+      }
+
+      // Pins all the given concepts, or unpins them if they're all pinned already.
+      function togglePins(ids) {
+        const all = ids.every((id) => state.pins.includes(id));
+        if (all) state.pins = state.pins.filter((id) => !ids.includes(id));
+        else ids.forEach((id) => { if (!state.pins.includes(id)) state.pins.push(id); });
+        applyFilters();
+      }
+
+      // Re-renders whatever view is showing after a filter change. Slider drags (live) skip rebuilding the panels.
+      let filterFrame = null;
+      function applyFilters({ live = false } = {}) {
+        recomputeScope();
+        renderFilterBar();
+        if (live) refreshFilterRange(); else renderFilterPanel();
+        if (state.view === "concept") { if (live) refreshLeftLive(); else renderLeft(false); }
+        if (filterFrame) return;
+        filterFrame = requestAnimationFrame(() => {
+          filterFrame = null;
+          if (state.view === "field") updateField();
+          else if (state.view === "concept") {
+            renderCompare();
+            fitOrbitViewBox(false);
+            updateOrbit(live ? 260 : 450);
+            renderRight({ keepScroll: true });
+          }
+        });
+      }
+
+      // Combinations to try when the pinned concepts share no papers: drop one pin at a time.
+      function gapSuggestions() {
+        if (state.pins.length < 2) return [];
+        return state.pins.map((drop) => {
+          const keep = state.pins.filter((id) => id !== drop);
+          const sets = keep.map((id) => new Set(byId.get(id).papers.filter(inRange).map((p) => p.paper_id)));
+          const n = [...sets[0]].filter((pid) => sets.every((set) => set.has(pid))).length;
+          return { drop, n };
+        }).filter((d) => d.n > 0).sort((a, b) => b.n - a.n);
+      }
+
+      function scopeCount() { return pinnedPapers ? [...pinnedPapers].filter((id) => inRange(paperById.get(id))).length : papersIn([...paperById.values()]).length; }
+      const totalPapers = paperById.size;
+
+      function renderFilterBar() {
+        const bar = $("filter-bar");
+        const n = filterCount();
+        $("filters-count").hidden = !n;
+        $("filters-count").textContent = n;
+        if (!n) { bar.hidden = true; bar.innerHTML = ""; return; }
+        const count = scopeCount();
+        const chip = (html, action, value = "") => `<span class="chip-filter"><span>${html}</span><button type="button" data-fb="${action}" data-v="${esc(value)}" aria-label="Remove filter">×</button></span>`;
+        const hidden = nodeTypes.filter((t) => !state.types.has(t));
+        bar.innerHTML = `
+          <span class="scope ${count ? "" : "gap"}">${count ? `<strong>${count}</strong> of ${totalPapers} papers match` : "<strong>0 papers:</strong> possible gap"}</span>
+          ${state.pins.map((id) => chip(`Includes ${dot(byId.get(id).type)} ${esc(cap(byId.get(id).label))}`, "pin", id)).join("")}
+          ${rangeActive() ? chip(`Years ${rangeText()}`, "range") : ""}
+          ${state.minPapers > 1 ? chip(`Concepts with ≥ ${state.minPapers} papers`, "min") : ""}
+          ${hidden.length ? chip(`Hiding ${listJoin(hidden.map((t) => typeOf(t).plural.toLowerCase()))}`, "types") : ""}
+          <button type="button" class="link-btn clear-all" data-fb="all">Clear all</button>`;
+        bar.hidden = false;
+      }
+      $("filter-bar").addEventListener("click", (event) => {
+        const el = event.target.closest("[data-fb]");
+        if (!el) return;
+        const what = el.dataset.fb;
+        if (what === "pin") state.pins = state.pins.filter((id) => id !== el.dataset.v);
+        if (what === "range" || what === "all") state.range = [Y0, Y1];
+        if (what === "min" || what === "all") state.minPapers = 1;
+        if (what === "types" || what === "all") state.types = new Set(nodeTypes);
+        if (what === "all") state.pins = [];
+        applyFilters();
+      });
+
+      function setFiltersOpen(open) {
+        state.filtersOpen = open;
+        $("filter-panel").hidden = !open;
+        $("filters-btn").classList.toggle("open", open);
+        $("filters-btn").setAttribute("aria-expanded", String(open));
+        if (open) renderFilterPanel();
+      }
+      $("filters-btn").addEventListener("click", () => setFiltersOpen(!state.filtersOpen));
+
+      // Type rows: one per type, nested under its group; groups collapse. Counts are concepts that pass the other filters.
+      function typeTreeHtml() {
+        const nested = shownTypeTree.some((t) => t.children.some((c) => c.total > 0));
+        const shownOf = (type) => nodes.filter((n) => n.type === type && papersInRange(n.papers).length >= state.minPapers).length;
+        const row = (t) => {
+          const kids = t.children.filter((c) => c.total > 0);
+          const open = !state.collapsedTypes.has(t.id);
+          const caret = kids.length
+            ? `<button type="button" class="caret ${open ? "open" : ""}" data-action="toggle-group" data-tid="${esc(t.id)}" aria-expanded="${open}" aria-label="Show or hide ${esc(t.plural)}">▶</button>`
+            : nested ? `<span class="caret-spacer"></span>` : "";
+          const on = t.nodeTypes.filter((id) => state.types.has(id)).length;
+          const c = d3.sum(t.nodeTypes, shownOf);
+          return `<div class="fnode" data-tid="${esc(t.id)}">
+            <div class="frow">
+              ${caret}
+              <label><input type="checkbox" data-tid="${esc(t.id)}" ${on === t.nodeTypes.length ? "checked" : ""} data-partial="${on > 0 && on < t.nodeTypes.length}" />${dot(t.id)} ${esc(t.plural)} <span class="n">(${c})</span></label>
+            </div>
+            ${kids.length ? `<div class="fchildren ${open ? "" : "collapsed"}"><div>${kids.map(row).join("")}</div></div>` : ""}
+          </div>`;
+        };
+        return shownTypeTree.filter((t) => !t.parentId).map(row).join("");
+      }
+
+      function renderFilterPanel() {
+        const panel = $("filter-panel");
+        if (!state.filtersOpen) return;
+        const count = scopeCount();
+        const sugg = count ? [] : gapSuggestions();
+        const pins = state.pins.map((id, i) => `${i ? `<span class="and">and</span>` : ""}<span class="chip-filter">${dot(byId.get(id).type)}<span>${esc(cap(byId.get(id).label))}</span><button type="button" data-fp="unpin" data-v="${esc(id)}" aria-label="Remove">×</button></span>`).join("");
+        panel.innerHTML = `
+          <div class="fp-head">
+            <h2>Filters</h2>
+            <div class="actions">
+              ${filterCount() ? `<button type="button" class="link-btn" data-fp="reset">Reset all</button>` : ""}
+              <button type="button" class="modal-close" data-fp="close" aria-label="Close filters">×</button>
+            </div>
+          </div>
+          <p class="fp-hint">These apply everywhere: the landing page, the orbit, connections and paper lists.</p>
+
+          <section class="fp-section">
+            <p class="label"><span>Narrow to papers that include</span></p>
+            <p class="fp-hint">Pick concepts to see only the papers that cover all of them, e.g. a population and a construct.</p>
+            ${pins ? `<div class="pin-list">${pins}</div>` : ""}
+            <div class="pin-search">
+              <input type="text" id="pin-input" placeholder="${state.pins.length ? "And also…" : "Add a concept…"}" autocomplete="off" />
+              <div class="pin-results" id="pin-results" hidden></div>
+            </div>
+            <div class="scope-meter">
+              <div class="bar"><i style="width:${(count / totalPapers) * 100}%"></i></div>
+              <div class="txt"><strong>${count}</strong> of ${totalPapers} papers match</div>
+            </div>
+            ${!count ? `<div class="gap-box">
+              <strong>0 papers: possible gap</strong>
+              <p>No paper in the Atlas${rangeActive() ? ` from ${rangeText()}` : ""} covers ${state.pins.length > 1 ? "all of these together" : "this"}. That can be an open research question, or a sign the combination doesn't make sense.</p>
+              ${sugg.length ? `<p>Closest combinations with papers:</p><div class="sugg">${sugg.map((d) => `<button type="button" data-fp="unpin" data-v="${esc(d.drop)}">Without ${esc(cap(byId.get(d.drop).label))} → ${plural(d.n, "paper")}</button>`).join("")}</div>` : ""}
+            </div>` : ""}
+          </section>
+
+          <section class="fp-section">
+            <p class="label"><span>Concept types</span></p>
+            <div class="filters">${typeTreeHtml()}</div>
+          </section>
+
+          <section class="fp-section">
+            <p class="label"><span>Years</span><span class="range-text ${rangeActive() ? "active" : ""}" id="fp-range-text">${rangeActive() ? rangeText() : "All years"}</span></p>
+            <div class="range-slider">
+              <div class="track"><div class="fill" id="fp-range-fill"></div></div>
+              <input type="range" id="fp-lo" min="${Y0}" max="${Y1}" step="1" value="${state.range[0]}" aria-label="First year" />
+              <input type="range" id="fp-hi" min="${Y0}" max="${Y1}" step="1" value="${state.range[1]}" aria-label="Last year" />
+            </div>
+            <div class="year-axis"><span>${Y0}</span><span>${Y1}</span></div>
+          </section>
+
+          <section class="fp-section">
+            <p class="label"><span>Minimum papers per concept</span></p>
+            <p class="fp-hint">Hide concepts that appear in only a few papers.</p>
+            <div class="stepper">
+              <button type="button" data-fp="min-" ${state.minPapers <= 1 ? "disabled" : ""} aria-label="Fewer">−</button>
+              <span class="val">${state.minPapers}</span>
+              <button type="button" data-fp="min+" ${state.minPapers >= 50 ? "disabled" : ""} aria-label="More">+</button>
+              <span class="note">${nodes.filter(conceptOn).length} of ${nodes.length} concepts shown</span>
+            </div>
+          </section>`;
+        panel.querySelectorAll("input[data-partial='true']").forEach((box) => { box.indeterminate = true; });
+        refreshFilterRange();
+      }
+
+      function refreshFilterRange() {
+        if (!state.filtersOpen || !$("fp-lo")) return;
+        const [lo, hi] = state.range;
+        const span = Y1 - Y0 || 1;
+        $("fp-range-fill").style.left = `${((lo - Y0) / span) * 100}%`;
+        $("fp-range-fill").style.right = `${((Y1 - hi) / span) * 100}%`;
+        $("fp-range-text").textContent = rangeActive() ? rangeText() : "All years";
+        $("fp-range-text").classList.toggle("active", rangeActive());
+        if (Number($("fp-lo").value) !== lo) $("fp-lo").value = lo;
+        if (Number($("fp-hi").value) !== hi) $("fp-hi").value = hi;
+        $("fp-lo").style.zIndex = lo >= Y1 - 1 ? 3 : 1;
+        const count = scopeCount();
+        const meter = $("filter-panel").querySelector(".scope-meter");
+        if (meter) {
+          meter.querySelector("i").style.width = `${(count / totalPapers) * 100}%`;
+          meter.querySelector("strong").textContent = count;
+        }
+      }
+
+      $("filter-panel").addEventListener("click", (event) => {
+        const caret = event.target.closest('[data-action="toggle-group"]');
+        if (caret) {
+          const id = caret.dataset.tid;
+          if (state.collapsedTypes.has(id)) state.collapsedTypes.delete(id); else state.collapsedTypes.add(id);
+          renderFilterPanel();
+          return;
+        }
+        const item = event.target.closest(".search-item[data-id]");
+        if (item) { togglePins([item.dataset.id]); $("pin-input")?.focus(); return; }
+        const el = event.target.closest("[data-fp]");
+        if (!el) return;
+        switch (el.dataset.fp) {
+          case "close": setFiltersOpen(false); return;
+          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); break;
+          case "unpin": state.pins = state.pins.filter((id) => id !== el.dataset.v); break;
+          case "min-": state.minPapers = Math.max(1, state.minPapers - 1); break;
+          case "min+": state.minPapers = Math.min(50, state.minPapers + 1); break;
+        }
+        applyFilters();
+      });
+      $("filter-panel").addEventListener("change", (event) => {
+        const tid = event.target.dataset.tid;
+        if (!tid) return;
+        // Checking a group switches every type inside it; at least one type always stays on.
+        const ids = typeOf(tid).nodeTypes;
+        if (event.target.checked) ids.forEach((id) => state.types.add(id));
+        else {
+          const next = new Set([...state.types].filter((id) => !ids.includes(id)));
+          if (next.size) state.types = next;
+        }
+        applyFilters();
+      });
+      $("filter-panel").addEventListener("input", (event) => {
+        const id = event.target.id;
+        if (id === "pin-input") {
+          const q = event.target.value.trim();
+          const results = $("pin-results");
+          const matches = q ? nodes.filter((n) => !state.pins.includes(n.id) && fuzzyMatch(n.label, q))
+            .sort((a, b) => (b.label.toLowerCase().includes(q.toLowerCase()) - a.label.toLowerCase().includes(q.toLowerCase())) || b.paperCount - a.paperCount)
+            .slice(0, 6) : [];
+          results.hidden = !matches.length;
+          results.innerHTML = matches.map((n) => `<div class="search-item" data-id="${esc(n.id)}"><span>${dot(n.type)} ${esc(cap(n.label))}</span><span class="t">${esc(typeWord(n.type))}</span></div>`).join("");
+          return;
+        }
+        if (id !== "fp-lo" && id !== "fp-hi") return;
+        let lo = Number($("fp-lo").value), hi = Number($("fp-hi").value);
+        if (lo > hi) {
+          if (id === "fp-lo") lo = hi; else hi = lo;
+          event.target.value = id === "fp-lo" ? lo : hi;
+        }
+        setRange(lo, hi);
+      });
+      $("filter-panel").addEventListener("keydown", (event) => {
+        if (event.target.id !== "pin-input" || event.key !== "Enter") return;
+        const first = $("pin-results").querySelector(".search-item");
+        if (first) { event.preventDefault(); togglePins([first.dataset.id]); $("pin-input")?.focus(); }
+      });
+
       // Shows a concept, and optionally one of its connections and/or a paper, as given by the address.
       // Moving within the same concept keeps the orbit and only refreshes what changed.
       // The year range carries over from concept to concept; everything else starts fresh.
@@ -2690,11 +3007,9 @@
         state.papersShown = PAGE;
         state.connSort = "most";
         state.connPapersShown = PAGE;
-        state.showTypes = new Set(nodeTypes);
         state.orbitLimit = ORBIT_STEP;
         state.hover = null;
         $("field-view").hidden = true;
-        $("field-controls").hidden = true;
         const view = $("concept-view");
         view.hidden = false;
         if (fromField && !REDUCED_MOTION) {
@@ -2712,6 +3027,8 @@
         updateOrbit(fromField ? 750 : 650);
       }
 
+      recomputeScope();
+      renderFilterBar();
       route();
     })();
   </script>
