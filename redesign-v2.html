@@ -1049,6 +1049,7 @@
     }
     .btn:hover:not(:disabled) { background: #1f2e47; }
     .btn:active:not(:disabled) { transform: scale(0.96); }
+    a.btn { text-decoration: none; }
     .btn:disabled { border-color: var(--line); background: var(--surface-3); color: var(--faint); cursor: not-allowed; }
 
     .paper-title { margin: 0 0 10px; font-size: 19px; line-height: 1.3; }
@@ -1190,6 +1191,58 @@
     .cert-checked { background: #7fd39a; color: #0d0e12; }
     .cert-key { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 11px var(--mono); color: var(--muted); }
     .cert-key span { display: inline-flex; align-items: center; gap: 5px; }
+    /* Evidence card */
+    .dir { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; font: 700 12px var(--sans); flex: 0 0 auto; }
+    .dir-increased { background: rgba(139, 197, 255, 0.18); color: #a9d4ff; }
+    .dir-reduced { background: rgba(244, 163, 192, 0.18); color: #f6b6cd; }
+    .dir-noeffect { background: rgba(154, 162, 178, 0.18); color: #c3c9d4; }
+    .dir-mixed { background: rgba(201, 182, 255, 0.18); color: #d6c9ff; }
+    .ev-title { margin: 0 0 10px; font-size: 14px; line-height: 1.4; }
+    .ev-title b { font-weight: 600; }
+    .ev-bars { display: grid; gap: 5px; }
+    .ev-bar { display: grid; grid-template-columns: 20px 92px minmax(0, 1fr) 54px; align-items: center; gap: 8px; font-size: 12.5px; }
+    .ev-bar .track { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
+    .ev-bar .track i { display: block; height: 100%; border-radius: 999px; }
+    .ev-bar .n { font: 11.5px var(--mono); color: var(--muted); text-align: right; }
+    .ev-facts { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 10px; margin-top: 12px; font-size: 12.5px; line-height: 1.45; }
+    .ev-facts .k { font: 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; padding-top: 1px; }
+    .ev-facts .v { color: #d5dbe6; }
+    .holds { display: grid; gap: 3px; }
+    .holds .hrow { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+    .holds .hk { color: var(--muted); min-width: 0; }
+    .holds .hv { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+    .holds .hv .dir { width: 16px; height: 16px; font-size: 10px; border-radius: 4px; }
+    .finding {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr);
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      background: rgba(13, 14, 18, 0.45);
+      border: 1px solid var(--line);
+      border-radius: var(--r-sm);
+      padding: 9px 10px;
+      margin-top: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .finding:hover { border-color: var(--line-strong); }
+    .finding .st { font-size: 12.5px; line-height: 1.45; color: #e3e7ee; }
+    .finding .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 5px; font: 11px var(--mono); color: var(--muted); }
+    .strength-bars { letter-spacing: 1px; color: #cfd5e0; }
+    .ex-empty { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
+
+    /* Study card */
+    .study-sec { margin-top: 12px; }
+    .study-sec h4 { margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+    .study-sec h4 span { font: 11px var(--mono); color: var(--faint); font-weight: 400; }
+    .kv { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 4px 10px; font-size: 12.5px; }
+    .kv .k { color: var(--muted); }
+    .kv .k em { font-style: normal; color: var(--faint); }
+    .kv .v { display: flex; align-items: center; gap: 6px; color: #e3e7ee; }
+    .ex-papers { margin-top: 18px; }
+    .ex-papers .paper-row { background: rgba(13, 14, 18, 0.35); }
+
     .preview-note {
       display: flex;
       align-items: flex-start;
@@ -1448,7 +1501,7 @@
       // the real papers: they never change real counts, and everything built on them is labelled "Example data".
       const EX = (() => {
         if (!exampleRaw) return null;
-        const papers = (exampleRaw.papers || []).map((p) => ({ ...p, concepts: (p.concepts || []).map(String).filter((id) => byId.has(id)) }));
+        const papers = (exampleRaw.papers || []).map((p) => ({ ...p, paper_id: p.id, isExample: true, concepts: (p.concepts || []).map(String).filter((id) => byId.has(id)) }));
         const variables = exampleRaw.variables || [];
         const findings = papers.flatMap((p) => (p.findings || [])
           .filter((f) => byId.has(String(f.iv)) && byId.has(String(f.dv)))
@@ -1478,7 +1531,7 @@
       })();
       const exampleBadge = (text = "Example data") => `<span class="ex-badge" title="Made-up data in a guessed Atlas 2 format, for trying out the design. Not real findings.">◇ ${esc(text)}</span>`;
       const CERT = { recorded: { mark: "", label: "Recorded" }, ai: { mark: "", label: "AI-extracted, not checked yet" }, checked: { mark: "✓", label: "Checked by a person" } };
-      const certMark = (c) => `<span class="cert cert-${esc(c)}" title="${esc(CERT[c]?.label || c)}">${CERT[c]?.mark || "?"}</span>`;
+      const certMark = (c) => `<span class="cert cert-${esc(c)}" title="${esc(CERT[c]?.label || c)}">${CERT[c]?.mark ?? "?"}</span>`;
       const certKey = () => `<div class="cert-key">${Object.keys(CERT).map((c) => `<span>${certMark(c)}${esc(CERT[c].label.replace(", not checked yet", ""))}</span>`).join("")}</div>`;
 
       // ---------- State ----------
@@ -1689,15 +1742,15 @@
         else goHome();
       }
       function route() {
-        const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+))?\/?$/);
+        const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+|ex\d+))?\/?$/);
         const id = m && decodeURIComponent(m[1]);
         if (/^#\/network\/?$/.test(location.hash)) { showField(); return; }
         if (!id || !byId.has(id)) { showLanding(); return; }
         const conn = m[2] ? decodeURIComponent(m[2]) : null;
-        const paper = m[3] ? Number(m[3]) : null;
+        const paper = m[3] ? (isExampleId(m[3]) ? m[3] : Number(m[3])) : null;
         showConcept(id, {
           connection: conn && linkByPair.has(pairKey(id, conn)) ? conn : null,
-          paper: paper != null && paperById.has(paper) ? paper : null
+          paper: paper != null && getPaper(paper) ? paper : null
         });
       }
       window.addEventListener("hashchange", route);
@@ -2081,8 +2134,12 @@
       const visibleNeighbors = () => neighborData().filter((d) => conceptOn(d.node) && !state.pins.includes(d.node.id));
       const selectedLink = () => (state.connection ? linkByPair.get(pairKey(state.center, state.connection)) : null);
 
+      // Real papers have numeric ids; example papers (atlas2_example.json) have ids like "ex3".
+      const isExampleId = (id) => typeof id === "string" && /^ex\d+$/.test(id);
+      const getPaper = (id) => (isExampleId(id) ? EX?.paperById.get(id) || null : paperById.get(id) || null);
+      const conceptIdsOfPaper = (p) => (p.isExample ? p.concepts : conceptsByPaper.get(p.paper_id) || []);
       function currentPaper() {
-        return state.tab === "papers" && state.paper != null ? paperById.get(state.paper) : null;
+        return state.tab === "papers" && state.paper != null ? getPaper(state.paper) : null;
       }
 
       // Atlas › Concept › ↔ Connection › Paper; every step but the last is a link back to that level.
@@ -2097,8 +2154,8 @@
             steps.push({ html: `↔ ${dot(nb.type)}${esc(cap(nb.label))}`, hash: conceptHash(center.id, nb.id), title: `Connection with ${cap(nb.label)}` });
           }
           if (state.paper != null) {
-            const p = paperById.get(state.paper);
-            steps.push({ html: `Paper: ${esc(trunc(paperTitle(p), 38))}`, hash: null, title: paperTitle(p) });
+            const p = getPaper(state.paper);
+            steps.push({ html: `${p.isExample ? "Example paper" : "Paper"}: ${esc(trunc(paperTitle(p), 38))}`, hash: null, title: paperTitle(p) });
           }
         }
         $("crumb-trail").innerHTML = steps.map((s, i) => {
@@ -2319,7 +2376,7 @@
         const base = typed.slice(0, state.orbitLimit);
         const baseIds = new Set(base.map((d) => d.node.id));
         const paper = currentPaper();
-        const inPaper = paper ? new Set(conceptsByPaper.get(paper.paper_id)) : null;
+        const inPaper = paper ? new Set(conceptIdsOfPaper(paper)) : null;
         // The selected connection and the open paper's concepts always appear, even outside the top N.
         const extras = typed.filter((d) => !baseIds.has(d.node.id) && (d.node.id === state.connection || (inPaper && inPaper.has(d.node.id))));
         base.forEach((d, i) => { d.ring = Math.min(2, Math.floor((i * 3) / base.length)); });
@@ -2474,7 +2531,7 @@
         const paper = currentPaper();
         const note = $("orbit-note");
         if (paper) {
-          const count = (conceptsByPaper.get(paper.paper_id) || []).length;
+          const count = conceptIdsOfPaper(paper).length;
           note.textContent = `Highlighting the ${plural(count, "concept")} in “${paperTitle(paper)}”`;
           note.hidden = false;
         } else {
@@ -2805,7 +2862,8 @@
           </div>
           ${chips ? `<div class="chip-row">${chips}</div>` : ""}
           <div class="rows">${rowsWithStagger(shown, (p, isNew) => paperRow(p, state.papersSort === "concepts", isNew)) || `<div class="empty-note">No papers${rangeActive() ? ` in ${rangeText()}` : ""}.</div>`}</div>
-          ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-papers">Load more · ${remaining} remaining</button>` : ""}`;
+          ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-papers">Load more · ${remaining} remaining</button>` : ""}
+          ${examplePapersHtml(byId.get(state.center))}`;
       }
 
       function renderConnectionsList() {
@@ -2897,6 +2955,7 @@
             </div>
             ${pinButton([center.id, neighbor.id], "both")}
           </div>
+          ${evidenceCard(center, neighbor)}
           ${n ? `
           <p class="eyebrow" style="margin-top:20px">When they met <span style="text-transform:none;letter-spacing:0">· each dot is a shared paper</span></p>
           <div class="met">${metTimeline(papers, colorOf(neighbor.type))}</div>
@@ -3006,6 +3065,7 @@
 
       function renderPaperDetail() {
         const paper = currentPaper();
+        if (paper.isExample) return renderExamplePaper(paper);
         const concepts = (conceptsByPaper.get(paper.paper_id) || []).map((id) => byId.get(id));
         const backLabel = state.connection ? "← Connection" : "← All papers";
         const related = relatedPapers(paper.paper_id);
@@ -3015,6 +3075,7 @@
             <p class="eyebrow" style="margin-top:0">Paper</p>
             <h2 class="paper-title">${esc(paperTitle(paper))}</h2>
             <span class="byline">${esc(paper.authors || "Unknown authors")} · ${esc(paper.year)}</span>
+            <div><a class="btn" href="https://scholar.google.com/scholar?q=${encodeURIComponent(paperTitle(paper))}" target="_blank" rel="noopener" title="The data has no links to the papers yet, so this searches Google Scholar for the title">Find on Google Scholar ↗</a></div>
           </div>
 
           <p class="eyebrow" style="margin-top:20px">Concepts in this paper (${concepts.length})</p>
@@ -3024,11 +3085,7 @@
               : `<button type="button" class="chip" data-action="open-concept" data-id="${esc(n.id)}" title="Open ${esc(cap(n.label))}">${dot(n.type)}${esc(cap(n.label))}</button>`).join("")}
           </div>
 
-          <div class="detail-card" style="margin-top:18px">
-            <p class="eyebrow" style="margin-top:0">Summary</p>
-            <p class="placeholder">Summary coming soon.</p>
-            <button type="button" class="btn" disabled title="No link to the original paper in the data yet">Original paper ↗</button>
-          </div>
+          ${studyCardPlaceholder(paper)}
 
           <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
           <div class="rows">
@@ -3039,6 +3096,145 @@
                 <span class="why">${esc(relatedSentence(shared))}</span>
               </button>`).join("") || `<div class="empty-note">No other papers share concepts with this one.</div>`}
           </div>`;
+      }
+
+      // ---------- Study card (Atlas 2) ----------
+      const fmtValue = (v, def) => (def?.kind === "yesno" ? (v.value ? "yes" : "no") : def?.kind === "number" ? String(v.value) : String(v.value));
+      const DIR = {
+        increased: { sym: "↑", cls: "increased", word: "increased" },
+        reduced: { sym: "↓", cls: "reduced", word: "reduced" },
+        "no effect": { sym: "○", cls: "noeffect", word: "no effect" },
+        mixed: { sym: "±", cls: "mixed", word: "mixed" }
+      };
+      const dirChip = (d) => `<span class="dir dir-${DIR[d]?.cls || "noeffect"}" title="${esc(DIR[d]?.word || d)}">${DIR[d]?.sym || "?"}</span>`;
+      const strengthBars = (st) => (st ? `<span class="strength-bars" title="${esc(st)} effect">${{ weak: "▮▯▯", moderate: "▮▮▯", strong: "▮▮▮" }[st] || ""}</span> ${esc(st)}` : "");
+      // "Using an LLM assistant ↑ cognitive fixation" style one-liner with its paper and certainty.
+      function findingHtml(f, { showPaper = true } = {}) {
+        return `<button type="button" class="finding" data-action="paper" data-id="${esc(f.paper.id)}" title="Open the example paper">
+          ${dirChip(f.direction)}
+          <span>
+            <span class="st">${esc(f.statement)}</span>
+            <span class="meta">
+              ${f.strength ? `<span>${strengthBars(f.strength)}</span>` : ""}
+              <span>${esc(f.hedging === "hedged" ? "hedged claim" : "firm claim")}</span>
+              <span>${certMark(f.certainty)} ${esc(CERT[f.certainty]?.label.replace(", not checked yet", "") || "")}</span>
+              ${showPaper ? `<span>${esc(f.paper.title.replace(/^Example study ([A-Z]):.*/, "Example study $1"))} · ${f.paper.year}</span>` : ""}
+            </span>
+          </span>
+        </button>`;
+      }
+
+      // A real paper has no Atlas 2 values yet: say so, and point to an example of what the card will hold.
+      function studyCardPlaceholder(paper) {
+        if (!EX) return "";
+        const mine = new Set(conceptsByPaper.get(paper.paper_id) || []);
+        const example = EX.papers.slice().sort((a, b) => b.concepts.filter((id) => mine.has(id)).length - a.concepts.filter((id) => mine.has(id)).length)[0];
+        return `<div class="ex-zone">
+          <div class="ex-head"><span class="t">Study details</span>${exampleBadge("Atlas 2 preview")}</div>
+          <p class="placeholder" style="font-size:13px">Not coded yet. In Atlas 2 this card will list the paper's values under Paper, Study, Measurement and Claim, each marked by how certain it is.</p>
+          ${example ? `<button type="button" class="btn" data-action="paper" data-id="${esc(example.id)}">See an example study card →</button>` : ""}
+        </div>`;
+      }
+
+      function renderExamplePaper(paper) {
+        const concepts = paper.concepts.map((id) => byId.get(id));
+        const backLabel = state.connection ? "← Connection" : "← All papers";
+        const sections = EX.groups.map((g) => {
+          if (g.id === "claim") {
+            return `<div class="study-sec"><h4>${esc(g.label)} <span>${esc(g.asks)}</span></h4>
+              ${(paper.findings || []).length ? paper.findings.map((f, i) => findingHtml(EX.findings.find((x) => x.id === `${paper.id}-${i}`) || { ...f, paper }, { showPaper: false })).join("") : `<p class="placeholder">No findings coded.</p>`}
+            </div>`;
+          }
+          const rows = EX.variables.filter((v) => v.group === g.id && paper.values?.[v.id]).map((v) => {
+            const val = paper.values[v.id];
+            return `<span class="k">${v.parentType ? `<em>${esc(typeOf(v.parentType)?.label.toLowerCase() || v.family)} ›</em> ` : v.family && v.family !== v.label ? `<em>${esc(v.family)} ›</em> ` : ""}${esc(v.label)}</span><span class="v">${certMark(val.certainty)}${esc(fmtValue(val, v))}</span>`;
+          }).join("");
+          return rows ? `<div class="study-sec"><h4>${esc(g.label)} <span>${esc(g.asks)}</span></h4><div class="kv">${rows}</div></div>` : "";
+        }).join("");
+        return `
+          <button type="button" class="back-link" data-action="back-paper">${backLabel}</button>
+          <div class="ex-zone">
+            <div class="ex-head"><span class="t">Example paper</span>${exampleBadge()}</div>
+            <h2 class="paper-title">${esc(paper.title)}</h2>
+            <span class="byline">${esc(paper.authors)} · ${esc(paper.year)}</span>
+            <p class="ex-note">A made-up paper to show what an Atlas 2 study card could hold. Not a real study.</p>
+          </div>
+
+          <p class="eyebrow" style="margin-top:20px">Concepts in this paper (${concepts.length})</p>
+          <div class="chips">
+            ${concepts.map((n) => n.id === state.center
+              ? `<span class="chip current" title="The concept you're viewing">${dot(n.type)}${esc(cap(n.label))}</span>`
+              : `<button type="button" class="chip" data-action="open-concept" data-id="${esc(n.id)}">${dot(n.type)}${esc(cap(n.label))}</button>`).join("")}
+          </div>
+
+          <div class="ex-zone">
+            <div class="ex-head"><span class="t">Study card</span>${exampleBadge()}</div>
+            ${certKey()}
+            ${sections}
+          </div>`;
+      }
+
+      // ---------- Evidence card (Atlas 2) ----------
+      // What the example findings say about this pair: direction counts, the findings themselves,
+      // evidence quality, certainty, and the conditions each direction came from ("holds when").
+      const HOLDS_VARS = ["subject_expertise", "task_team", "setting", "condition_tool"];
+      function evidenceCard(center, neighbor) {
+        if (!EX) return "";
+        const all = EX.byPair.get(pairKey(center.id, neighbor.id)) || [];
+        if (!all.length) {
+          return `<div class="ex-zone"><div class="ex-empty">${exampleBadge("Atlas 2 preview")}<span>No findings coded for this pair in the example data. In Atlas 2, what these papers found would appear here.</span></div></div>`;
+        }
+        // One block per direction of cause (IV → DV), most findings first.
+        const blocks = d3.groups(all, (f) => `${f.iv}>${f.dv}`).sort((a, b) => b[1].length - a[1].length).map(([, fs]) => {
+          const iv = byId.get(fs[0].iv), dv = byId.get(fs[0].dv);
+          const counts = Object.keys(DIR).map((d) => ({ d, n: fs.filter((f) => f.direction === d).length })).filter((x) => x.n);
+          const max = d3.max(counts, (x) => x.n) || 1;
+          const colors = { increased: "#8bc5ff", reduced: "#f4a3c0", "no effect": "#9aa2b2", mixed: "#c9b6ff" };
+          const studies = (k) => `${k} ${k === 1 ? "study" : "studies"}`;
+          const bars = counts.map(({ d, n }) => `<div class="ev-bar">${dirChip(d)}<span>${esc(DIR[d].word)}</span><span class="track"><i style="width:${(n / max) * 100}%;background:${colors[d]}"></i></span><span class="n">${studies(n)}</span></div>`).join("");
+          const papers = [...new Set(fs.map((f) => f.paper))];
+          const sizes = papers.map((p) => p.values?.sample_size?.value).filter((v) => v != null).sort((a, b) => a - b);
+          const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : null;
+          const causal = papers.filter((p) => p.values?.causal_design?.value === true).length;
+          const validated = papers.filter((p) => p.values?.measure_validated?.value === true).length;
+          const checked = fs.filter((f) => f.certainty === "checked").length;
+          const disagree = counts.length > 1;
+          const holds = HOLDS_VARS.map((vid) => {
+            const def = EX.varById.get(vid);
+            const groups = d3.groups(fs.filter((f) => f.paper.values?.[vid]), (f) => fmtValue(f.paper.values[vid], def));
+            // Only conditions that actually differ between the findings say anything about when they hold.
+            if (groups.length < 2) return "";
+            return `<div class="hrow"><span class="hk">${esc(def.label)}:</span>${groups.map(([val, gfs]) => `<span class="hv">${esc(val)} ${gfs.map((f) => dirChip(f.direction)).join("")}</span>`).join("")}</div>`;
+          }).filter(Boolean).join("");
+          return `<div style="margin-top:6px">
+            <p class="ev-title">Effect of <b>${esc(cap(iv.label))}</b> on <b>${esc(dv.label)}</b> · ${plural(fs.length, "finding")}</p>
+            <div class="ev-bars">${bars}</div>
+            ${disagree ? `<p class="ex-note" style="color:#ffcf8a">The findings disagree. See “Holds when” for the conditions behind each.</p>` : ""}
+            <div class="ev-facts">
+              <span class="k">Evidence</span><span class="v">median sample ${median ?? "?"} · ${causal} of ${studies(papers.length)} with a causal design · ${validated} with validated measures</span>
+              <span class="k">Certainty</span><span class="v">${certMark("checked")} ${checked} checked by a person · ${certMark("ai")} ${fs.length - checked} AI-extracted</span>
+              ${holds ? `<span class="k">Holds when</span><span class="v holds">${holds}</span>` : ""}
+            </div>
+            ${fs.map((f) => findingHtml(f)).join("")}
+          </div>`;
+        }).join("");
+        return `<div class="ex-zone">
+          <div class="ex-head"><span class="t">What was found</span>${exampleBadge()}</div>
+          ${blocks}
+          <p class="ex-note">Made-up findings from ${EX.papers.length} example papers, to show how Atlas 2 could explain a connection. Not real results; real counts above are unaffected.</p>
+        </div>`;
+      }
+
+      // Example papers on this concept, at the bottom of its paper list.
+      function examplePapersHtml(center) {
+        if (!EX) return "";
+        const list = EX.papers.filter((p) => p.concepts.includes(center.id) && (!state.connection || p.concepts.includes(state.connection)));
+        if (!list.length) return "";
+        return `<div class="ex-zone ex-papers">
+          <div class="ex-head"><span class="t">Example papers (${list.length})</span>${exampleBadge()}</div>
+          <div class="rows">${list.map((p) => `<button type="button" class="paper-row" data-action="paper" data-id="${esc(p.id)}"><span class="p-title">${esc(p.title)}</span><span class="p-meta">${esc(p.authors)} · ${p.year} · ${plural((p.findings || []).length, "finding")}</span></button>`).join("")}</div>
+          <p class="ex-note">Made-up papers with Atlas 2 study cards. Not counted in the real papers above.</p>
+        </div>`;
       }
 
       function updateTabs() {
@@ -3088,7 +3284,7 @@
         switch (el.dataset.action) {
           case "paper":
           case "paper-push":
-            openPaper(Number(id));
+            openPaper(isExampleId(id) ? id : Number(id));
             break;
           case "back-paper":
             closePaper();
