@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Strata</title>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="strata.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <button class="brand" id="brand" type="button" title="Reset to the four layers">
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+          <path d="M3 6.5 11 3l8 3.5-8 3.5z" fill="#4fc3f7" opacity=".85"/>
+          <path d="M3 10l8 3.5 8-3.5" fill="none" stroke="#81c784" stroke-width="1.6"/>
+          <path d="M3 13.5 11 17l8-3.5" fill="none" stroke="#ffb74d" stroke-width="1.6"/>
+          <path d="M3 17l8 3.5 8-3.5" fill="none" stroke="#ce93d8" stroke-width="1.6"/>
+        </svg>
+        <span><b>Atlas</b> Strata</span>
+      </button>
+      <nav class="crumbs" id="crumbs" aria-label="Core sample chain"></nav>
+      <div class="spacer"></div>
+      <div class="search-wrap">
+        <input id="search" type="text" placeholder="Search a concept…" autocomplete="off" spellcheck="false" aria-label="Search concepts" />
+        <div id="search-results" role="listbox" hidden></div>
+      </div>
+      <button class="pill-btn" id="reset" type="button" title="Clear the core sample and filters">Reset</button>
+      <button class="icon-btn" id="about-btn" type="button" aria-label="About this concept" title="About this concept">i</button>
+      <div class="about" id="about" hidden>
+        <h4>About Strata</h4>
+        <p>The Atlas is drawn as four stacked layers that read like the anatomy of a study: who is studied, what they do, what they work on, and what is measured. You explore by drilling a core sample down through the layers, and the sample holds the real papers that cover every concept you picked.</p>
+        <p class="muted">An empty sample is not an error: it may be a gap in the literature worth studying.</p>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="stage" id="stage">
+        <div class="toolbar" id="toolbar">
+          <div class="tgroup" id="layer-toggles" aria-label="Layers"></div>
+          <div class="tgroup years">
+            <span class="tlabel">Years</span>
+            <span class="yval" id="y0v">1989</span>
+            <div class="dual" id="dual">
+              <div class="dual-track"><div class="dual-fill" id="dual-fill"></div></div>
+              <input type="range" id="y0" aria-label="From year" />
+              <input type="range" id="y1" aria-label="To year" />
+            </div>
+            <span class="yval" id="y1v">2025</span>
+          </div>
+          <div class="tgroup">
+            <span class="tlabel">Min papers</span>
+            <button class="step" id="m-dn" type="button" aria-label="Fewer">−</button>
+            <span class="yval" id="mval">1</span>
+            <button class="step" id="m-up" type="button" aria-label="More">+</button>
+          </div>
+          <div class="tgroup seg" role="group" aria-label="View">
+            <button type="button" id="v-tilt" class="on">Tilted</button>
+            <button type="button" id="v-flat">Flat</button>
+          </div>
+        </div>
+        <svg id="svg" role="img" aria-label="Four stacked layers of concepts">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          <g id="g-planes"></g>
+          <g id="g-grid"></g>
+          <g id="g-threads"></g>
+          <g id="g-core"></g>
+          <g id="g-nodes"></g>
+          <g id="g-labels"></g>
+        </svg>
+        <div id="layer-heads"></div>
+        <div class="tip" id="tip" hidden></div>
+        <div class="hint" id="hint"></div>
+        <div class="legend" id="legend">
+          <div class="legend-title"><span>How to read the strata</span><button type="button" id="legend-tog">Hide</button></div>
+          <div><span class="lg-ico">⇣</span><span><b>Layers</b>: who is studied → what they do → what they work on → what is measured</span></div>
+          <div><span class="lg-ico">→</span><span><b>Left to right</b>: median year of a concept's papers</span></div>
+          <div><span class="lg-ico">●</span><span><b>Size</b>: papers in the year range</span></div>
+          <div><span class="lg-ico">↗</span><span><b>Depth</b>: neighborhood (concepts studied together share a depth)</span></div>
+          <div><span class="lg-ico">│</span><span><b>Threads</b>: papers shared with your sample</span></div>
+        </div>
+      </section>
+
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </main>
+  </div>
+  <div class="loading" id="loading">Loading the strata…</div>
+
+  <script src="../shared/atlas-core.js"></script>
+  <script src="strata.js"></script>
+</body>
+</html>

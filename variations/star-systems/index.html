@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas · Star Systems</title>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <svg id="scene" role="img" aria-label="Galaxy of research neighborhoods">
+      <defs id="defs"></defs>
+      <g id="g-galaxy"></g>
+      <g id="g-system"></g>
+      <g id="g-focus"></g>
+    </svg>
+
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark"></span><span>Atlas</span><em>star systems</em></div>
+      <button id="back" class="icon-btn" title="Up one level (Esc)" aria-label="Back">
+        <svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 2 4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <nav id="crumbs" aria-label="Where you are"></nav>
+      <div class="spacer"></div>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Search concepts…  /" autocomplete="off" spellcheck="false" aria-label="Search concepts" />
+        <div id="search-results" role="listbox" hidden></div>
+      </div>
+      <button id="filters-btn" class="pill-btn" aria-expanded="false">Filters<span id="filter-count"></span></button>
+      <button id="reset" class="pill-btn" title="Back to the galaxy and clear filters">Reset</button>
+      <button id="about-btn" class="icon-btn" title="About this concept" aria-label="About this concept">i</button>
+    </header>
+
+    <div id="filters" class="popover" hidden>
+      <div class="pop-section">
+        <div class="pop-label">Concept types</div>
+        <div id="type-chips" class="chips"></div>
+      </div>
+      <div class="pop-section">
+        <div class="pop-label">Years <span id="year-label" class="mono"></span></div>
+        <svg id="year-hist" width="300" height="34"></svg>
+        <div class="dual">
+          <input id="y0" type="range" aria-label="From year" />
+          <input id="y1" type="range" aria-label="To year" />
+        </div>
+      </div>
+      <div class="pop-section">
+        <div class="pop-label">Minimum papers per concept <span id="min-label" class="mono"></span></div>
+        <input id="minp" type="range" min="1" max="25" step="1" value="1" aria-label="Minimum papers" />
+      </div>
+      <div class="pop-foot"><span id="filter-summary"></span><button id="filters-clear" class="link-btn">Clear filters</button></div>
+    </div>
+
+    <div id="about" class="popover about" hidden>
+      <div class="pop-label">About this concept</div>
+      <p>The field is drawn as a galaxy: each star system is a <b>neighborhood</b> of concepts that tend to be studied in the same papers, and systems that share more papers sit closer together. You travel inward, from galaxy to system to a single concept, then to one connection and the papers behind it.</p>
+      <p class="faint">It is 2.5D on purpose: tilt, depth ordering and parallax give a sense of space, while every label stays flat and readable. Esc or Back moves you out one level.</p>
+    </div>
+
+    <div id="welcome">
+      <span class="w-strong">601 papers from ASME DTM, 1989–2025.</span>
+      Each star is a <b>neighborhood</b> of concepts that are studied together. Pick one to travel in.
+    </div>
+
+    <div id="legend" class="card"></div>
+    <aside id="panel" aria-live="polite">
+      <div id="minimap"><svg></svg><div class="mm-cap">Galaxy · <span>you are here</span></div></div>
+      <div id="panel-body"></div>
+    </aside>
+    <div id="tip" hidden></div>
+    <div id="empty" hidden></div>
+    <div id="loading">Charting the galaxy…</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="../shared/atlas-core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
