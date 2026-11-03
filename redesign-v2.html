@@ -1232,6 +1232,46 @@
     .strength-bars { letter-spacing: 1px; color: #cfd5e0; }
     .ex-empty { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
 
+    /* Atlas 2 variables in the filter panel */
+    .fp-section.ex-zone { border-top: 1.5px dashed var(--ex-line); margin-top: 16px; padding-top: 14px; }
+    .ex-group { border-top: 1px solid var(--line); padding: 6px 0; }
+    .ex-group:first-of-type { border-top: none; }
+    .ex-group-head {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 4px 0;
+      cursor: pointer;
+      text-align: left;
+    }
+    .ex-group-head .caret { pointer-events: none; }
+    .ex-group-head b { font-size: 13px; }
+    .ex-group-head span { font: 11px var(--mono); color: var(--faint); }
+    .ex-group-head .sel { margin-left: auto; color: var(--ex); }
+    .ex-var { margin: 6px 0 8px 24px; }
+    .ex-var .vl { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .ex-var .vl em { font-style: normal; color: var(--faint); }
+    .vchips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .vchip {
+      border: 1px solid var(--line-strong);
+      background: var(--surface-2);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font: 11.5px var(--mono);
+      color: #cfd5e0;
+      cursor: pointer;
+    }
+    .vchip span { color: var(--faint); margin-left: 3px; }
+    .vchip.on { border-color: var(--ex); background: rgba(255, 196, 107, 0.16); color: #ffe2b0; }
+    .vchip:disabled { opacity: 0.35; cursor: not-allowed; }
+    .cert-filter { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
+    .cert-filter .vchip { display: inline-flex; align-items: center; gap: 5px; }
+    .chip-filter.ex { border-style: dashed; border-color: var(--ex-line); background: var(--ex-bg); }
+    .kv .dim { opacity: 0.35; }
+
     /* Study card */
     .study-sec { margin-top: 12px; }
     .study-sec h4 { margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
@@ -1543,6 +1583,11 @@
         minPapers: 1,
         pins: [],
         filtersOpen: false,
+        // Atlas 2 filters (example data only): chosen values per variable, a minimum per number, and which certainties count.
+        exValues: new Map(),
+        exMin: new Map(),
+        exCert: new Set(["recorded", "ai", "checked"]),
+        exOpen: new Set(["study"]),
         center: null,
         tab: "papers",
         connection: null,
@@ -3147,7 +3192,8 @@
           }
           const rows = EX.variables.filter((v) => v.group === g.id && paper.values?.[v.id]).map((v) => {
             const val = paper.values[v.id];
-            return `<span class="k">${v.parentType ? `<em>${esc(typeOf(v.parentType)?.label.toLowerCase() || v.family)} ›</em> ` : v.family && v.family !== v.label ? `<em>${esc(v.family)} ›</em> ` : ""}${esc(v.label)}</span><span class="v">${certMark(val.certainty)}${esc(fmtValue(val, v))}</span>`;
+            const dim = state.exCert.has(val.certainty) ? "" : "dim";
+            return `<span class="k ${dim}">${v.parentType ? `<em>${esc(typeOf(v.parentType)?.label.toLowerCase() || v.family)} ›</em> ` : v.family && v.family !== v.label ? `<em>${esc(v.family)} ›</em> ` : ""}${esc(v.label)}</span><span class="v ${dim}" ${dim ? `title="Hidden by your certainty filter"` : ""}>${certMark(val.certainty)}${esc(fmtValue(val, v))}</span>`;
           }).join("");
           return rows ? `<div class="study-sec"><h4>${esc(g.label)} <span>${esc(g.asks)}</span></h4><div class="kv">${rows}</div></div>` : "";
         }).join("");
@@ -3174,15 +3220,99 @@
           </div>`;
       }
 
+      // ---------- Atlas 2 filters (example data) ----------
+      // A paper passes when, for every variable with a choice, it has a value of a certainty that's switched on and that value is chosen.
+      const exFilterCount = () => (EX ? [...state.exValues.values()].filter((set) => set.size).length + state.exMin.size + (state.exCert.size < 3 ? 1 : 0) : 0);
+      const valueKey = (val, def) => fmtValue(val, def);
+      function exValueOk(val, def) {
+        if (!val || !state.exCert.has(val.certainty)) return false;
+        if (def.kind === "number") return !state.exMin.has(def.id) || Number(val.value) >= state.exMin.get(def.id);
+        const chosen = state.exValues.get(def.id);
+        return !chosen || !chosen.size || chosen.has(valueKey(val, def));
+      }
+      function exPaperPasses(p) {
+        for (const def of EX.variables) {
+          if (def.group === "claim") continue;
+          const active = def.kind === "number" ? state.exMin.has(def.id) : state.exValues.get(def.id)?.size;
+          if (active && !exValueOk(p.values?.[def.id], def)) return false;
+        }
+        return true;
+      }
+      const FINDING_FIELD = { finding_direction: "direction", finding_strength: "strength", finding_hedging: "hedging" };
+      function exFindingPasses(f) {
+        if (!state.exCert.has(f.certainty) || !exPaperPasses(f.paper)) return false;
+        return Object.entries(FINDING_FIELD).every(([vid, field]) => {
+          const chosen = state.exValues.get(vid);
+          return !chosen || !chosen.size || chosen.has(String(f[field]));
+        });
+      }
+      function exChips() {
+        if (!EX) return [];
+        const chips = [];
+        state.exValues.forEach((set, vid) => { if (set.size) chips.push({ html: `${esc(EX.varById.get(vid).label)}: ${esc([...set].join(" or "))}`, kind: "val", v: vid }); });
+        state.exMin.forEach((min, vid) => chips.push({ html: `${esc(EX.varById.get(vid).label)} ≥ ${min}`, kind: "min", v: vid }));
+        if (state.exCert.size < 3) chips.push({ html: `Certainty: ${esc([...state.exCert].map((c) => CERT[c].label.replace(", not checked yet", "")).join(", ") || "none")}`, kind: "cert", v: "" });
+        return chips;
+      }
+      const NUM_STEPS = { sample_size: [20, 50, 100], task_duration: [30, 60, 120] };
+
+      function exFiltersHtml() {
+        if (!EX) return "";
+        const papersWith = (def, val) => EX.papers.filter((p) => p.values?.[def.id] && state.exCert.has(p.values[def.id].certainty) && valueKey(p.values[def.id], def) === val).length;
+        const findingsWith = (field, val) => EX.findings.filter((f) => state.exCert.has(f.certainty) && String(f[field]) === val).length;
+        const groups = EX.groups.map((g) => {
+          const vars = EX.variables.filter((v) => v.group === g.id);
+          const selected = vars.filter((v) => (v.kind === "number" ? state.exMin.has(v.id) : state.exValues.get(v.id)?.size)).length;
+          const open = state.exOpen.has(g.id);
+          const body = !open ? "" : vars.map((def) => {
+            const label = `${def.parentType ? `<em>${esc(typeOf(def.parentType)?.label.toLowerCase() || def.family)} ›</em> ` : def.family && def.family !== def.label ? `<em>${esc(def.family)} ›</em> ` : ""}${esc(def.label)} ${certMark(def.obtained === "record" ? "recorded" : def.obtained === "judge" ? "checked" : "ai")}`;
+            let chips;
+            if (def.kind === "number") {
+              const steps = NUM_STEPS[def.id] || [];
+              const cur = state.exMin.get(def.id);
+              chips = [`<button type="button" class="vchip ${cur == null ? "on" : ""}" data-ex="min" data-v="${esc(def.id)}" data-val="">any</button>`]
+                .concat(steps.map((n) => `<button type="button" class="vchip ${cur === n ? "on" : ""}" data-ex="min" data-v="${esc(def.id)}" data-val="${n}">≥ ${n}</button>`)).join("");
+            } else {
+              const values = def.kind === "yesno" ? ["yes", "no"] : def.values || [];
+              const chosen = state.exValues.get(def.id) || new Set();
+              chips = values.map((val) => {
+                const n = g.id === "claim" ? findingsWith(FINDING_FIELD[def.id], val) : papersWith(def, val);
+                return `<button type="button" class="vchip ${chosen.has(val) ? "on" : ""}" data-ex="val" data-v="${esc(def.id)}" data-val="${esc(val)}" ${n || chosen.has(val) ? "" : "disabled"}>${esc(val)}<span>${n}</span></button>`;
+              }).join("");
+            }
+            return `<div class="ex-var"><div class="vl">${label}</div><div class="vchips">${chips}</div></div>`;
+          }).join("");
+          return `<div class="ex-group">
+            <button type="button" class="ex-group-head" data-ex="group" data-v="${esc(g.id)}" aria-expanded="${open}">
+              <span class="caret ${open ? "open" : ""}">▶</span><b>${esc(g.label)}</b><span>${esc(g.asks)}</span>${selected ? `<span class="sel">${selected} chosen</span>` : ""}
+            </button>
+            ${body}
+          </div>`;
+        }).join("");
+        const passing = EX.papers.filter(exPaperPasses).length;
+        return `<section class="fp-section ex-zone">
+          <div class="ex-head"><span class="t">Atlas 2 variables</span>${exampleBadge()}</div>
+          <p class="fp-hint">Real papers have no Atlas 2 values yet, so these filter only the ${EX.papers.length} example papers and their findings (evidence cards, study cards, findings in the orbit). Counts are example papers${EX.findings.length ? ", or findings for Claim" : ""}. The mark by each variable shows how it's usually obtained.</p>
+          <p class="label" style="margin-top:4px"><span>Count values that are</span></p>
+          <div class="cert-filter">${Object.keys(CERT).map((c) => `<button type="button" class="vchip ${state.exCert.has(c) ? "on" : ""}" data-ex="cert" data-v="${c}">${certMark(c)}${esc(CERT[c].label.replace(", not checked yet", ""))}</button>`).join("")}</div>
+          ${groups}
+          <p class="ex-note">${passing} of ${EX.papers.length} example papers match.</p>
+        </section>`;
+      }
+
       // ---------- Evidence card (Atlas 2) ----------
       // What the example findings say about this pair: direction counts, the findings themselves,
       // evidence quality, certainty, and the conditions each direction came from ("holds when").
       const HOLDS_VARS = ["subject_expertise", "task_team", "setting", "condition_tool"];
       function evidenceCard(center, neighbor) {
         if (!EX) return "";
-        const all = EX.byPair.get(pairKey(center.id, neighbor.id)) || [];
-        if (!all.length) {
+        const coded = EX.byPair.get(pairKey(center.id, neighbor.id)) || [];
+        if (!coded.length) {
           return `<div class="ex-zone"><div class="ex-empty">${exampleBadge("Atlas 2 preview")}<span>No findings coded for this pair in the example data. In Atlas 2, what these papers found would appear here.</span></div></div>`;
+        }
+        const all = coded.filter(exFindingPasses);
+        if (!all.length) {
+          return `<div class="ex-zone"><div class="ex-empty">${exampleBadge()}<span>${plural(coded.length, "example finding")} for this pair, but none match your Atlas 2 filters.</span></div></div>`;
         }
         // One block per direction of cause (IV → DV), most findings first.
         const blocks = d3.groups(all, (f) => `${f.iv}>${f.dv}`).sort((a, b) => b[1].length - a[1].length).map(([, fs]) => {
@@ -3221,14 +3351,14 @@
         return `<div class="ex-zone">
           <div class="ex-head"><span class="t">What was found</span>${exampleBadge()}</div>
           ${blocks}
-          <p class="ex-note">Made-up findings from ${EX.papers.length} example papers, to show how Atlas 2 could explain a connection. Not real results; real counts above are unaffected.</p>
+          <p class="ex-note">${all.length < coded.length ? `Showing ${all.length} of ${coded.length} findings that match your Atlas 2 filters. ` : ""}Made-up findings from ${EX.papers.length} example papers, to show how Atlas 2 could explain a connection. Not real results; real counts above are unaffected.</p>
         </div>`;
       }
 
       // Example papers on this concept, at the bottom of its paper list.
       function examplePapersHtml(center) {
         if (!EX) return "";
-        const list = EX.papers.filter((p) => p.concepts.includes(center.id) && (!state.connection || p.concepts.includes(state.connection)));
+        const list = EX.papers.filter((p) => p.concepts.includes(center.id) && (!state.connection || p.concepts.includes(state.connection)) && exPaperPasses(p));
         if (!list.length) return "";
         return `<div class="ex-zone ex-papers">
           <div class="ex-head"><span class="t">Example papers (${list.length})</span>${exampleBadge()}</div>
@@ -3346,12 +3476,18 @@
       });
 
       // ---------- Filters: one shared panel, and the active filters under the top bar ----------
-      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0);
+      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0) + exFilterCount();
 
       function pinButton(ids, what) {
         const on = ids.every((id) => state.pins.includes(id));
         return `<button type="button" class="pin-btn ${on ? "on" : ""}" data-action="pin" data-pin="${esc(ids.join(","))}" data-ids="${esc(ids.join(","))}"
           title="Only count papers that include ${esc(what)}">${on ? "✓ Narrowed to papers with " + esc(what) : "＋ Narrow to papers with " + esc(what)}</button>`;
+      }
+
+      function clearExFilters() {
+        state.exValues = new Map();
+        state.exMin = new Map();
+        state.exCert = new Set(["recorded", "ai", "checked"]);
       }
 
       // Pins all the given concepts, or unpins them if they're all pinned already.
@@ -3412,6 +3548,7 @@
           ${rangeActive() ? chip(`Years ${rangeText()}`, "range") : ""}
           ${state.minPapers > 1 ? chip(`Concepts with ≥ ${state.minPapers} papers`, "min") : ""}
           ${hidden.length ? chip(`Hiding ${listJoin(hidden.map((t) => typeOf(t).plural.toLowerCase()))}`, "types") : ""}
+          ${exChips().map((c) => `<span class="chip-filter ex" title="Filters the example papers only"><span>◇ ${c.html}</span><button type="button" data-fb="ex-${c.kind}" data-v="${esc(c.v)}" aria-label="Remove filter">×</button></span>`).join("")}
           <button type="button" class="link-btn clear-all" data-fb="all">Clear all</button>`;
         bar.hidden = false;
       }
@@ -3423,7 +3560,10 @@
         if (what === "range" || what === "all") state.range = [Y0, Y1];
         if (what === "min" || what === "all") state.minPapers = 1;
         if (what === "types" || what === "all") state.types = new Set(nodeTypes);
-        if (what === "all") state.pins = [];
+        if (what === "all") { state.pins = []; clearExFilters(); }
+        if (what === "ex-val") state.exValues.delete(el.dataset.v);
+        if (what === "ex-min") state.exMin.delete(el.dataset.v);
+        if (what === "ex-cert") state.exCert = new Set(["recorded", "ai", "checked"]);
         applyFilters();
       });
 
@@ -3518,7 +3658,8 @@
               <button type="button" data-fp="min+" ${state.minPapers >= 50 ? "disabled" : ""} aria-label="More">+</button>
               <span class="note">${nodes.filter(conceptOn).length} of ${nodes.length} concepts shown</span>
             </div>
-          </section>`;
+          </section>
+          ${exFiltersHtml()}`;
         panel.querySelectorAll("input[data-partial='true']").forEach((box) => { box.indeterminate = true; });
         refreshFilterRange();
       }
@@ -3552,11 +3693,31 @@
         }
         const item = event.target.closest(".search-item[data-id]");
         if (item) { togglePins([item.dataset.id]); $("pin-input")?.focus(); return; }
+        const ex = event.target.closest("[data-ex]");
+        if (ex) {
+          const { v, val } = ex.dataset;
+          if (ex.dataset.ex === "group") {
+            if (state.exOpen.has(v)) state.exOpen.delete(v); else state.exOpen.add(v);
+            renderFilterPanel();
+            return;
+          }
+          if (ex.dataset.ex === "val") {
+            const set = state.exValues.get(v) || new Set();
+            if (set.has(val)) set.delete(val); else set.add(val);
+            state.exValues.set(v, set);
+          } else if (ex.dataset.ex === "min") {
+            if (val === "") state.exMin.delete(v); else state.exMin.set(v, Number(val));
+          } else if (ex.dataset.ex === "cert") {
+            if (state.exCert.has(v)) { if (state.exCert.size > 1) state.exCert.delete(v); } else state.exCert.add(v);
+          }
+          applyFilters();
+          return;
+        }
         const el = event.target.closest("[data-fp]");
         if (!el) return;
         switch (el.dataset.fp) {
           case "close": setFiltersOpen(false); return;
-          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); break;
+          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); clearExFilters(); break;
           case "unpin": state.pins = state.pins.filter((id) => id !== el.dataset.v); break;
           case "min-": state.minPapers = Math.max(1, state.minPapers - 1); break;
           case "min+": state.minPapers = Math.min(50, state.minPapers + 1); break;
