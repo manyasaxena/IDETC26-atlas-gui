@@ -1152,6 +1152,58 @@
 
     .error { padding: 24px; color: #ff8a80; font: 13px var(--mono); line-height: 1.6; }
 
+    /* ---------- Example data (Atlas 2 preview) ----------
+       Anything built on atlas2_example.json sits in a dashed amber frame with an "Example data" badge,
+       so it can never be mistaken for real findings. */
+    :root { --ex: #ffc46b; --ex-line: rgba(255, 196, 107, 0.55); --ex-bg: rgba(255, 183, 77, 0.06); }
+    .ex-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 9px;
+      border: 1px dashed var(--ex-line);
+      border-radius: 999px;
+      background: var(--ex-bg);
+      color: var(--ex);
+      font: 600 10.5px var(--mono);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      vertical-align: 1px;
+    }
+    .ex-zone {
+      position: relative;
+      border: 1.5px dashed var(--ex-line);
+      border-radius: var(--r-lg);
+      background:
+        repeating-linear-gradient(135deg, rgba(255, 196, 107, 0.035) 0 8px, transparent 8px 16px),
+        var(--surface-2);
+      padding: 14px 14px 12px;
+      margin-top: 14px;
+    }
+    .ex-zone > .ex-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .ex-zone > .ex-head .t { font: 600 11px var(--mono); color: var(--text); text-transform: uppercase; letter-spacing: 0.6px; }
+    .ex-zone .ex-note { margin: 8px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+    .cert { display: inline-grid; place-items: center; width: 13px; height: 13px; box-sizing: border-box; border-radius: 50%; font: 700 9px var(--sans); line-height: 1; vertical-align: -1px; flex: 0 0 auto; }
+    .cert-recorded { background: #aab3c5; }
+    .cert-ai { border: 1.5px dashed #9fb6d9; color: #9fb6d9; }
+    .cert-checked { background: #7fd39a; color: #0d0e12; }
+    .cert-key { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 11px var(--mono); color: var(--muted); }
+    .cert-key span { display: inline-flex; align-items: center; gap: 5px; }
+    .preview-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 22px;
+      padding: 12px 16px;
+      border: 1.5px dashed var(--ex-line);
+      border-radius: var(--r-md);
+      background: var(--ex-bg);
+      color: #d5dbe6;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
     }
@@ -1245,17 +1297,20 @@
       const tooltip = $("tooltip");
 
       // ---------- Load data ----------
-      let raw, schemaFile = null;
+      let raw, schemaFile = null, exampleRaw = null;
       try {
         if (location.protocol === "file:") throw new Error("This page has to be served over http to load graph_data.json.");
-        const [response, schemaResponse] = await Promise.all([
+        const [response, schemaResponse, exampleResponse] = await Promise.all([
           fetch("./graph_data.json"),
-          fetch("./atlas_schema.json").catch(() => null)
+          fetch("./atlas_schema.json").catch(() => null),
+          fetch("./atlas2_example.json").catch(() => null)
         ]);
         if (!response.ok) throw new Error(`Could not load graph_data.json (HTTP ${response.status}).`);
         raw = await response.json();
         if (schemaResponse && schemaResponse.ok) schemaFile = await schemaResponse.json();
         else if (!raw.schema) console.warn("No atlas_schema.json found; type names and colors are generated from the data.");
+        if (exampleResponse && exampleResponse.ok) exampleRaw = await exampleResponse.json();
+        else console.warn("No atlas2_example.json found; the Atlas 2 preview panels are hidden.");
       } catch (error) {
         $("app").innerHTML = `<div class="error">${esc(error.message)}<br/>From the project folder run <code>python3 -m http.server 8000</code> and open http://localhost:8000/redesign.html</div>`;
         console.error(error);
@@ -1387,6 +1442,44 @@
 
       const [Y0, Y1] = (raw.meta && raw.meta.year_range) || d3.extent([...paperById.values()], (p) => p.year);
       const nodeR = d3.scaleSqrt().domain([0, d3.max(nodes, (n) => n.paperCount)]).range([3, 20]);
+
+      // ---------- Example data (Atlas 2 preview) ----------
+      // atlas2_example.json holds ten made-up papers in a guessed Atlas 2 format. They are kept apart from
+      // the real papers: they never change real counts, and everything built on them is labelled "Example data".
+      const EX = (() => {
+        if (!exampleRaw) return null;
+        const papers = (exampleRaw.papers || []).map((p) => ({ ...p, concepts: (p.concepts || []).map(String).filter((id) => byId.has(id)) }));
+        const variables = exampleRaw.variables || [];
+        const findings = papers.flatMap((p) => (p.findings || [])
+          .filter((f) => byId.has(String(f.iv)) && byId.has(String(f.dv)))
+          .map((f, i) => ({ ...f, iv: String(f.iv), dv: String(f.dv), id: `${p.id}-${i}`, paper: p })));
+        const byPair = new Map();
+        const byConcept = new Map();
+        findings.forEach((f) => {
+          const key = pairKey(f.iv, f.dv);
+          if (!byPair.has(key)) byPair.set(key, []);
+          byPair.get(key).push(f);
+          [f.iv, f.dv].forEach((id) => {
+            if (!byConcept.has(id)) byConcept.set(id, []);
+            byConcept.get(id).push(f);
+          });
+        });
+        return {
+          papers,
+          paperById: new Map(papers.map((p) => [p.id, p])),
+          variables,
+          varById: new Map(variables.map((v) => [v.id, v])),
+          groups: exampleRaw.groups || [],
+          certainty: exampleRaw.certainty || [],
+          findings,
+          byPair,
+          byConcept
+        };
+      })();
+      const exampleBadge = (text = "Example data") => `<span class="ex-badge" title="Made-up data in a guessed Atlas 2 format, for trying out the design. Not real findings.">◇ ${esc(text)}</span>`;
+      const CERT = { recorded: { mark: "", label: "Recorded" }, ai: { mark: "", label: "AI-extracted, not checked yet" }, checked: { mark: "✓", label: "Checked by a person" } };
+      const certMark = (c) => `<span class="cert cert-${esc(c)}" title="${esc(CERT[c]?.label || c)}">${CERT[c]?.mark || "?"}</span>`;
+      const certKey = () => `<div class="cert-key">${Object.keys(CERT).map((c) => `<span>${certMark(c)}${esc(CERT[c].label.replace(", not checked yet", ""))}</span>`).join("")}</div>`;
 
       // ---------- State ----------
       const state = {
@@ -1684,8 +1777,11 @@
           </div>`).join("")}
         <div class="more">
           <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
-          <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
+          <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The inner ring holds the third that are most tightly tied, meaning the biggest share of their papers are shared.</p>
+          <p><strong>× chance.</strong> How many times more often two concepts share papers than you'd expect if they were unrelated. Common concepts (like Engineering Students) share many papers with everything, so a big count can still be "about chance".</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
+          ${EX ? `<p>${exampleBadge()} <strong>Atlas 2 preview.</strong> Panels in a dashed amber frame use ${EX.papers.length} made-up papers to show how findings, certainty and study details could look once Atlas 2 data exists. They are not real findings and never change the real counts.</p>
+          <p><strong>Certainty marks</strong> (on example data):</p>${certKey()}` : ""}
         </div>`;
       const glossary = $("glossary");
       $("help-btn").addEventListener("click", () => { glossary.hidden = false; });
@@ -1884,6 +1980,8 @@
               <button type="button" class="see-network" data-network="1">See the full network →</button>
             </div>
           </div>
+
+          ${EX ? `<div class="preview-note">${exampleBadge("Atlas 2 preview")}<span>Some panels (findings, evidence, study cards and the Paper / Study / Measurement / Claim filters) are filled with <strong>${EX.papers.length} made-up example papers</strong> so you can try the Atlas 2 design. They always sit in a dashed amber frame like this one, and never change the real counts. Try <button type="button" class="link-btn" data-open="8238" style="font-size:13px">cognitive fixation</button>.</span></div>` : ""}
 
           ${!inView ? `<div class="gap-box land-gap"><strong>0 papers: possible gap</strong><p>No paper covers every concept you pinned${rangeActive() ? ` in ${rangeText()}` : ""}. Open Filters to see the closest combinations that do.</p></div>` : ""}
 
