@@ -1232,6 +1232,52 @@
     .strength-bars { letter-spacing: 1px; color: #cfd5e0; }
     .ex-empty { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
 
+    /* Orbit tools: mode switch and split-by */
+    .orbit-tools {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .seg {
+      display: inline-flex;
+      gap: 2px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(13, 14, 18, 0.9);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+    }
+    .seg button {
+      border: none;
+      background: none;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font: 11.5px var(--mono);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .seg button.on { background: var(--surface-3); color: var(--text); }
+    .seg button.ex.on { background: rgba(255, 196, 107, 0.16); color: #ffe2b0; }
+    .split-pick { display: flex; align-items: center; gap: 6px; font: 11.5px var(--mono); color: var(--muted); background: rgba(13, 14, 18, 0.9); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 12px; }
+    .split-pick select { max-width: 170px; }
+    .orbit-wrap.findings-mode { outline: 1.5px dashed var(--ex-line); outline-offset: -1.5px; }
+    #orbit .split-ring path { stroke: var(--bg); stroke-width: 0.6; }
+    #orbit .spoke.hide { stroke-opacity: 0 !important; }
+    #orbit .f-link { fill: none; stroke-width: 2.2; stroke-linecap: round; }
+    #orbit .f-badge rect { stroke-width: 1; }
+    #orbit .f-badge text { font: 600 10.5px var(--mono); }
+    #orbit .ring.dim, #orbit .ring-label.dim { opacity: 0.25; }
+    .legend-ex { display: grid; gap: 5px; padding-top: 6px; border-top: 1px dashed var(--ex-line); }
+    .legend-split { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+    .legend-split span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-split i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
     /* Atlas 2 variables in the filter panel */
     .fp-section.ex-zone { border-top: 1.5px dashed var(--ex-line); margin-top: 16px; padding-top: 14px; }
     .ex-group { border-top: 1px solid var(--line); padding: 6px 0; }
@@ -1337,6 +1383,7 @@
           </div>
           <div class="orbit-empty" id="orbit-empty" hidden></div>
           <div class="orbit-legend" id="orbit-legend"></div>
+          <div class="orbit-tools" id="orbit-tools"></div>
         </div>
         <aside class="right bubble-panel">
           <div class="tabs" id="tabs">
@@ -1588,6 +1635,9 @@
         exMin: new Map(),
         exCert: new Set(["recorded", "ai", "checked"]),
         exOpen: new Set(["study"]),
+        // Orbit: "together" (shared papers) or "findings" (example Atlas 2 findings), and what to split nodes by.
+        orbitMode: "together",
+        splitBy: "",
         center: null,
         tab: "papers",
         connection: null,
@@ -2222,7 +2272,9 @@
       // d3.arc measures angles clockwise from 12 o'clock; the layout measures them from 3 o'clock.
       const arcAngles = (g) => ({ startAngle: g.start + Math.PI / 2, endAngle: g.end + Math.PI / 2 });
       const spokeG = orbitRoot.append("g");
+      const findingG = orbitRoot.append("g");
       const orbitNodeG = orbitRoot.append("g");
+      const splitG = orbitRoot.append("g");
       const centerG = orbitRoot.append("g").attr("class", "center-node");
       const labelG = orbitRoot.append("g");
       const sectorLabelG = orbitRoot.append("g");
@@ -2415,9 +2467,24 @@
         });
       }
 
+      // Example findings between the center and each neighbor that pass the Atlas 2 filters.
+      function findingPartners(centerId) {
+        const map = new Map();
+        if (!EX) return map;
+        (EX.byConcept.get(centerId) || []).filter(exFindingPasses).forEach((f) => {
+          const other = f.iv === centerId ? f.dv : f.iv;
+          if (!map.has(other)) map.set(other, []);
+          map.get(other).push(f);
+        });
+        return map;
+      }
+
       function updateOrbit(duration = 650) {
         const center = byId.get(state.center);
-        const typed = visibleNeighbors().sort(byRelevance);
+        const findingsMode = state.orbitMode === "findings" && !!EX;
+        const partners = findingsMode ? findingPartners(center.id) : null;
+        const typed = visibleNeighbors().filter((d) => !partners || partners.has(d.node.id)).sort(byRelevance);
+        typed.forEach((d) => { d.findings = partners ? partners.get(d.node.id) : null; });
         const base = typed.slice(0, state.orbitLimit);
         const baseIds = new Set(base.map((d) => d.node.id));
         const paper = currentPaper();
@@ -2428,8 +2495,10 @@
         extras.forEach((d) => { d.ring = 2; });
         const shown = base.concat(extras);
         const centerSize = Math.max(12, nodeR(papersOf(center).length));
-        Object.assign(orbit, { center, shown, inPaper, typedCount: typed.length, centerSize });
-        // The legend is drawn first so label placement sees its final size.
+        Object.assign(orbit, { center, shown, inPaper, typedCount: typed.length, centerSize, findingsMode });
+        shown.forEach((d) => { d.split = splitCounts(d); });
+        // The legend and tools are drawn first so label placement sees their final size.
+        renderOrbitTools();
         renderOrbitLegend();
 
         const groups = layoutOrbit(shown);
@@ -2498,7 +2567,9 @@
               styleOrbit();
               highlightRow(d.node.id, true);
               const range = rangeActive() ? ` in ${rangeText()}` : "";
-              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${liftShort(d.lift)}<br/>${RING_NAMES[d.ring]} · click to see why`), event, $("orbit-wrap"));
+              const split = d.split ? `<br/>${d.split.filter((x) => x.n).map((x) => `${esc(x.key)} ${x.n}`).join(" · ")}` : "";
+              const found = d.findings ? `<br/>◇ Example findings: ${d.findings.map((f) => DIR[f.direction].sym).join(" ")}` : "";
+              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${liftShort(d.lift)}<br/>${RING_NAMES[d.ring]} · click to see why${split}${found}`), event, $("orbit-wrap"));
             })
               .on("mousemove", moveTip)
               .on("mouseleave", (event, d) => {
@@ -2538,11 +2609,18 @@
           .transition(t)
           .attr("transform", (d) => `translate(${d.lab.x},${d.lab.y})`);
         centerLabel.raise();
+        drawSplitRings(shown, t);
+        drawFindings(shown, t);
+        $("orbit-wrap").classList.toggle("findings-mode", findingsMode);
+        ringG.selectAll("circle").classed("dim", findingsMode);
+        ringLabelG.selectAll("text").classed("dim", findingsMode);
 
         const empty = $("orbit-empty");
         empty.hidden = shown.length > 0;
         if (!shown.length) {
-          empty.textContent = !papersOf(center).length && scopeActive()
+          empty.textContent = findingsMode
+            ? "No example findings involve this concept (or none match your filters). Try cognitive fixation or divergent thinking."
+            : !papersOf(center).length && scopeActive()
             ? "No papers match your filters."
             : !neighborData().length
               ? scopeActive() ? "No connections that match your filters." : "No connections for this concept in the graph."
@@ -2558,6 +2636,7 @@
         const faded = (id) => !!inPaper && !inPaper.has(id);
 
         spokeG.selectAll("line.spoke")
+          .classed("hide", () => !!orbit.findingsMode)
           .classed("sel", (d) => d.node.id === sel)
           .classed("faded", (d) => d.node.id !== sel && faded(d.node.id))
           .classed("lit", (d) => !!inPaper && !faded(d.node.id))
@@ -2596,6 +2675,140 @@
         return `<svg width="30" height="18" aria-hidden="true">${paths}</svg>`;
       }
 
+      // ---------- Split by ----------
+      const DECADES = d3.range(Math.floor(Y0 / 10) * 10, Y1 + 1, 10);
+      const DECADE_COLORS = ["#3d5580", "#4f72ab", "#6d95d0", "#97baea", "#cfe3ff"];
+      const SPLIT_COLORS = ["#8bc5ff", "#f4a3c0", "#a5e3b0", "#d6c9ff", "#ffd59a", "#80cbc4"];
+      const NOT_CODED = "#3a3f4d";
+      const SPLIT_VARS = ["subject_expertise", "task_team", "setting", "method", "condition_tool"];
+      const splitIsExample = () => state.splitBy && state.splitBy !== "decade";
+
+      // Slices for one orbit node: decades of its shared papers (real), or values of an Atlas 2 variable
+      // among example papers covering both concepts, with every real shared paper counted as "not coded yet".
+      function splitKeys() {
+        if (state.splitBy === "decade") return DECADES.map((d) => `${d}s`);
+        const def = EX?.varById.get(state.splitBy);
+        if (!def) return [];
+        return [...(def.kind === "yesno" ? ["yes", "no"] : def.values || []), "not coded yet"];
+      }
+      function splitColor(key, i) {
+        if (state.splitBy === "decade") return DECADE_COLORS[Math.min(i, DECADE_COLORS.length - 1)];
+        return key === "not coded yet" ? NOT_CODED : SPLIT_COLORS[i % SPLIT_COLORS.length];
+      }
+      function splitCounts(d) {
+        if (!state.splitBy) return null;
+        const keys = splitKeys();
+        const counts = new Map(keys.map((k) => [k, 0]));
+        if (state.splitBy === "decade") {
+          d.sharedPapers.forEach((p) => { const k = `${Math.floor(p.year / 10) * 10}s`; counts.set(k, (counts.get(k) || 0) + 1); });
+        } else {
+          const def = EX.varById.get(state.splitBy);
+          EX.papers.filter((p) => p.concepts.includes(state.center) && p.concepts.includes(d.node.id) && exPaperPasses(p)).forEach((p) => {
+            const v = p.values?.[def.id];
+            const k = v && state.exCert.has(v.certainty) ? fmtValue(v, def) : "not coded yet";
+            counts.set(k, (counts.get(k) || 0) + 1);
+          });
+          counts.set("not coded yet", counts.get("not coded yet") + d.shared);
+        }
+        return keys.map((k, i) => ({ key: k, n: counts.get(k) || 0, color: splitColor(k, i) }));
+      }
+      const splitPie = d3.pie().sort(null).value((x) => x.n);
+      function drawSplitRings(shown, t) {
+        const data = state.splitBy ? shown.filter((d) => d.split && d3.sum(d.split, (x) => x.n)) : [];
+        splitG.selectAll("g.split-ring").data(data, (d) => d.node.id).join(
+          (enter) => enter.append("g").attr("class", "split-ring").style("opacity", 0).attr("pointer-events", "none"),
+          (update) => update,
+          (exit) => exit.remove()
+        )
+          .each(function (d) {
+            const arc = d3.arc().innerRadius(d.size + 2.5).outerRadius(d.size + 7);
+            d3.select(this).selectAll("path").data(splitPie(d.split.filter((x) => x.n))).join("path")
+              .attr("d", arc)
+              .attr("fill", (a) => a.data.color);
+          })
+          .transition(t)
+          .style("opacity", 1)
+          .attr("transform", (d) => `translate(${d.x},${d.y})`);
+      }
+
+      // ---------- Findings mode ----------
+      const DIR_COLORS = { increased: "#8bc5ff", reduced: "#f4a3c0", "no effect": "#9aa2b2", mixed: "#c9b6ff" };
+      // Marker ids per direction (set up at load time, before the DIR table further down exists).
+      const DIR_MARK = { increased: "increased", reduced: "reduced", "no effect": "noeffect", mixed: "mixed" };
+      function drawFindings(shown, t) {
+        const data = orbit.findingsMode ? shown.filter((d) => d.findings && d.findings.length) : [];
+        const center = orbit.center;
+        // One arrow per neighbor, drawn from cause (IV) to effect (DV); its badge counts each direction.
+        const items = data.map((d) => {
+          const fs = d.findings;
+          const fromCenter = fs.filter((f) => f.iv === center.id).length >= fs.length / 2;
+          const dirs = Object.keys(DIR).map((k) => ({ k, n: fs.filter((f) => f.direction === k).length })).filter((x) => x.n);
+          const main = dirs.length === 1 ? dirs[0].k : "mixed";
+          const [sx, sy, ex, ey, sr, er] = fromCenter ? [0, 0, d.x, d.y, orbit.centerSize, d.size] : [d.x, d.y, 0, 0, d.size, orbit.centerSize];
+          const len = Math.hypot(ex - sx, ey - sy) || 1;
+          const ux = (ex - sx) / len, uy = (ey - sy) / len;
+          return {
+            d, main, dirs,
+            x1: sx + ux * (sr + 3), y1: sy + uy * (sr + 3), x2: ex - ux * (er + 9), y2: ey - uy * (er + 9),
+            mx: (sx + ex) / 2, my: (sy + ey) / 2,
+            label: dirs.map((x) => `${DIR[x.k].sym}${x.n}`).join(" ")
+          };
+        });
+        const g = findingG.selectAll("g.f-item").data(items, (x) => x.d.node.id).join(
+          (enter) => {
+            const e = enter.append("g").attr("class", "f-item").style("opacity", 0);
+            e.append("path").attr("class", "f-link");
+            const b = e.append("g").attr("class", "f-badge");
+            b.append("rect").attr("rx", 7);
+            b.append("text").attr("text-anchor", "middle").attr("dy", "0.35em");
+            return e;
+          },
+          (update) => update,
+          (exit) => exit.remove()
+        );
+        g.select("path")
+          .attr("d", (x) => `M${x.x1},${x.y1}L${x.x2},${x.y2}`)
+          .attr("stroke", (x) => DIR_COLORS[x.main])
+          .attr("marker-end", (x) => `url(#arrow-${DIR_MARK[x.main]})`);
+        g.select(".f-badge").attr("transform", (x) => `translate(${x.mx},${x.my})`);
+        g.select(".f-badge text").text((x) => x.label).attr("fill", (x) => DIR_COLORS[x.main]);
+        g.select(".f-badge rect")
+          .attr("x", (x) => -(x.label.length * 3.6 + 6)).attr("y", -9)
+          .attr("width", (x) => x.label.length * 7.2 + 12).attr("height", 18)
+          .attr("fill", "rgba(13,14,18,0.92)")
+          .attr("stroke", (x) => DIR_COLORS[x.main]);
+        g.transition(t).style("opacity", 1);
+      }
+      // Arrowheads for each direction color.
+      const defs = orbitSvg.append("defs");
+      Object.entries(DIR_COLORS).forEach(([k, color]) => {
+        defs.append("marker").attr("id", `arrow-${DIR_MARK[k]}`).attr("viewBox", "0 0 10 10").attr("refX", 2).attr("refY", 5)
+          .attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto-start-reverse")
+          .append("path").attr("d", "M0,0L10,5L0,10z").attr("fill", color);
+      });
+
+      function renderOrbitTools() {
+        const options = [`<option value="" ${!state.splitBy ? "selected" : ""}>Nothing</option>`, `<option value="decade" ${state.splitBy === "decade" ? "selected" : ""}>Decade</option>`]
+          .concat(EX ? [`<optgroup label="◇ Example data (Atlas 2)">${SPLIT_VARS.map((vid) => EX.varById.get(vid)).filter(Boolean).map((def) => `<option value="${esc(def.id)}" ${state.splitBy === def.id ? "selected" : ""}>${esc(def.parentType ? `${typeOf(def.parentType)?.label.toLowerCase()} › ${def.label}` : def.label)}</option>`).join("")}</optgroup>`] : []);
+        $("orbit-tools").innerHTML = `
+          ${EX ? `<div class="seg" role="group" aria-label="What the orbit shows">
+            <button type="button" class="${state.orbitMode === "together" ? "on" : ""}" data-mode="together">Studied together</button>
+            <button type="button" class="ex ${state.orbitMode === "findings" ? "on" : ""}" data-mode="findings" title="Example data: made-up Atlas 2 findings">◇ Findings</button>
+          </div>` : ""}
+          <label class="split-pick">Split by <select id="split-by">${options.join("")}</select></label>`;
+      }
+      $("orbit-tools").addEventListener("click", (event) => {
+        const b = event.target.closest("[data-mode]");
+        if (!b || b.dataset.mode === state.orbitMode) return;
+        state.orbitMode = b.dataset.mode;
+        updateOrbit(450);
+      });
+      $("orbit-tools").addEventListener("change", (event) => {
+        if (event.target.id !== "split-by") return;
+        state.splitBy = event.target.value;
+        updateOrbit(300);
+      });
+
       function renderOrbitLegend() {
         const shownCount = orbit.shown.length;
         const more = orbit.typedCount > state.orbitLimit;
@@ -2613,6 +2826,10 @@
             ${sliceIcon()}
             <span>Slices group the concept types</span>
           </div>
+          ${orbit.findingsMode ? `<div class="legend-ex"><div>${exampleBadge("Findings · example data")}</div><span>Arrows run from cause to effect: ↑ increased · ↓ reduced · ○ no effect · ± mixed. Only pairs with example findings are shown.</span></div>` : ""}
+          ${state.splitBy ? `<div class="row" style="align-items:flex-start"><svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="5" fill="#8a93a6"/><circle cx="15" cy="9" r="7.5" fill="none" stroke="#6d95d0" stroke-width="3"/></svg>
+            <span>${splitIsExample() ? `<span style="display:block;margin-bottom:4px">${exampleBadge()}</span>` : ""}Ring = shared papers split by ${esc(state.splitBy === "decade" ? "decade" : EX.varById.get(state.splitBy).label)}:
+              <span class="legend-split">${splitKeys().map((k, i) => `<span><i style="background:${splitColor(k, i)}"></i>${esc(k)}</span>`).join("")}</span></span></div>` : ""}
           ${orbit.typedCount ? `<div class="legend-more">
             <span>Showing ${shownCount} of ${orbit.typedCount}</span>
             ${more ? `<button type="button" class="pill-btn" data-action="orbit-more">Show more</button>` : ""}
