@@ -1,0 +1,315 @@
+{
+  "about": "EXAMPLE DATA ONLY. Ten made-up papers in a guessed Atlas 2 format, for prototyping redesign-v2.html before real Atlas 2 data exists. None of these papers, authors or findings are real. They link to real concept ids from graph_data.json so they appear on real concept pages, always labelled as example data. Variables follow design_figma/inspo-atlas2-variables.png.png (a subset). Unit of analysis is the paper, one study each (an open question for Casey).",
+  "certainty": [
+    { "id": "recorded", "label": "Recorded", "mark": "●", "description": "Taken from bibliographic data. Reliable." },
+    { "id": "ai", "label": "AI-extracted", "mark": "◌", "description": "Read from the paper by a model, not checked by a person yet." },
+    { "id": "checked", "label": "Checked by a person", "mark": "✓", "description": "A person judged or verified this value." }
+  ],
+  "groups": [
+    { "id": "paper", "label": "Paper", "asks": "who, where, why" },
+    { "id": "study", "label": "Study", "asks": "what happened" },
+    { "id": "measurement", "label": "Measurement", "asks": "how it became data" },
+    { "id": "claim", "label": "Claim", "asks": "what was found" }
+  ],
+  "variables": [
+    { "id": "region", "group": "paper", "family": "metadata", "label": "region", "kind": "category", "obtained": "record", "values": ["North America", "Europe", "Asia", "Oceania"] },
+    { "id": "hypothesis_stated", "group": "paper", "family": "research question", "label": "hypothesis stated", "kind": "yesno", "obtained": "extract" },
+    { "id": "named_theory", "group": "paper", "family": "theory", "label": "named theory", "kind": "category", "obtained": "judge", "values": ["Design fixation theory", "Dual-process theory", "Psychological safety theory", "Cognitive load theory", "None named"] },
+
+    { "id": "subject_expertise", "group": "study", "family": "subject", "parentType": "subject", "label": "expertise", "kind": "category", "obtained": "extract", "values": ["novice", "intermediate", "expert", "mixed"] },
+    { "id": "subject_discipline", "group": "study", "family": "subject", "parentType": "subject", "label": "discipline", "kind": "category", "obtained": "extract", "values": ["mechanical engineering", "industrial design", "mixed engineering", "non-engineering"] },
+    { "id": "task_team", "group": "study", "family": "task", "parentType": "task", "label": "individual or team", "kind": "category", "obtained": "extract", "values": ["individual", "team"] },
+    { "id": "task_duration", "group": "study", "family": "task", "parentType": "task", "label": "duration (minutes)", "kind": "number", "obtained": "extract" },
+    { "id": "design_phase", "group": "study", "family": "task", "parentType": "task", "label": "design phase", "kind": "category", "obtained": "judge", "values": ["problem definition", "ideation", "evaluation", "detail design"] },
+    { "id": "problem_realism", "group": "study", "family": "problem", "parentType": "problem", "label": "realism", "kind": "category", "obtained": "extract", "values": ["toy problem", "realistic brief", "real client"] },
+    { "id": "problem_openness", "group": "study", "family": "problem", "parentType": "problem", "label": "openness", "kind": "category", "obtained": "judge", "values": ["well-defined", "ill-defined"] },
+    { "id": "method", "group": "study", "family": "study design", "label": "method", "kind": "category", "obtained": "extract", "values": ["controlled experiment", "quasi-experiment", "observational", "interview", "survey"] },
+    { "id": "setting", "group": "study", "family": "context", "label": "setting", "kind": "category", "obtained": "extract", "values": ["lab", "classroom", "workplace", "online"] },
+    { "id": "time_pressure", "group": "study", "family": "context", "label": "time pressure", "kind": "yesno", "obtained": "extract" },
+    { "id": "condition_tool", "group": "study", "family": "condition", "label": "tool", "kind": "category", "obtained": "extract", "values": ["sketching", "CAD", "AI assistant", "physical prototyping"] },
+
+    { "id": "instrument", "group": "measurement", "family": "measure", "label": "instrument", "kind": "category", "obtained": "extract", "values": ["idea ratings", "questionnaire", "think-aloud coding", "eye tracking"] },
+    { "id": "sample_size", "group": "measurement", "family": "evidence strength", "label": "sample size", "kind": "number", "obtained": "extract" },
+    { "id": "measure_validated", "group": "measurement", "family": "measure", "label": "validated measure", "kind": "yesno", "obtained": "judge" },
+    { "id": "causal_design", "group": "measurement", "family": "evidence strength", "label": "causal design", "kind": "yesno", "obtained": "judge" },
+
+    { "id": "finding_direction", "group": "claim", "family": "finding", "label": "direction", "kind": "category", "obtained": "judge", "values": ["increased", "reduced", "no effect", "mixed"] },
+    { "id": "finding_strength", "group": "claim", "family": "finding", "label": "strength", "kind": "category", "obtained": "judge", "values": ["weak", "moderate", "strong"] },
+    { "id": "finding_hedging", "group": "claim", "family": "finding", "label": "hedging", "kind": "category", "obtained": "judge", "values": ["firm", "hedged"] }
+  ],
+  "papers": [
+    {
+      "id": "ex1", "title": "Example study A: Priming with Far Analogies Before Ideation", "authors": "Example et al.", "year": 2018,
+      "concepts": ["6577", "6725", "6600", "8018", "8238", "8257"],
+      "values": {
+        "region": { "value": "North America", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Design fixation theory", "certainty": "checked" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "mechanical engineering", "certainty": "ai" },
+        "task_team": { "value": "individual", "certainty": "ai" },
+        "task_duration": { "value": 30, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "checked" },
+        "problem_realism": { "value": "realistic brief", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "checked" },
+        "method": { "value": "controlled experiment", "certainty": "ai" },
+        "setting": { "value": "lab", "certainty": "ai" },
+        "time_pressure": { "value": true, "certainty": "ai" },
+        "condition_tool": { "value": "sketching", "certainty": "ai" },
+        "instrument": { "value": "idea ratings", "certainty": "ai" },
+        "sample_size": { "value": 64, "certainty": "ai" },
+        "measure_validated": { "value": true, "certainty": "checked" },
+        "causal_design": { "value": true, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "6725", "dv": "8238", "direction": "reduced", "strength": "moderate", "hedging": "firm", "certainty": "checked", "statement": "A far-analogy priming activity before ideation reduced fixation on the example solution.", "scope": "novice engineering students, 30-minute lab session" },
+        { "iv": "8257", "dv": "8238", "direction": "increased", "strength": "weak", "hedging": "hedged", "certainty": "ai", "statement": "Near analogies (close to the example) slightly increased fixation compared with no analogy.", "scope": "same participants, secondary comparison" }
+      ]
+    },
+    {
+      "id": "ex2", "title": "Example study B: Does a Warm-Up Exercise Loosen Fixation in Teams?", "authors": "Sample et al.", "year": 2020,
+      "concepts": ["6577", "6725", "6600", "7835", "8238", "8239"],
+      "values": {
+        "region": { "value": "Europe", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Design fixation theory", "certainty": "ai" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "industrial design", "certainty": "ai" },
+        "task_team": { "value": "team", "certainty": "ai" },
+        "task_duration": { "value": 45, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "checked" },
+        "problem_realism": { "value": "toy problem", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "controlled experiment", "certainty": "ai" },
+        "setting": { "value": "classroom", "certainty": "ai" },
+        "time_pressure": { "value": false, "certainty": "ai" },
+        "condition_tool": { "value": "sketching", "certainty": "ai" },
+        "instrument": { "value": "idea ratings", "certainty": "ai" },
+        "sample_size": { "value": 96, "certainty": "ai" },
+        "measure_validated": { "value": true, "certainty": "ai" },
+        "causal_design": { "value": true, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "6725", "dv": "8238", "direction": "reduced", "strength": "strong", "hedging": "firm", "certainty": "checked", "statement": "Teams that did a five-minute warm-up exercise fixated much less on the provided example.", "scope": "student design teams, classroom" }
+      ]
+    },
+    {
+      "id": "ex3", "title": "Example study C: Novices Ideating with an LLM Assistant", "authors": "Placeholder et al.", "year": 2024,
+      "concepts": ["6577", "6579", "6600", "8018", "8238", "8239"],
+      "values": {
+        "region": { "value": "North America", "certainty": "recorded" },
+        "hypothesis_stated": { "value": false, "certainty": "ai" },
+        "named_theory": { "value": "None named", "certainty": "ai" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "mixed engineering", "certainty": "ai" },
+        "task_team": { "value": "individual", "certainty": "ai" },
+        "task_duration": { "value": 40, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "realistic brief", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "controlled experiment", "certainty": "ai" },
+        "setting": { "value": "lab", "certainty": "ai" },
+        "time_pressure": { "value": true, "certainty": "ai" },
+        "condition_tool": { "value": "AI assistant", "certainty": "ai" },
+        "instrument": { "value": "idea ratings", "certainty": "ai" },
+        "sample_size": { "value": 48, "certainty": "ai" },
+        "measure_validated": { "value": false, "certainty": "checked" },
+        "causal_design": { "value": true, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "6579", "dv": "8238", "direction": "increased", "strength": "moderate", "hedging": "firm", "certainty": "checked", "statement": "Novices who used the LLM assistant converged on its first suggestions and fixated more than those sketching alone.", "scope": "novice students working alone, 40 minutes, lab" },
+        { "iv": "6579", "dv": "8239", "direction": "increased", "strength": "weak", "hedging": "hedged", "certainty": "ai", "statement": "Idea counts were somewhat higher with the assistant, though the ideas were less varied.", "scope": "same participants" }
+      ]
+    },
+    {
+      "id": "ex4", "title": "Example study D: Practitioner Teams Using Generative AI in Concept Reviews", "authors": "Dummy et al.", "year": 2025,
+      "concepts": ["6576", "6579", "6600", "8018", "8238"],
+      "values": {
+        "region": { "value": "Europe", "certainty": "recorded" },
+        "hypothesis_stated": { "value": false, "certainty": "ai" },
+        "named_theory": { "value": "Dual-process theory", "certainty": "ai" },
+        "subject_expertise": { "value": "expert", "certainty": "ai" },
+        "subject_discipline": { "value": "industrial design", "certainty": "ai" },
+        "task_team": { "value": "team", "certainty": "ai" },
+        "task_duration": { "value": 90, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "real client", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "observational", "certainty": "ai" },
+        "setting": { "value": "workplace", "certainty": "ai" },
+        "time_pressure": { "value": false, "certainty": "ai" },
+        "condition_tool": { "value": "AI assistant", "certainty": "ai" },
+        "instrument": { "value": "think-aloud coding", "certainty": "ai" },
+        "sample_size": { "value": 18, "certainty": "ai" },
+        "measure_validated": { "value": false, "certainty": "ai" },
+        "causal_design": { "value": false, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "6579", "dv": "8238", "direction": "reduced", "strength": "weak", "hedging": "hedged", "certainty": "ai", "statement": "Practitioner teams used AI suggestions to challenge early ideas, which appeared to reduce fixation.", "scope": "expert teams, real client project, observational" }
+      ]
+    },
+    {
+      "id": "ex5", "title": "Example study E: A Replication of Priming Effects Under Time Pressure", "authors": "Specimen et al.", "year": 2022,
+      "concepts": ["6577", "6725", "6600", "7835", "8238"],
+      "values": {
+        "region": { "value": "Asia", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Design fixation theory", "certainty": "checked" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "mechanical engineering", "certainty": "ai" },
+        "task_team": { "value": "individual", "certainty": "ai" },
+        "task_duration": { "value": 15, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "toy problem", "certainty": "ai" },
+        "problem_openness": { "value": "well-defined", "certainty": "checked" },
+        "method": { "value": "controlled experiment", "certainty": "ai" },
+        "setting": { "value": "online", "certainty": "ai" },
+        "time_pressure": { "value": true, "certainty": "ai" },
+        "condition_tool": { "value": "sketching", "certainty": "ai" },
+        "instrument": { "value": "idea ratings", "certainty": "ai" },
+        "sample_size": { "value": 120, "certainty": "ai" },
+        "measure_validated": { "value": true, "certainty": "checked" },
+        "causal_design": { "value": true, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "6725", "dv": "8238", "direction": "no effect", "strength": null, "hedging": "firm", "certainty": "checked", "statement": "Under a 15-minute limit, the priming activity made no measurable difference to fixation.", "scope": "novices, online, short time-pressured task" }
+      ]
+    },
+    {
+      "id": "ex6", "title": "Example study F: Chatbot Support in a Capstone Ideation Workshop", "authors": "Mockup et al.", "year": 2025,
+      "concepts": ["6577", "6579", "6600", "8238", "8239"],
+      "values": {
+        "region": { "value": "Oceania", "certainty": "recorded" },
+        "hypothesis_stated": { "value": false, "certainty": "ai" },
+        "named_theory": { "value": "None named", "certainty": "ai" },
+        "subject_expertise": { "value": "intermediate", "certainty": "ai" },
+        "subject_discipline": { "value": "mixed engineering", "certainty": "ai" },
+        "task_team": { "value": "team", "certainty": "ai" },
+        "task_duration": { "value": 120, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "real client", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "quasi-experiment", "certainty": "ai" },
+        "setting": { "value": "classroom", "certainty": "ai" },
+        "time_pressure": { "value": false, "certainty": "ai" },
+        "condition_tool": { "value": "AI assistant", "certainty": "ai" },
+        "instrument": { "value": "questionnaire", "certainty": "ai" },
+        "sample_size": { "value": 34, "certainty": "ai" },
+        "measure_validated": { "value": false, "certainty": "ai" },
+        "causal_design": { "value": false, "certainty": "ai" }
+      },
+      "findings": [
+        { "iv": "6579", "dv": "8238", "direction": "no effect", "strength": null, "hedging": "hedged", "certainty": "ai", "statement": "Self-reported fixation did not differ between teams with and without the chatbot.", "scope": "capstone teams, self-report only" },
+        { "iv": "6579", "dv": "8239", "direction": "mixed", "strength": null, "hedging": "hedged", "certainty": "ai", "statement": "Some teams generated more varied ideas with the chatbot and others fewer.", "scope": "capstone teams" }
+      ]
+    },
+    {
+      "id": "ex7", "title": "Example study G: Distant Analogies and Breaking Out of Early Ideas", "authors": "Template et al.", "year": 2016,
+      "concepts": ["6577", "6600", "8018", "8238", "8257"],
+      "values": {
+        "region": { "value": "North America", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Design fixation theory", "certainty": "checked" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "mechanical engineering", "certainty": "ai" },
+        "task_team": { "value": "individual", "certainty": "ai" },
+        "task_duration": { "value": 30, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "checked" },
+        "problem_realism": { "value": "realistic brief", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "controlled experiment", "certainty": "ai" },
+        "setting": { "value": "lab", "certainty": "ai" },
+        "time_pressure": { "value": false, "certainty": "ai" },
+        "condition_tool": { "value": "sketching", "certainty": "ai" },
+        "instrument": { "value": "idea ratings", "certainty": "ai" },
+        "sample_size": { "value": 72, "certainty": "ai" },
+        "measure_validated": { "value": true, "certainty": "checked" },
+        "causal_design": { "value": true, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "8257", "dv": "8238", "direction": "reduced", "strength": "moderate", "hedging": "firm", "certainty": "checked", "statement": "Distant analogies reduced fixation on the example more than near analogies or no analogy.", "scope": "novice students, lab" }
+      ]
+    },
+    {
+      "id": "ex8", "title": "Example study H: Team Climate and Idea Variety in Student Projects", "authors": "Sketch et al.", "year": 2021,
+      "concepts": ["6577", "6600", "8276", "8239"],
+      "values": {
+        "region": { "value": "Europe", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Psychological safety theory", "certainty": "checked" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "mixed engineering", "certainty": "ai" },
+        "task_team": { "value": "team", "certainty": "ai" },
+        "task_duration": { "value": 600, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "real client", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "survey", "certainty": "ai" },
+        "setting": { "value": "classroom", "certainty": "ai" },
+        "time_pressure": { "value": false, "certainty": "ai" },
+        "condition_tool": { "value": "physical prototyping", "certainty": "ai" },
+        "instrument": { "value": "questionnaire", "certainty": "ai" },
+        "sample_size": { "value": 210, "certainty": "ai" },
+        "measure_validated": { "value": true, "certainty": "checked" },
+        "causal_design": { "value": false, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "8276", "dv": "8239", "direction": "increased", "strength": "moderate", "hedging": "hedged", "certainty": "checked", "statement": "Teams reporting more psychological safety produced more varied ideas (correlational).", "scope": "student project teams over a semester" }
+      ]
+    },
+    {
+      "id": "ex9", "title": "Example study I: Do Experts Fixate Less? A Think-Aloud Comparison", "authors": "Draft et al.", "year": 2012,
+      "concepts": ["6576", "6577", "6618", "8018", "8238"],
+      "values": {
+        "region": { "value": "Asia", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Design fixation theory", "certainty": "ai" },
+        "subject_expertise": { "value": "mixed", "certainty": "ai" },
+        "subject_discipline": { "value": "industrial design", "certainty": "ai" },
+        "task_team": { "value": "individual", "certainty": "ai" },
+        "task_duration": { "value": 60, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "realistic brief", "certainty": "ai" },
+        "problem_openness": { "value": "ill-defined", "certainty": "ai" },
+        "method": { "value": "quasi-experiment", "certainty": "ai" },
+        "setting": { "value": "lab", "certainty": "ai" },
+        "time_pressure": { "value": false, "certainty": "ai" },
+        "condition_tool": { "value": "sketching", "certainty": "ai" },
+        "instrument": { "value": "think-aloud coding", "certainty": "ai" },
+        "sample_size": { "value": 24, "certainty": "ai" },
+        "measure_validated": { "value": false, "certainty": "ai" },
+        "causal_design": { "value": false, "certainty": "checked" }
+      },
+      "findings": [
+        { "iv": "6576", "dv": "8238", "direction": "reduced", "strength": "moderate", "hedging": "hedged", "certainty": "ai", "statement": "Experienced practitioners reused the example less often than students, suggesting less fixation.", "scope": "12 experts vs 12 students, think-aloud" }
+      ]
+    },
+    {
+      "id": "ex10", "title": "Example study J: Workload and Idea Fluency in Timed Design Sprints", "authors": "Sample et al.", "year": 2019,
+      "concepts": ["6577", "6600", "8259", "8239"],
+      "values": {
+        "region": { "value": "North America", "certainty": "recorded" },
+        "hypothesis_stated": { "value": true, "certainty": "ai" },
+        "named_theory": { "value": "Cognitive load theory", "certainty": "checked" },
+        "subject_expertise": { "value": "novice", "certainty": "ai" },
+        "subject_discipline": { "value": "mechanical engineering", "certainty": "ai" },
+        "task_team": { "value": "individual", "certainty": "ai" },
+        "task_duration": { "value": 20, "certainty": "ai" },
+        "design_phase": { "value": "ideation", "certainty": "ai" },
+        "problem_realism": { "value": "toy problem", "certainty": "ai" },
+        "problem_openness": { "value": "well-defined", "certainty": "ai" },
+        "method": { "value": "controlled experiment", "certainty": "ai" },
+        "setting": { "value": "lab", "certainty": "ai" },
+        "time_pressure": { "value": true, "certainty": "ai" },
+        "condition_tool": { "value": "CAD", "certainty": "ai" },
+        "instrument": { "value": "questionnaire", "certainty": "ai" },
+        "sample_size": { "value": 40, "certainty": "ai" },
+        "measure_validated": { "value": true, "certainty": "checked" },
+        "causal_design": { "value": true, "certainty": "ai" }
+      },
+      "findings": [
+        { "iv": "8259", "dv": "8239", "direction": "reduced", "strength": "moderate", "hedging": "firm", "certainty": "ai", "statement": "Higher reported workload went with fewer and less varied ideas in timed sprints.", "scope": "novices, 20-minute CAD task" }
+      ]
+    }
+  ]
+}

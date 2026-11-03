@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Terrain</title>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="terrain.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="../shared/atlas-core.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <div id="stage">
+      <canvas id="gl"></canvas>
+      <div id="labels" aria-hidden="true"></div>
+      <div id="tooltip" hidden></div>
+      <div id="year-watermark" hidden></div>
+      <div id="empty" hidden></div>
+      <div id="loading"><div class="spinner"></div><span>Raising the terrain…</span></div>
+    </div>
+
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">◭</span><span>Atlas</span><em>Terrain</em></div>
+      <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+      <div class="spacer"></div>
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Search a concept…  ( / )" autocomplete="off" spellcheck="false" aria-label="Search concepts" />
+        <div id="search-results" role="listbox" hidden></div>
+      </div>
+      <div class="seg" role="group" aria-label="View">
+        <button id="mode-3d" class="on" title="Oblique 3D view">3D</button>
+        <button id="mode-map" title="Top-down map view: nothing hides behind mountains (M)">Map</button>
+      </div>
+      <button class="icon-btn" id="about-btn" title="About this concept" aria-label="About this concept">i</button>
+    </header>
+
+    <section id="intro" class="card intro">
+      <div class="kicker">The landscape of design research</div>
+      <h1>Where DTM research piles up, and what is studied together</h1>
+      <p>601 empirical papers, 1989–2025. Each pin is a concept; the land rises where papers concentrate. Click a region or a pin to fly in.</p>
+      <div class="chip-group"><span class="chip-label">Biggest regions</span><div id="chips-regions" class="chips"></div></div>
+      <div class="chip-group"><span class="chip-label">Highest peaks</span><div id="chips-peaks" class="chips"></div></div>
+    </section>
+
+    <aside id="panel" class="card panel" hidden>
+      <div class="panel-head">
+        <button id="back-btn" class="ghost-btn" title="Back (Esc)">← Back</button>
+        <button id="close-btn" class="ghost-btn" title="Back to the whole landscape">Overview</button>
+      </div>
+      <div id="panel-body" class="panel-body"></div>
+    </aside>
+
+    <section class="dock card" id="dock">
+      <div class="legend" id="legend">
+        <div><b>Ground</b> close together = often studied in the same papers</div>
+        <div><b>Height</b> how many papers sit on that ground (in the year range)</div>
+        <div><b>Pin</b> one concept · color = type<span id="legend-arc"> · <b>Arc</b> shared papers, thicker = more</span></div>
+      </div>
+      <div class="filters">
+        <div class="types" id="types"></div>
+        <div class="row years">
+          <button id="play" class="play-btn" title="Grow the landscape year by year">▶ Grow 1989→2025</button>
+          <div class="range2" id="range2">
+            <input type="range" id="y0" aria-label="From year" />
+            <input type="range" id="y1" aria-label="To year" />
+            <div class="range-track"><div class="range-fill" id="range-fill"></div></div>
+          </div>
+          <span id="year-label" class="mono"></span>
+        </div>
+        <div class="row">
+          <label for="minp" class="mono small">min papers</label>
+          <input type="range" id="minp" min="1" max="30" value="1" />
+          <span id="minp-label" class="mono small"></span>
+          <span id="visible-count" class="mono small faint"></span>
+        </div>
+      </div>
+    </section>
+
+    <div class="nav-tools">
+      <button id="compass" class="compass" title="Reset the view (north up)" aria-label="Reset view">
+        <svg viewBox="-20 -20 40 40" width="44" height="44"><circle r="18" class="c-ring"/><g id="compass-needle"><path d="M0,-14 L4,0 L0,3 L-4,0 Z" class="c-n"/><path d="M0,14 L4,0 L0,-3 L-4,0 Z" class="c-s"/><text y="-7.5" class="c-t">N</text></g></svg>
+      </button>
+      <button id="reset" class="ghost-btn small-btn" title="Back to the whole landscape">Reset</button>
+    </div>
+
+    <div id="about" class="modal" hidden>
+      <div class="card modal-card">
+        <div class="kicker">About this concept</div>
+        <h2>Terrain</h2>
+        <p>The field is drawn as land: concepts that are often studied in the same papers sit close together on the ground, and the land rises wherever many papers fall, so mountains are heavily studied areas and valleys are thin ones. Change the years and the land reshapes; click a region or a pin to fly down to a concept, its connections and the papers behind them.</p>
+        <p class="faint small">Ground positions come from a seeded force layout over co-occurrence strength (shared papers ÷ √(papers A × papers B)), so distances are approximate. Height is a smoothed sum of each visible concept's paper count, square-root-ish compressed and scaled to the full 1989–2025 total, so growing years can be compared. If a mountain hides something, switch to Map (M).</p>
+        <button class="ghost-btn" id="about-close">Close</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="terrain.js"></script>
+</body>
+</html>

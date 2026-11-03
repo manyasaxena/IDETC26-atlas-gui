@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Journeys</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0e12;
+      --surface: #15171e;
+      --surface-2: #1b1e27;
+      --line: rgba(255, 255, 255, 0.08);
+      --line-strong: rgba(255, 255, 255, 0.16);
+      --text: #eceff4;
+      --muted: #9aa2b2;
+      --faint: #6b7282;
+      --accent: #8bc5ff;
+      --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--sans); }
+    a { color: var(--accent); }
+    .wrap { max-width: 1680px; margin: 0 auto; padding: 40px 32px 80px; }
+    header h1 { font-size: 30px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+    header p { color: var(--muted); max-width: 900px; margin: 0; }
+    .kicker { font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-bottom: 10px; }
+
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+    @media (min-width: 2200px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; }
+    .frame { position: relative; aspect-ratio: 1440 / 900; overflow: hidden; background: #000; border-bottom: 1px solid var(--line); }
+    .frame iframe { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; border: 0; transform-origin: 0 0; }
+    .frame .cover { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: flex-end; padding: 12px; gap: 8px; pointer-events: none; }
+    .frame .cover a { pointer-events: auto; }
+    .btn { font: 500 12px var(--mono); padding: 7px 12px; border-radius: 999px; background: rgba(13, 14, 18, 0.82); border: 1px solid var(--line-strong); color: var(--text); text-decoration: none; backdrop-filter: blur(6px); }
+    .btn:hover { border-color: var(--accent); }
+    .body { padding: 20px 22px 24px; }
+    .title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .title h2 { margin: 0; font-size: 21px; font-weight: 600; }
+    .tag { font: 500 11px var(--mono); color: var(--faint); border: 1px solid var(--line-strong); border-radius: 999px; padding: 2px 8px; }
+    .tag.own { color: #ffd479; border-color: rgba(255, 212, 121, 0.45); }
+    .pitch { color: var(--muted); margin: 6px 0 14px; }
+    .space { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+    .space span { font: 12px var(--mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; color: #cfd5df; }
+    .note h3 { font: 600 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin: 16px 0 4px; }
+    .note p { margin: 0; color: #d6dbe4; }
+    .note ul { margin: 4px 0 0; padding-left: 18px; color: #d6dbe4; }
+    .note li { margin-bottom: 6px; }
+    .note li b { color: var(--text); font-weight: 600; }
+
+    section.verdict { margin-top: 48px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px 32px; }
+    section.verdict h2 { margin: 0 0 10px; font-size: 22px; }
+    section.verdict p, section.verdict li { color: #d6dbe4; max-width: 980px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 18px; font-size: 14px; }
+    th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    th { font: 600 12px var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; }
+    td:first-child { color: var(--text); font-weight: 600; white-space: nowrap; }
+    td { color: #cfd5df; }
+    .scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="kicker">Design Engineering Atlas · variations</div>
+      <h1>Four journeys through the Atlas</h1>
+      <p>Four different ideas for exploring the same data (228 concepts, 601 empirical DTM papers, 1989–2025). Each starts from a few landmarks instead of the whole network, gives space a meaning, and lets you go all the way from the field to a single connection and paper. The previews below are live. Interact with them in place, or open one full screen.</p>
+    </header>
+
+    <div class="grid" id="grid"></div>
+
+    <section class="verdict" id="verdict"></section>
+  </div>
+
+  <script src="concepts.js"></script>
+  <script>
+    const grid = document.getElementById("grid");
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c]));
+    CONCEPTS.forEach((c) => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="frame"><iframe src="${c.folder}/" title="${esc(c.name)} live preview" loading="lazy"></iframe>
+          <div class="cover"><a class="btn" href="${c.folder}/" target="_blank" rel="noopener">Open full screen ↗</a></div></div>
+        <div class="body">
+          <div class="title"><h2>${esc(c.name)}</h2><span class="tag ${c.own ? "own" : ""}">${esc(c.tag)}</span></div>
+          <p class="pitch">${esc(c.pitch)}</p>
+          <div class="space">${c.space.map((s) => `<span>${esc(s)}</span>`).join("")}</div>
+          <div class="note">
+            <h3>Started from</h3><p>${c.startedFrom}</p>
+            <h3>Does well</h3><p>${c.doesWell}</p>
+            <h3>Costs</h3><p>${c.costs}</p>
+            <h3>Three tasks</h3>
+            <ul>
+              <li><b>First-year PhD student exploring:</b> ${c.tasks.explore}</li>
+              <li><b>Researcher picking a task:</b> ${c.tasks.pick}</li>
+              <li><b>Why are two concepts connected?</b> ${c.tasks.why}</li>
+            </ul>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+    // Scale each 1440×900 preview to its card.
+    const fit = () => document.querySelectorAll(".frame").forEach((f) => {
+      f.querySelector("iframe").style.transform = `scale(${f.clientWidth / 1440})`;
+    });
+    new ResizeObserver(fit).observe(grid);
+    fit();
+    document.getElementById("verdict").innerHTML = VERDICT;
+  </script>
+</body>
+</html>

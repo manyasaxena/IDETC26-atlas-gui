@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Time River</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="river.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+        <path d="M1 7c4 0 5 3 10 3s6-3 10-3" stroke="#4fc3f7" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M1 12c4 0 5 2.5 10 2.5S17 12 21 12" stroke="#81c784" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M1 17c4 0 5 2 10 2s6-2 10-2" stroke="#ce93d8" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg>
+      <b>Design Engineering Atlas</b><em>time river</em>
+    </div>
+    <button id="back" class="icon-btn" title="Back (Esc goes up one level)" aria-label="Back">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 2 4 7l5 5"/></svg>
+    </button>
+    <nav id="crumbs" class="crumbs" aria-label="Where you are"></nav>
+    <div class="search">
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Find a concept  ( / )" aria-label="Search concepts" />
+      <div id="results" class="results" role="listbox" hidden></div>
+    </div>
+    <button id="reset" class="text-btn" title="Clear filters and return to the whole watershed">Reset</button>
+    <button id="about" class="icon-btn" title="About this concept" aria-label="About this concept"><b style="font:600 13px var(--mono)">i</b></button>
+  </header>
+  <main>
+    <section class="stage">
+      <div class="filters" id="filters"></div>
+      <div class="plot-wrap" id="plotWrap">
+        <svg id="plot" class="plot" role="img" aria-label="Streams of research over time"></svg>
+        <div id="tip" class="tip" hidden></div>
+        <div id="empty" class="empty" hidden></div>
+      </div>
+      <div class="timeline"><svg id="overview" aria-label="Year range: drag to choose years"></svg></div>
+      <div class="legend" id="legend"></div>
+    </section>
+    <aside class="panel" id="panel"></aside>
+  </main>
+  <div id="aboutPop" class="pop" hidden>
+    <h4>About this concept: a watershed in time</h4>
+    <p>The Atlas is drawn as a watershed: every concept is a stream that rises in the year it was first studied and widens with the papers published on it each year, flowing left to right from 1989 to 2025 in four channels (subjects, tasks, problems, constructs). Where two streams share papers you see a confluence, a dot at the year those topics met in the same study.</p>
+    <p class="note">It is flat on purpose, a counterpoint to the 3D concepts: nothing hides behind anything and every label is readable; depth comes from opening and closing channels.</p>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="../shared/atlas-core.js"></script>
+  <script src="river.js"></script>
+</body>
+</html>
