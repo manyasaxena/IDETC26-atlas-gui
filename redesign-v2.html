@@ -344,7 +344,100 @@
       flex: 0 0 auto;
     }
 
-    main { min-height: 0; position: relative; }
+    /* Rows are pinned so main keeps the last row even while the filter bar is hidden. */
+    .topbar { grid-row: 1; }
+    .filter-bar { grid-row: 2; }
+    main { grid-row: 3; min-height: 0; position: relative; }
+
+    /* ---------- Landing ---------- */
+    #landing-view { position: absolute; inset: 0; overflow-y: auto; animation: fadeIn 0.35s var(--ease); }
+    .landing { max-width: 1240px; margin: 0 auto; padding: 28px 28px 48px; }
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; margin-bottom: 26px; }
+    .hero .kicker { font: 500 11px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin: 0 0 10px; }
+    .hero h1 { margin: 0; font-size: 34px; line-height: 1.1; letter-spacing: -0.01em; }
+    .hero p { margin: 12px 0 0; max-width: 720px; color: #cfd5e0; line-height: 1.55; font-size: 15px; }
+    .hero p strong { color: var(--text); }
+    .hero-side { display: grid; gap: 8px; justify-items: end; }
+    .hero-search { position: relative; width: 340px; }
+    .hero-search input {
+      width: 100%;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text);
+      padding: 13px 20px;
+      font: 14px var(--sans);
+      outline: none;
+      box-shadow: var(--shadow-soft);
+    }
+    .hero-search input:focus { box-shadow: 0 0 0 4px rgba(139, 197, 255, 0.14); }
+    .hero-search .pin-results { top: calc(100% + 6px); }
+    .see-network { font: 12px var(--mono); color: var(--muted); background: none; border: none; cursor: pointer; padding: 4px 2px; }
+    .see-network:hover { color: var(--accent); }
+    .land-section { margin-top: 30px; }
+    .land-section > h2 { font: 600 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+    .land-section > .sub { margin: 0 0 14px; color: var(--faint); font-size: 13px; }
+    .type-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    @media (max-width: 1100px) { .type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .type-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--c);
+      border-radius: var(--r-lg);
+      padding: 16px 14px 12px;
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .type-card h3 { margin: 0; font-size: 17px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .type-card h3 .n { font: 12px var(--mono); color: var(--faint); font-weight: 400; }
+    .type-card .def { margin: 6px 0 12px; color: var(--muted); font-size: 12.5px; line-height: 1.45; min-height: 36px; }
+    .lm-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 3px 10px;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: var(--r-sm);
+      padding: 7px 8px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .lm-row:hover { background: var(--surface-2); border-color: var(--line); }
+    .lm-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+    .lm-row .num { font: 12px var(--mono); color: var(--muted); }
+    .lm-row .bar { grid-column: 1 / -1; height: 3px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+    .lm-row .bar i { display: block; height: 100%; background: var(--c); opacity: 0.75; border-radius: 999px; }
+    .type-card .more { margin-top: 6px; align-self: flex-start; }
+    .type-card .all-list { max-height: 320px; overflow-y: auto; margin-top: 4px; }
+    .rise-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    @media (max-width: 1100px) { .rise-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .rise-card, .pair-card {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--r-md);
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s var(--ease);
+    }
+    .rise-card:hover, .pair-card:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+    .rise-card .top { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+    .rise-card .meta { margin-top: 6px; font: 12px var(--mono); color: var(--muted); }
+    .rise-card .meta strong { color: #a5e3b0; font-weight: 600; }
+    .rise-card svg { display: block; width: 100%; height: 26px; margin-top: 8px; }
+    .pair-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    @media (max-width: 1100px) { .pair-grid { grid-template-columns: 1fr; } }
+    .pair-card .names { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 600; }
+    .pair-card .names .arrow { color: var(--faint); font-weight: 400; }
+    .pair-card .s { margin-top: 6px; color: #cfd5e0; font-size: 13px; line-height: 1.45; }
+    .land-gap { margin-top: 20px; }
 
     /* ---------- Field view ---------- */
     #field-view { position: absolute; inset: 0; animation: fadeIn 0.35s var(--ease); }
@@ -1060,7 +1153,8 @@
 
     <main>
       <aside class="filter-panel" id="filter-panel" hidden aria-label="Filters"></aside>
-      <section id="field-view">
+      <section id="landing-view" hidden></section>
+      <section id="field-view" hidden>
         <svg id="field" aria-label="Field view of all concepts"></svg>
         <div class="field-legend" id="field-legend"></div>
       </section>
@@ -1273,7 +1367,8 @@
 
       // ---------- State ----------
       const state = {
-        view: "field",
+        view: "landing",
+        landingOpen: new Set(),
         // Filters: shared by every view and kept as you move around.
         types: new Set(nodeTypes),
         minPapers: 1,
@@ -1447,22 +1542,25 @@
           + (paper != null ? `/paper/${paper}` : "");
       }
       const openConcept = (id) => navigate(conceptHash(id));
-      const goField = () => navigate("#/");
+      const goHome = () => navigate("#/");
+      const goField = () => navigate("#/network");
       const selectConnection = (id) => navigate(conceptHash(state.center, id));
       const clearConnection = () => navigate(conceptHash(state.center));
       const openPaper = (id) => navigate(conceptHash(state.center, state.connection, id));
       const closePaper = () => navigate(conceptHash(state.center, state.connection));
       // One level up from wherever you are: paper → connection → concept → field.
       function goUp() {
+        if (state.view === "field") { goHome(); return; }
         if (state.view !== "concept") return;
         if (state.paper != null) closePaper();
         else if (state.connection) clearConnection();
-        else goField();
+        else goHome();
       }
       function route() {
         const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+))?\/?$/);
         const id = m && decodeURIComponent(m[1]);
-        if (!id || !byId.has(id)) { showField(); return; }
+        if (/^#\/network\/?$/.test(location.hash)) { showField(); return; }
+        if (!id || !byId.has(id)) { showLanding(); return; }
         const conn = m[2] ? decodeURIComponent(m[2]) : null;
         const paper = m[3] ? Number(m[3]) : null;
         showConcept(id, {
@@ -1473,7 +1571,7 @@
       window.addEventListener("hashchange", route);
 
       // ---------- Top bar ----------
-      $("crumb-home").addEventListener("click", goField);
+      $("crumb-home").addEventListener("click", goHome);
 
 
       // Search
@@ -1635,7 +1733,8 @@
       $("field-legend").innerHTML = `
         ${shownTypeTree.filter((t) => !t.parentId).map((t) => `<div class="row">${dot(t.id)}${esc(t.plural)} (${t.total})</div>`).join("")}
         <div class="hint">Size = papers · line = shared papers</div>
-        <div class="hint">Hover for a definition · click to explore</div>`;
+        <div class="hint">Hover for a definition · click to explore</div>
+        <div class="hint">Esc or the Atlas button returns home</div>`;
 
       function resizeField() {
         const w = fieldEl.clientWidth, h = fieldEl.clientHeight;
@@ -1655,10 +1754,174 @@
         state.center = null;
         hideTip();
         $("concept-view").hidden = true;
+        $("landing-view").hidden = true;
         $("field-view").hidden = false;
         renderCrumbs();
         resizeField();
         updateField();
+      }
+
+      // ---------- Landing: a few landmarks instead of the whole network ----------
+      const LANDMARKS = 5;
+      const RECENT_FROM = Y1 - 9;
+
+      // Papers per year as a tiny area line, for the rising cards.
+      function sparkline(papers, color) {
+        const years = d3.range(Y0, Y1 + 1);
+        const counts = d3.rollup(papers, (v) => v.length, (p) => p.year);
+        const vals = years.map((y) => counts.get(y) || 0);
+        const max = d3.max(vals) || 1;
+        const W = 200, H = 26;
+        const x = (i) => (i / (years.length - 1)) * W, y = (v) => H - 1 - (v / max) * (H - 3);
+        const line = vals.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+        const cut = x(RECENT_FROM - Y0);
+        return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="${cut}" y="0" width="${W - cut}" height="${H}" fill="rgba(255,255,255,0.04)"/>
+          <path d="${line}L${W},${H}L0,${H}Z" fill="${color}" fill-opacity="0.18"/>
+          <path d="${line}" fill="none" stroke="${color}" stroke-width="1.4"/>
+        </svg>`;
+      }
+
+      // Concepts whose recent share of papers is well above the field's: at least 8 papers in view,
+      // and most of them from the last ten years.
+      function risingConcepts() {
+        const all = papersIn([...paperById.values()]);
+        const fieldShare = all.length ? all.filter((p) => p.year >= RECENT_FROM).length / all.length : 0;
+        return nodes.filter((n) => conceptOn(n) && !state.pins.includes(n.id)).map((n) => {
+          const ps = papersOf(n);
+          const recent = ps.filter((p) => p.year >= RECENT_FROM).length;
+          return { node: n, n: ps.length, recent, share: ps.length ? recent / ps.length : 0 };
+        }).filter((d) => d.n >= 8 && d.share >= Math.min(0.95, fieldShare + 0.2))
+          .sort((a, b) => b.share - a.share || b.n - a.n)
+          .slice(0, 6)
+          .map((d) => ({ ...d, fieldShare }));
+      }
+
+      function topConnections() {
+        return links
+          .filter((l) => conceptOn(byId.get(l.a)) && conceptOn(byId.get(l.b)) && !state.pins.includes(l.a) && !state.pins.includes(l.b))
+          .map((l) => ({ l, n: papersIn(l.papers).length }))
+          .filter((d) => d.n > 0)
+          .sort((a, b) => b.n - a.n)
+          .slice(0, 6);
+      }
+
+      function renderLanding() {
+        const inView = scopeCount();
+        const typeCards = nodeTypes.filter((t) => state.types.has(t)).map((t) => {
+          const list = nodes.filter((n) => n.type === t && conceptOn(n) && !state.pins.includes(n.id))
+            .map((n) => ({ n, c: papersOf(n).length }))
+            .filter((d) => d.c > 0)
+            .sort((a, b) => b.c - a.c || a.n.label.localeCompare(b.n.label));
+          const open = state.landingOpen.has(t);
+          const max = list[0]?.c || 1;
+          const row = (d) => `<button type="button" class="lm-row" data-open="${esc(d.n.id)}" style="--c:${colorOf(t)}" title="${esc(cap(d.n.label))}">
+              <span class="name">${esc(cap(d.n.label))}</span><span class="num">${d.c}</span>
+              <span class="bar"><i style="width:${(d.c / max) * 100}%"></i></span>
+            </button>`;
+          const shown = open ? list : list.slice(0, LANDMARKS);
+          return `<div class="type-card" style="--c:${colorOf(t)}">
+            <h3>${esc(typeOf(t).plural)} <span class="n">${list.length}</span></h3>
+            <p class="def">${esc(definitionOf(t))}</p>
+            <div class="${open ? "all-list" : ""}">${shown.map(row).join("") || `<div class="empty-note">None match your filters.</div>`}</div>
+            ${list.length > LANDMARKS ? `<button type="button" class="link-btn more" data-more="${esc(t)}">${open ? "Show top 5" : `See all ${list.length}`}</button>` : ""}
+          </div>`;
+        }).join("");
+
+        const rising = risingConcepts();
+        const pairs = topConnections();
+        $("landing-view").innerHTML = `<div class="landing">
+          <div class="hero">
+            <div>
+              <p class="kicker">Design Engineering Atlas</p>
+              <h1>What has design research studied, and what goes together?</h1>
+              <p>A map of <strong>${totalPapers} empirical papers</strong> from the ASME Design Theory and Methodology conference, ${Y0}–${Y1}. Each paper is tagged with the <strong>subjects</strong> it observed, the <strong>tasks</strong> they did, the <strong>problems</strong> they worked on and the <strong>cognitive constructs</strong> it measured. Start from a landmark below, or search.</p>
+            </div>
+            <div class="hero-side">
+              <div class="hero-search">
+                <input type="text" id="hero-search" placeholder="Search a concept, e.g. fixation" autocomplete="off" />
+                <div class="pin-results" id="hero-results" hidden></div>
+              </div>
+              <button type="button" class="see-network" data-network="1">See the full network →</button>
+            </div>
+          </div>
+
+          ${!inView ? `<div class="gap-box land-gap"><strong>0 papers: possible gap</strong><p>No paper covers every concept you pinned${rangeActive() ? ` in ${rangeText()}` : ""}. Open Filters to see the closest combinations that do.</p></div>` : ""}
+
+          <section class="land-section">
+            <h2>Landmarks</h2>
+            <p class="sub">The most studied concepts of each type${scopeActive() ? `, counting the ${inView} papers that match your filters` : ""}. Bars show papers.</p>
+            <div class="type-grid">${typeCards}</div>
+          </section>
+
+          ${rising.length ? `<section class="land-section">
+            <h2>Rising</h2>
+            <p class="sub">Most of their papers are from ${RECENT_FROM}–${Y1}; across ${scopeActive() ? "the papers in view" : "the whole Atlas"} that share is ${Math.round(rising[0].fieldShare * 100)}%.</p>
+            <div class="rise-grid">${rising.map((d) => `
+              <button type="button" class="rise-card" data-open="${esc(d.node.id)}">
+                <span class="top">${dot(d.node.type)}${esc(cap(d.node.label))}</span>
+                <div class="meta"><strong>${Math.round(d.share * 100)}%</strong> of its ${d.n} papers since ${RECENT_FROM}</div>
+                ${sparkline(papersOf(d.node), colorOf(d.node.type))}
+              </button>`).join("")}</div>
+          </section>` : ""}
+
+          ${pairs.length ? `<section class="land-section">
+            <h2>Most studied together</h2>
+            <p class="sub">The pairs of concepts that share the most papers. Open one to see why they're connected.</p>
+            <div class="pair-grid">${pairs.map(({ l, n }) => {
+              const A = byId.get(l.a), B = byId.get(l.b);
+              return `<button type="button" class="pair-card" data-pair="${esc(l.a)}|${esc(l.b)}">
+                <span class="names">${dot(A.type)}${esc(cap(A.label))}<span class="arrow">↔</span>${dot(B.type)}${esc(cap(B.label))}</span>
+                <div class="s">${esc(cap(connectionSentence(A, B, n)))}.</div>
+              </button>`;
+            }).join("")}</div>
+          </section>` : ""}
+        </div>`;
+      }
+
+      $("landing-view").addEventListener("click", (event) => {
+        const el = event.target.closest("[data-open],[data-more],[data-pair],[data-network],.search-item[data-id]");
+        if (!el) return;
+        if (el.dataset.id) openConcept(el.dataset.id);
+        else if (el.dataset.open) openConcept(el.dataset.open);
+        else if (el.dataset.pair) { const [a, b] = el.dataset.pair.split("|"); navigate(conceptHash(a, b)); }
+        else if (el.dataset.network) goField();
+        else if (el.dataset.more) {
+          const t = el.dataset.more;
+          if (state.landingOpen.has(t)) state.landingOpen.delete(t); else state.landingOpen.add(t);
+          renderLanding();
+        }
+      });
+      // The landing's own search box, with the same matching as the top bar.
+      function heroMatches(q) {
+        const lower = q.toLowerCase();
+        return nodes.filter((n) => fuzzyMatch(n.label, q))
+          .sort((a, b) => ((b.label.toLowerCase().includes(lower)) - (a.label.toLowerCase().includes(lower))) || b.paperCount - a.paperCount)
+          .slice(0, 7);
+      }
+      $("landing-view").addEventListener("input", (event) => {
+        if (event.target.id !== "hero-search") return;
+        const q = event.target.value.trim();
+        const matches = q ? heroMatches(q) : [];
+        $("hero-results").hidden = !matches.length;
+        $("hero-results").innerHTML = matches.map((n) => `<div class="search-item" data-id="${esc(n.id)}"><span>${dot(n.type)} ${esc(cap(n.label))}</span><span class="t">${esc(typeWord(n.type))}</span></div>`).join("");
+      });
+      $("landing-view").addEventListener("keydown", (event) => {
+        if (event.target.id !== "hero-search" || event.key !== "Enter") return;
+        const q = event.target.value.trim();
+        const first = q && heroMatches(q)[0];
+        if (first) openConcept(first.id);
+      });
+
+      function showLanding() {
+        state.view = "landing";
+        state.center = null;
+        hideTip();
+        $("concept-view").hidden = true;
+        $("field-view").hidden = true;
+        $("landing-view").hidden = false;
+        renderCrumbs();
+        renderLanding();
       }
 
       // ---------- Concept view: shared data ----------
@@ -1687,6 +1950,7 @@
       // Atlas › Concept › ↔ Connection › Paper; every step but the last is a link back to that level.
       function renderCrumbs() {
         const steps = [];
+        if (state.view === "field") steps.push({ html: "Full network", hash: null, title: "Every concept and connection" });
         if (state.view === "concept") {
           const center = byId.get(state.center);
           steps.push({ html: `${dot(center.type)}${esc(cap(center.label))}`, hash: conceptHash(center.id), title: cap(center.label) });
@@ -2267,7 +2531,7 @@
         const link = selectedLink();
         const neighbor = link ? byId.get(state.connection) : null;
         $("left").innerHTML = `<div class="pane ${animate ? "swap" : ""}">
-          <button type="button" class="back-link" data-action="field">‹ Back to Field</button>
+          <button type="button" class="back-link" data-action="field">‹ Atlas home</button>
           <div class="card">
             <h1 class="concept-name">${esc(cap(center.label))}</h1>
             ${badge(center.type)}
@@ -2330,7 +2594,7 @@
       }
 
       $("left").addEventListener("click", (event) => {
-        if (event.target.closest('[data-action="field"]')) goField();
+        if (event.target.closest('[data-action="field"]')) goHome();
         else if (event.target.id === "range-reset") setRange(Y0, Y1);
         else {
           const pin = event.target.closest("[data-pin]");
@@ -2753,6 +3017,7 @@
         filterFrame = requestAnimationFrame(() => {
           filterFrame = null;
           if (state.view === "field") updateField();
+          else if (state.view === "landing") renderLanding();
           else if (state.view === "concept") {
             renderCompare();
             fitOrbitViewBox(false);
@@ -2998,6 +3263,7 @@
           return;
         }
         const fromField = state.view !== "concept";
+        if (state.filtersOpen) setFiltersOpen(false);
         state.view = "concept";
         state.center = id;
         state.connection = connection;
@@ -3010,6 +3276,7 @@
         state.orbitLimit = ORBIT_STEP;
         state.hover = null;
         $("field-view").hidden = true;
+        $("landing-view").hidden = true;
         const view = $("concept-view");
         view.hidden = false;
         if (fromField && !REDUCED_MOTION) {
