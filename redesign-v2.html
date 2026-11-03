@@ -997,6 +997,29 @@
       line-height: 1.5;
     }
     .conn-stats { margin: 10px 0 0; font: 12px var(--mono); color: var(--muted); line-height: 1.5; }
+    .stat-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .stat-tile { background: var(--surface-3); border-radius: var(--r-sm); padding: 10px 12px; }
+    .stat-tile b { display: block; font-size: 20px; line-height: 1.1; }
+    .stat-tile span { display: block; margin-top: 3px; font: 11px var(--mono); color: var(--muted); line-height: 1.35; }
+    .strength { margin: 10px 0 0; color: #d5dbe6; font-size: 13px; line-height: 1.5; }
+    .strength strong { color: var(--text); }
+    .caution { color: #ffcf8a; }
+    .met { margin-top: 4px; }
+    .met svg { display: block; width: 100%; }
+    .met .dotp { cursor: pointer; transition: r 0.15s; }
+    .met .dotp:hover { r: 4.6; }
+    .met .axis text { fill: var(--faint); font: 10px var(--mono); }
+    .met .axis line { stroke: var(--line-strong); }
+    .met-note { margin: 4px 0 0; font: 12px var(--mono); color: var(--muted); line-height: 1.5; }
+    .also { display: grid; gap: 8px; }
+    .also-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+    .also-row .k { font: 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+    .also-row .v { display: flex; flex-wrap: wrap; gap: 5px; }
+    .also-row .chip { padding: 3px 10px; font-size: 12px; }
+    .also-row .chip .c { color: var(--faint); font: 11px var(--mono); }
+    .ends { display: grid; gap: 6px; }
+    .ends .paper-row { padding: 8px 10px; background: var(--surface-3); }
+    .ends .lab { font: 11px var(--mono); color: var(--muted); display: block; margin-bottom: 2px; }
     .common { margin: 0; line-height: 1.6; color: #d5dbe6; }
     .common-note { margin: 8px 0 0; font-size: 12px; color: var(--faint); font-style: italic; }
     .ref {
@@ -1491,6 +1514,22 @@
       const inScope = (p) => inRange(p) && (!pinnedPapers || pinnedPapers.has(p.paper_id));
       const papersIn = (list) => (scopeActive() ? list.filter(inScope) : list);
       const papersInRange = (list) => (rangeActive() ? list.filter(inRange) : list);
+      // How much more often two concepts share papers than if they were unrelated:
+      // shared papers ÷ (papers of A × papers of B ÷ all papers in view).
+      function liftOf(nShared, aCount, bCount) {
+        const total = scopeCount();
+        const expected = total ? (aCount * bCount) / total : 0;
+        return { lift: expected ? nShared / expected : 0, expected };
+      }
+      const liftText = (lift) => (lift >= 10 ? lift.toFixed(0) : lift.toFixed(1)) + "×";
+      // Short form for lists and tooltips.
+      const liftShort = (lift) => (lift >= 1.15 ? `${liftText(lift)} chance` : lift > 0.87 ? "about chance" : `below chance (${liftText(lift)})`);
+      // "studied together 2.0× more often than chance", in plain words, for any lift.
+      function liftPhrase(lift) {
+        if (lift >= 1.15) return `studied together <strong>${liftText(lift)} more often</strong> than chance`;
+        if (lift > 0.87) return `studied together <strong>about as often as chance</strong> would predict`;
+        return `studied together <strong>less often than chance</strong> (${liftText(lift)})`;
+      }
       // A concept is shown when its type is on and it has enough papers in the year range.
       const conceptOn = (n) => state.types.has(n.type) && papersInRange(n.papers).length >= state.minPapers;
       const papersOf = (node) => papersIn(node.papers);
@@ -1936,7 +1975,8 @@
           const sharedPapers = papersIn(link.papers);
           const shared = sharedPapers.length;
           const total = papersOf(node).length;
-          return { node, link, sharedPapers, shared, total, either: centerCount + total - shared, j: shared ? shared / (centerCount + total - shared) : 0 };
+          const { lift } = liftOf(shared, centerCount, total);
+          return { node, link, sharedPapers, shared, total, lift, either: centerCount + total - shared, j: shared ? shared / (centerCount + total - shared) : 0 };
         }).filter((d) => d.shared > 0);
       }
       // Pinned concepts are left out: every paper in view covers them, so they'd only add noise.
@@ -2258,7 +2298,7 @@
               styleOrbit();
               highlightRow(d.node.id, true);
               const range = rangeActive() ? ` in ${rangeText()}` : "";
-              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · click to see the connection`), event, $("orbit-wrap"));
+              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${liftShort(d.lift)}<br/>${RING_NAMES[d.ring]} · click to see why`), event, $("orbit-wrap"));
             })
               .on("mousemove", moveTip)
               .on("mouseleave", (event, d) => {
@@ -2367,7 +2407,7 @@
           </div>
           <div class="row">
             <svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="2.5" fill="#8a93a6"/><circle cx="15" cy="9" r="5.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/><circle cx="15" cy="9" r="8.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/></svg>
-            <span>Rings rank relevance: shared papers ÷ papers in either concept</span>
+            <span>Inner rings = more tightly tied: a bigger share of their papers are shared</span>
           </div>
           <div class="row">
             ${sliceIcon()}
@@ -2425,17 +2465,17 @@
           const papers = papersIn(link.papers);
           const n = papers.length;
           const either = papersOf(A).length + papersOf(B).length - n;
-          return { c, A, B, link, n, j: either ? n / either : 0, ids: new Set(papers.map((p) => p.paper_id)) };
+          return { c, A, B, link, n, j: either ? n / either : 0, lift: liftOf(n, papersOf(A).length, papersOf(B).length).lift, ids: new Set(papers.map((p) => p.paper_id)) };
         });
         const range = rangeActive() ? ` · ${rangeText()}` : "";
-        const cards = items.map(({ c, A, B, link, n, j }, i) => `
+        const cards = items.map(({ c, A, B, link, n, lift }, i) => `
           <div class="cmp-card ${compareKey(c) === lastCompared ? "pop" : ""}" role="button" tabindex="0" data-action="cmp-open" data-i="${i}" title="Open this connection">
             <div class="cmp-head">
               <span class="cmp-num">${i + 1}</span>
               <button type="button" class="cmp-x" data-action="cmp-remove" data-i="${i}" aria-label="Remove from comparison">×</button>
             </div>
             <div class="cmp-pair">${dot(A.type)}${esc(cap(A.label))}<span class="arrow">↔</span>${dot(B.type)}${esc(cap(B.label))}</div>
-            <div class="cmp-stats"><strong>${plural(n, "paper")}</strong> · ${pct(j)} overlap${range}</div>
+            <div class="cmp-stats"><strong>${plural(n, "paper")}</strong> · ${liftShort(lift)}${range}</div>
             ${compareMiniChart(link, colorOf(B.type))}
           </div>`).join("");
         lastCompared = null;
@@ -2671,8 +2711,10 @@
       }
 
       function renderConnectionsList() {
-        const list = visibleNeighbors();
+        // Very small connections make "× chance" jumpy, so "most above chance" needs at least 3 shared papers.
+        const list = visibleNeighbors().filter((d) => state.connSort !== "lift" || d.shared >= 3);
         if (state.connSort === "least") list.sort((a, b) => a.shared - b.shared || a.node.label.localeCompare(b.node.label));
+        else if (state.connSort === "lift") list.sort((a, b) => b.lift - a.lift || b.shared - a.shared);
         else list.sort((a, b) => b.shared - a.shared || a.node.label.localeCompare(b.node.label));
         const chip = rangeChip();
         return `
@@ -2682,6 +2724,7 @@
               <select data-change="conn-sort">
                 <option value="most" ${state.connSort === "most" ? "selected" : ""}>Most connected</option>
                 <option value="least" ${state.connSort === "least" ? "selected" : ""}>Least connected</option>
+                <option value="lift" ${state.connSort === "lift" ? "selected" : ""}>Most above chance</option>
               </select>
             </label>
           </div>
@@ -2692,7 +2735,7 @@
                 ${dot(d.node.type)}
                 <span class="body">
                   <span class="name">${esc(cap(d.node.label))}</span>
-                  <span class="sub">${esc(typeWord(d.node.type))} · ${pct(d.j)} overlap</span>
+                  <span class="sub">${esc(typeWord(d.node.type))} · ${liftShort(d.lift)}</span>
                 </span>
                 <span class="conn-side">
                   <span class="count">${plural(d.shared, "paper")}</span>
@@ -2733,7 +2776,6 @@
         const link = selectedLink();
         const papers = papersIn(link.papers).slice().sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
         const n = papers.length;
-        const either = papersOf(center).length + papersOf(neighbor).length - n;
         const shown = papers.slice(0, state.connPapersShown);
         const remaining = papers.length - shown.length;
         const range = rangeActive() ? ` between ${state.range[0]} and ${state.range[1]}` : "";
@@ -2749,76 +2791,96 @@
             ${badge(neighbor.type)}
             ${n
               ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>
-                 <p class="conn-stats">${pct(n / either)} overlap · ${n} shared of ${plural(either, "paper")} in either concept${rangeActive() ? ` (${rangeText()})` : ""}</p>
-                 <p class="eyebrow">What these papers have in common</p>
-                 <p class="common">${commonGround(center, neighbor, papers)}</p>
-                 <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>`
-              : `<p class="sentence">No shared papers in ${rangeText()}.</p>`}
+                 ${strengthHtml(center, neighbor, n)}`
+              : `<p class="sentence">No shared papers ${pinnedPapers ? "that match your filters" : `in ${rangeText()}`}.</p>`}
             <div class="btn-row">
               <button type="button" class="btn" data-action="open-concept" data-id="${esc(neighbor.id)}">Open ${esc(cap(neighbor.label))} →</button>
               ${compareButton(center.id, neighbor.id, "big")}
             </div>
             ${pinButton([center.id, neighbor.id], "both")}
           </div>
+          ${n ? `
+          <p class="eyebrow" style="margin-top:20px">When they met <span style="text-transform:none;letter-spacing:0">· each dot is a shared paper</span></p>
+          <div class="met">${metTimeline(papers, colorOf(neighbor.type))}</div>
+          <p class="met-note">${esc(trendText(papers))}</p>
+          ${alsoInHtml(center, neighbor, papers)}
+          ${n > 1 ? endsHtml(papers) : ""}
+          <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>` : ""}
           <p class="eyebrow" style="margin-top:20px">Papers (${n})</p>
           <div class="rows">${shown.map((p) => paperRow(p, false, false)).join("")}</div>
           ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-conn-papers">Load more · ${remaining} remaining</button>` : ""}`;
       }
 
-      // A 2–3 sentence summary of the shared papers, built only from extracted concepts and years:
-      // which other concepts recur, how the count changed over time, and the earliest and latest paper.
-      function commonGround(center, neighbor, papers) {
+      // Strength in plain words: share of each concept's papers, and how it compares with chance.
+      function strengthHtml(center, neighbor, n) {
+        const a = papersOf(center).length, b = papersOf(neighbor).length;
+        const { lift, expected } = liftOf(n, a, b);
+        const exp = expected < 1 ? "less than one" : expected < 10 ? expected.toFixed(1) : Math.round(expected);
+        return `<div class="stat-tiles">
+            <div class="stat-tile"><b>${n}</b><span>shared ${n === 1 ? "paper" : "papers"}</span></div>
+            <div class="stat-tile"><b>${liftText(lift)}</b><span>vs. chance</span></div>
+            <div class="stat-tile"><b>${Math.round((n / a) * 100)}%</b><span>of ${esc(cap(center.label))}'s papers</span></div>
+            <div class="stat-tile"><b>${Math.round((n / b) * 100)}%</b><span>of ${esc(cap(neighbor.label))}'s papers</span></div>
+          </div>
+          <p class="strength">These two are ${liftPhrase(lift)}. If they were unrelated you'd expect about ${exp} shared ${expected >= 0.95 && expected < 1.05 ? "paper" : "papers"}${scopeActive() ? " among the papers in view" : ""}; there ${n === 1 ? "is" : "are"} ${n}.${n < 3 ? ` <span class="caution">With so few papers, read this lightly.</span>` : ""}</p>`;
+      }
+
+      // The shared papers as dots on a year axis, stacked when a year has several.
+      function metTimeline(papers, color) {
+        const W = 340, pad = 8, r = 3.4, step = 7.6;
+        const x = d3.scaleLinear().domain([Y0, Y1]).range([pad, W - pad]);
+        const byYear = d3.groups(papers.slice().sort((a, b) => a.year - b.year), (p) => p.year);
+        const tallest = d3.max(byYear, ([, ps]) => ps.length) || 1;
+        const H = Math.max(34, tallest * step + 22);
+        const base = H - 18;
+        const dots = byYear.flatMap(([year, ps]) => ps.map((p, i) => `<circle class="dotp" data-action="paper" data-id="${p.paper_id}" cx="${x(year).toFixed(1)}" cy="${(base - r - i * step).toFixed(1)}" r="${r}" fill="${color}"><title>${esc(paperTitle(p))} (${p.year})</title></circle>`)).join("");
+        const out = rangeActive()
+          ? `<rect x="0" y="0" width="${x(state.range[0]) - 2}" height="${base}" fill="rgba(255,255,255,0.03)"/><rect x="${x(state.range[1]) + 2}" y="0" width="${W - x(state.range[1]) - 2}" height="${base}" fill="rgba(255,255,255,0.03)"/>`
+          : "";
+        const ticks = [1990, 2000, 2010, 2020].filter((y) => y >= Y0 && y <= Y1);
+        return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Shared papers by year">
+          ${out}
+          <g class="axis"><line x1="${pad}" x2="${W - pad}" y1="${base + 2}" y2="${base + 2}"/>${ticks.map((t) => `<text x="${x(t)}" y="${H - 3}" text-anchor="middle">${t}</text>`).join("")}</g>
+          ${dots}
+        </svg>`;
+      }
+
+      function trendText(papers) {
         const n = papers.length;
-        const conceptRef = (id, count) => {
-          const c = byId.get(id);
-          return `<span role="button" tabindex="0" class="ref" data-action="open-concept" data-id="${esc(id)}" style="--c:${colorOf(c.type)}">${esc(c.label)}</span>${count ? ` (${count})` : ""}`;
-        };
-        // Spans rather than buttons, so long titles wrap with the sentence instead of breaking out of it.
-        const paperRef = (p) => `“<span role="button" tabindex="0" class="ref plain" data-action="paper" data-id="${p.paper_id}">${esc(paperTitle(p))}</span>” (${esc(p.authors || "Unknown authors")}, ${p.year})`;
-
-        const counts = new Map();
-        papers.forEach((p) => (conceptsByPaper.get(p.paper_id) || []).forEach((id) => {
-          if (id !== center.id && id !== neighbor.id) counts.set(id, (counts.get(id) || 0) + 1);
-        }));
-
-        if (n === 1) {
-          const others = [...counts.keys()];
-          return `The one shared paper, ${paperRef(papers[0])}, ${others.length ? `also covers ${listJoin(others.map((id) => conceptRef(id)))}` : "covers no other concepts"}.`;
-        }
-
-        const minCount = n >= 5 ? 2 : 1;
-        // Concepts are grouped under the type that owns the phrasing, so sub-types share their parent's phrase.
-        const phraseOwner = (type) => ancestry(type).find((t) => t.summary)?.id || type;
-        const owners = [...new Set(nodeTypes.map(phraseOwner))];
-        const phrases = owners.map((owner) => {
-          const top = [...counts.entries()]
-            .filter(([id, c]) => phraseOwner(byId.get(id).type) === owner && c >= minCount)
-            .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
-            .slice(0, 2);
-          if (!top.length) return null;
-          const template = typeOf(owner).summary || "also involve {list}";
-          return fillTemplate(template, { list: listJoin(top.map(([id, c]) => conceptRef(id, c))), s: top.length > 1 ? "s" : "" });
-        }).filter(Boolean);
-        const recurring = phrases.length
-          ? `Alongside both concepts, these ${n} papers most often ${listJoin(phrases)}.`
-          : `No other concept comes up in more than one of these papers.`;
-
         const years = papers.map((p) => p.year);
         const [minY, maxY] = d3.extent(years);
-        let trend;
-        if (minY === maxY) {
-          trend = `All ${n} were published in ${minY}.`;
-        } else {
-          const mid = Math.floor((minY + maxY) / 2);
-          const early = years.filter((y) => y <= mid).length, late = n - early;
-          const [peakYear, peakCount] = d3.greatest(d3.rollups(years, (v) => v.length, (y) => y), ([y, c]) => c * 10000 + y);
-          const shape = late >= early * 1.5 ? "The count has grown over time" : early >= late * 1.5 ? "Most of them are older" : "They are spread fairly evenly over time";
-          trend = `${shape}: ${early} from ${minY}–${mid} and ${late} from ${mid + 1}–${maxY}${peakCount > 1 ? `, peaking in ${peakYear} with ${peakCount}` : ""}.`;
-        }
+        if (minY === maxY) return n === 1 ? `Published in ${minY}.` : `All ${n} were published in ${minY}.`;
+        const mid = Math.floor((minY + maxY) / 2);
+        const early = years.filter((y) => y <= mid).length, late = n - early;
+        const shape = late >= early * 1.5 ? "Growing over time" : early >= late * 1.5 ? "Mostly older work" : "Spread fairly evenly";
+        return `${shape}: ${early} from ${minY}–${mid}, ${late} from ${mid + 1}–${maxY}.`;
+      }
 
+      // What else the shared papers cover, one row per type, most frequent first.
+      function alsoInHtml(center, neighbor, papers) {
+        const n = papers.length;
+        const counts = new Map();
+        papers.forEach((p) => (conceptsByPaper.get(p.paper_id) || []).forEach((id) => {
+          if (id !== center.id && id !== neighbor.id && !state.pins.includes(id)) counts.set(id, (counts.get(id) || 0) + 1);
+        }));
+        const minCount = n >= 5 ? 2 : 1;
+        const rows = nodeTypes.map((t) => {
+          const top = [...counts.entries()]
+            .filter(([id, c]) => byId.get(id).type === t && c >= minCount)
+            .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
+            .slice(0, 3);
+          if (!top.length) return "";
+          return `<div class="also-row"><span class="k">${esc(typeOf(t).plural)}</span><span class="v">${top.map(([id, c]) => `<button type="button" class="chip" data-action="open-concept" data-id="${esc(id)}">${dot(t)}${esc(cap(byId.get(id).label))} <span class="c">${c}</span></button>`).join("")}</span></div>`;
+        }).join("");
+        return `<p class="eyebrow" style="margin-top:20px">Also in these papers <span style="text-transform:none;letter-spacing:0">· out of ${n}</span></p>
+          ${rows ? `<div class="also">${rows}</div>` : `<p class="met-note">No other concept comes up in more than one of these papers.</p>`}`;
+      }
+
+      function endsHtml(papers) {
         const byYear = papers.slice().sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
-        const ends = `The earliest is ${paperRef(byYear[0])} and the most recent is ${paperRef(byYear[byYear.length - 1])}.`;
-        return `${recurring} ${trend} ${ends}`;
+        const row = (label, p) => `<button type="button" class="paper-row" data-action="paper" data-id="${p.paper_id}"><span class="lab">${label}</span><span class="p-title">${esc(paperTitle(p))}</span><span class="p-meta">${esc(p.authors || "Unknown authors")} · ${p.year}</span></button>`;
+        return `<p class="eyebrow" style="margin-top:20px">Earliest and most recent</p>
+          <div class="ends">${row("Earliest", byYear[0])}${row("Most recent", byYear[byYear.length - 1])}</div>`;
       }
 
       function relatedPapers(paperId) {
