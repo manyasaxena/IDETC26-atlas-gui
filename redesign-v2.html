@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atlas Redesign v2</title>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -348,6 +354,74 @@
     .topbar { grid-row: 1; }
     .filter-bar { grid-row: 2; }
     main { grid-row: 3; min-height: 0; position: relative; }
+
+    /* ---------- Full network in 3D ---------- */
+    .net3d { position: absolute; inset: 0; background: #07080c; overflow: hidden; }
+    .net3d canvas { display: block; width: 100%; height: 100%; cursor: grab; outline: none; }
+    .net3d canvas:active { cursor: grabbing; }
+    .net3d.hovering canvas { cursor: pointer; }
+    .net3d-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+    .nl {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      font: 11.5px var(--mono);
+      color: #e6eaf1;
+      text-shadow: 0 0 4px #07080c, 0 0 8px #07080c, 0 0 2px #07080c;
+      will-change: transform, opacity;
+    }
+    .nl.big { font-size: 12.5px; font-weight: 600; }
+    .nl.hot { color: #fff; font-weight: 600; }
+    .nl.hot::before { content: ""; position: absolute; inset: -3px -6px; border-radius: 999px; background: rgba(7, 8, 12, 0.72); z-index: -1; }
+    .net-tools {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .net-tools .seg button { padding: 6px 14px; }
+    .net-legend {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      max-width: 330px;
+      background: rgba(13, 14, 18, 0.9);
+      border: 1px solid var(--line);
+      border-radius: var(--r-lg);
+      padding: 12px 16px;
+      font: 11.5px var(--mono);
+      color: var(--muted);
+      display: grid;
+      gap: 6px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+    }
+    .net-legend .types { display: flex; flex-wrap: wrap; gap: 4px 12px; color: #cfd5e0; }
+    .net-legend .types span { display: inline-flex; align-items: center; gap: 6px; }
+    .net-legend b { color: #cfd5e0; font-weight: 500; }
+    .net-legend .how { color: var(--faint); border-top: 1px solid var(--line); padding-top: 6px; }
+    .net-note {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 6;
+      background: rgba(13, 14, 18, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font: 12px var(--mono);
+      color: var(--muted);
+      white-space: nowrap;
+      animation: fadeUp 0.3s var(--ease);
+    }
 
     /* ---------- Landing ---------- */
     #landing-view { position: absolute; inset: 0; overflow-y: auto; animation: fadeIn 0.35s var(--ease); }
@@ -1371,6 +1445,20 @@
       <section id="field-view" hidden>
         <svg id="field" aria-label="Field view of all concepts"></svg>
         <div class="field-legend" id="field-legend"></div>
+        <div class="net3d" id="net3d" hidden aria-label="Every concept as a star in 3D space">
+          <div class="net3d-labels" id="net3d-labels"></div>
+          <div class="net-legend" id="net3d-legend"></div>
+        </div>
+        <div class="net-note" id="net-note" hidden></div>
+        <div class="net-tools" id="net-tools">
+          <button type="button" class="pill-btn" id="net-overview">Landmarks overview</button>
+          <button type="button" class="pill-btn" id="net-spin" hidden>Pause rotation</button>
+          <button type="button" class="pill-btn" id="net-reset" hidden>Reset view</button>
+          <div class="seg" role="group" aria-label="2D or 3D">
+            <button type="button" data-dim="3d">3D</button>
+            <button type="button" data-dim="2d">2D</button>
+          </div>
+        </div>
       </section>
 
       <section id="concept-view" hidden>
@@ -1623,7 +1711,7 @@
 
       // ---------- State ----------
       const state = {
-        view: "landing",
+        view: "field",
         landingOpen: new Set(),
         // Filters: shared by every view and kept as you move around.
         types: new Set(nodeTypes),
@@ -1648,6 +1736,10 @@
         connPapersShown: PAGE,
         // Sub-groups start collapsed; top-level groups start open.
         collapsedTypes: new Set(typesInOrder.filter((t) => t.depth >= 1 && t.children.length).map((t) => t.id)),
+        showTypes: new Set(nodeTypes),
+        // Papers opened one after another from "Related papers", so "← Previous paper" can step back.
+        paperTrail: [],
+        keepPapersTab: false,
         orbitLimit: ORBIT_STEP,
         range: [Y0, Y1],
         compare: [],
@@ -1822,15 +1914,17 @@
           + (paper != null ? `/paper/${paper}` : "");
       }
       const openConcept = (id) => navigate(conceptHash(id));
+      // Home is the full network (3D stars, or 2D); the landmarks overview lives at #/overview.
       const goHome = () => navigate("#/");
-      const goField = () => navigate("#/network");
+      const goField = goHome;
+      const goOverview = () => navigate("#/overview");
       const selectConnection = (id) => navigate(conceptHash(state.center, id));
       const clearConnection = () => navigate(conceptHash(state.center));
       const openPaper = (id) => navigate(conceptHash(state.center, state.connection, id));
       const closePaper = () => navigate(conceptHash(state.center, state.connection));
       // One level up from wherever you are: paper → connection → concept → field.
       function goUp() {
-        if (state.view === "field") { goHome(); return; }
+        if (state.view === "landing") { goHome(); return; }
         if (state.view !== "concept") return;
         if (state.paper != null) closePaper();
         else if (state.connection) clearConnection();
@@ -1839,8 +1933,8 @@
       function route() {
         const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+|ex\d+))?\/?$/);
         const id = m && decodeURIComponent(m[1]);
-        if (/^#\/network\/?$/.test(location.hash)) { showField(); return; }
-        if (!id || !byId.has(id)) { showLanding(); return; }
+        if (/^#\/overview\/?$/.test(location.hash)) { showLanding(); return; }
+        if (!id || !byId.has(id)) { showField(); return; }
         const conn = m[2] ? decodeURIComponent(m[2]) : null;
         const paper = m[3] ? (isExampleId(m[3]) ? m[3] : Number(m[3])) : null;
         showConcept(id, {
@@ -1896,7 +1990,8 @@
         searchResults.hidden = true;
         activeResult = -1;
         searchInput.blur();
-        openConcept(id);
+        if (state.view === "field" && net.dim === "3d" && net.scene) net.flyTo(id, { open: false });
+        else openConcept(id);
       }
       searchInput.addEventListener("input", () => { activeResult = -1; renderSearch(); });
       searchInput.addEventListener("keydown", (event) => {
@@ -1925,7 +2020,7 @@
           </div>`).join("")}
         <div class="more">
           <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
-          <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The inner ring holds the third that are most tightly tied, meaning the biggest share of their papers are shared.</p>
+          <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
           <p><strong>× chance.</strong> How many times more often two concepts share papers than you'd expect if they were unrelated. Common concepts (like Engineering Students) share many papers with everything, so a big count can still be "about chance".</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
           ${EX ? `<p>${exampleBadge()} <strong>Atlas 2 preview.</strong> Panels in a dashed amber frame use ${EX.papers.length} made-up papers to show how findings, certainty and study details could look once Atlas 2 data exists. They are not real findings and never change the real counts.</p>
@@ -2011,13 +2106,14 @@
           })
           .attr("stroke-width", (d) => widthScale(fieldLinkCount(d.link)))
           .attr("stroke-opacity", (d) => opacityScale(fieldLinkCount(d.link)));
+        if (net.scene) net.applyFilters();
       }
 
       $("field-legend").innerHTML = `
         ${shownTypeTree.filter((t) => !t.parentId).map((t) => `<div class="row">${dot(t.id)}${esc(t.plural)} (${t.total})</div>`).join("")}
         <div class="hint">Size = papers · line = shared papers</div>
         <div class="hint">Hover for a definition · click to explore</div>
-        <div class="hint">Esc or the Atlas button returns home</div>`;
+`;
 
       function resizeField() {
         const w = fieldEl.clientWidth, h = fieldEl.clientHeight;
@@ -2042,7 +2138,429 @@
         renderCrumbs();
         resizeField();
         updateField();
+        setNetDim(net.dim);
       }
+
+      // ---------- Full network in 3D ----------
+      // Each concept is a star. Position comes from a fixed 3D layout computed once: concepts are pulled
+      // toward the ones whose papers they share the biggest share of, and pushed away from everything else.
+      // Concepts with no links sit evenly on an outer shell.
+      const net = {
+        dim: (() => { try { return localStorage.getItem("atlas-net-dim") === "2d" ? "2d" : "3d"; } catch { return "3d"; } })(),
+        scene: null,
+        loading: null
+      };
+
+      function layout3D() {
+        let r = 11;
+        const rnd = () => ((r = (r * 1664525 + 1013904223) >>> 0) / 4294967296);
+        const linked = nodes.filter((n) => (adjacency.get(n.id) || []).length);
+        const loose = nodes.filter((n) => !(adjacency.get(n.id) || []).length);
+        const idx = new Map(linked.map((n, i) => [n.id, i]));
+        const N = linked.length;
+        const P = new Float64Array(N * 3), V = new Float64Array(N * 3);
+        for (let i = 0; i < N; i++) {
+          const u = rnd() * 2 - 1, t = rnd() * Math.PI * 2, rad = 150 * Math.cbrt(rnd()), sq = Math.sqrt(1 - u * u);
+          P[i * 3] = rad * sq * Math.cos(t); P[i * 3 + 1] = rad * sq * Math.sin(t); P[i * 3 + 2] = rad * u;
+        }
+        // Strength of a tie = shared papers ÷ √(papers of A × papers of B), so big hubs don't pull everything in.
+        const cos = (l) => l.shared / Math.sqrt(byId.get(l.a).paperCount * byId.get(l.b).paperCount);
+        // Springs only on each concept's six strongest ties; with all ~1,900 the space collapses into one ball.
+        const springs = new Map();
+        linked.forEach((n) => adjacency.get(n.id).map((x) => x.link).sort((x, y) => cos(y) - cos(x)).slice(0, 6)
+          .forEach((l) => springs.set(pairKey(l.a, l.b), l)));
+        const S = [...springs.values()].map((l) => {
+          const w = Math.min(1, cos(l) * 1.6);
+          return { i: idx.get(l.a), j: idx.get(l.b), len: 18 + 70 * (1 - w), k: 0.04 + 0.25 * w };
+        });
+        const ITER = 420, REP = 2600, GRAV = 0.012;
+        for (let it = 0; it < ITER; it++) {
+          const alpha = 1 - it / ITER;
+          for (let i = 0; i < N; i++) {
+            for (let j = i + 1; j < N; j++) {
+              let dx = P[i * 3] - P[j * 3], dy = P[i * 3 + 1] - P[j * 3 + 1], dz = P[i * 3 + 2] - P[j * 3 + 2];
+              let d2 = dx * dx + dy * dy + dz * dz;
+              if (d2 < 1) { dx = rnd() - 0.5; dy = rnd() - 0.5; dz = rnd() - 0.5; d2 = 1; }
+              const d = Math.sqrt(d2), f = (REP / d2) * alpha;
+              const fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
+              V[i * 3] += fx; V[i * 3 + 1] += fy; V[i * 3 + 2] += fz;
+              V[j * 3] -= fx; V[j * 3 + 1] -= fy; V[j * 3 + 2] -= fz;
+            }
+          }
+          S.forEach(({ i, j, len, k }) => {
+            const dx = P[j * 3] - P[i * 3], dy = P[j * 3 + 1] - P[i * 3 + 1], dz = P[j * 3 + 2] - P[i * 3 + 2];
+            const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+            const f = k * (d - len) * alpha;
+            const fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
+            V[i * 3] += fx; V[i * 3 + 1] += fy; V[i * 3 + 2] += fz;
+            V[j * 3] -= fx; V[j * 3 + 1] -= fy; V[j * 3 + 2] -= fz;
+          });
+          for (let i = 0; i < N * 3; i++) {
+            V[i] -= P[i] * GRAV * alpha;
+            P[i] += Math.max(-12, Math.min(12, V[i]));
+            V[i] *= 0.6;
+          }
+        }
+        const pos = new Map();
+        let maxR = 0;
+        linked.forEach((n, i) => {
+          const p = [P[i * 3], P[i * 3 + 1], P[i * 3 + 2]];
+          pos.set(n.id, p);
+          maxR = Math.max(maxR, Math.hypot(...p));
+        });
+        const shell = maxR * 1.35;
+        loose.sort((a, b) => b.paperCount - a.paperCount).forEach((n, i) => {
+          const y = 1 - (2 * (i + 0.5)) / loose.length, rr = Math.sqrt(1 - y * y), th = i * Math.PI * (3 - Math.sqrt(5));
+          pos.set(n.id, [shell * rr * Math.cos(th), shell * y, shell * rr * Math.sin(th)]);
+        });
+        return { pos, radius: maxR, shell, looseCount: loose.length };
+      }
+
+      // A soft round sprite texture: `hard` gives a crisp core, otherwise a wide glow.
+      function starTexture(THREE, hard) {
+        const c = document.createElement("canvas");
+        c.width = c.height = 128;
+        const g = c.getContext("2d");
+        const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+        if (hard) {
+          grad.addColorStop(0, "rgba(255,255,255,1)");
+          grad.addColorStop(0.55, "rgba(255,255,255,1)");
+          grad.addColorStop(0.72, "rgba(255,255,255,0.35)");
+          grad.addColorStop(1, "rgba(255,255,255,0)");
+        } else {
+          grad.addColorStop(0, "rgba(255,255,255,0.9)");
+          grad.addColorStop(0.25, "rgba(255,255,255,0.35)");
+          grad.addColorStop(1, "rgba(255,255,255,0)");
+        }
+        g.fillStyle = grad;
+        g.fillRect(0, 0, 128, 128);
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      }
+
+      async function buildNet3D() {
+        const THREE = await import("three");
+        const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+        const host = $("net3d");
+        let renderer;
+        try {
+          renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        } catch (error) {
+          throw new Error("3D needs WebGL, which isn't available in this browser.");
+        }
+        renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+        renderer.setClearColor(0x07080c, 1);
+        host.prepend(renderer.domElement);
+        renderer.domElement.setAttribute("tabindex", "0");
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x07080c, 0.0009);
+        const camera = new THREE.PerspectiveCamera(50, 1, 1, 8000);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.zoomToCursor = true;
+        controls.minDistance = 15;
+        controls.maxDistance = 1800;
+        controls.rotateSpeed = 0.6;
+        controls.autoRotate = !REDUCED_MOTION;
+        controls.autoRotateSpeed = 0.3;
+
+        const L = layout3D();
+        const HOME = { pos: new THREE.Vector3(0, L.shell * 0.45, L.shell * 1.75), target: new THREE.Vector3(0, 0, 0) };
+        camera.position.copy(HOME.pos);
+        controls.target.copy(HOME.target);
+
+        // Faint background stars, far away and unaffected by fog.
+        const bg = new Float32Array(1600 * 3);
+        for (let i = 0; i < 1600; i++) {
+          const u = Math.random() * 2 - 1, t = Math.random() * Math.PI * 2, rr = 2600 + Math.random() * 2400, sq = Math.sqrt(1 - u * u);
+          bg[i * 3] = rr * sq * Math.cos(t); bg[i * 3 + 1] = rr * sq * Math.sin(t); bg[i * 3 + 2] = rr * u;
+        }
+        const bgGeo = new THREE.BufferGeometry();
+        bgGeo.setAttribute("position", new THREE.BufferAttribute(bg, 3));
+        scene.add(new THREE.Points(bgGeo, new THREE.PointsMaterial({ color: 0x8a93a6, size: 1.3, sizeAttenuation: false, transparent: true, opacity: 0.45, fog: false, depthWrite: false })));
+
+        // Stars: a glow and a crisp core per concept, tinted by type.
+        const glowTex = starTexture(THREE, false), coreTex = starTexture(THREE, true);
+        const stars = new Map();
+        nodes.forEach((n) => {
+          const color = new THREE.Color(colorOf(n.type));
+          const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
+          const core = new THREE.Sprite(new THREE.SpriteMaterial({ map: coreTex, color, transparent: true, depthWrite: false }));
+          const p = new THREE.Vector3(...L.pos.get(n.id));
+          glow.position.copy(p);
+          core.position.copy(p);
+          scene.add(glow, core);
+          stars.set(n.id, { n, glow, core, p, r: 3, visible: true });
+        });
+
+        // Lines: every connection, very faint; brighter with more shared papers. Additive, so they glow where they bunch.
+        const linkGeo = new THREE.BufferGeometry();
+        const linkMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+        const linkLines = new THREE.LineSegments(linkGeo, linkMat);
+        scene.add(linkLines);
+        // The hovered or focused star's own lines, drawn on top in its color.
+        const hiGeo = new THREE.BufferGeometry();
+        const hiMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending });
+        const hiLines = new THREE.LineSegments(hiGeo, hiMat);
+        scene.add(hiLines);
+
+        // Labels: one HTML element per concept, positioned each frame.
+        const labelLayer = $("net3d-labels");
+        stars.forEach((st) => {
+          const el = document.createElement("div");
+          el.className = "nl";
+          el.innerHTML = `${dot(st.n.type)}${esc(cap(st.n.label))}`;
+          labelLayer.appendChild(el);
+          st.el = el;
+          st.labelW = Math.min(260, cap(st.n.label).length * 7 + 16);
+        });
+
+        Object.assign(net, { THREE, renderer, scene, camera, controls, stars, linkGeo, linkLines, hiGeo, hiLines, hiMat, L, HOME, hover: null, focus: null, fly: null, running: false, big: new Set() });
+
+        net.applyFilters = function () {
+          const counts = new Map();
+          stars.forEach((st) => {
+            const c = papersIn(st.n.papers).length;
+            counts.set(st.n.id, c);
+            st.visible = fieldNodeOn(st.n);
+            st.r = nodeR(Math.max(1, c));
+            st.core.visible = st.glow.visible = st.visible;
+            st.core.scale.setScalar(st.r * 1.5);
+            st.glow.scale.setScalar(st.r * 3.2);
+          });
+          // The biggest concepts in view always keep a label.
+          net.big = new Set([...stars.values()].filter((st) => st.visible).sort((a, b) => counts.get(b.n.id) - counts.get(a.n.id)).slice(0, 14).map((st) => st.n.id));
+          const shown = links.filter((l) => stars.get(l.a).visible && stars.get(l.b).visible && fieldLinkCount(l) > 0);
+          const max = d3.max(shown, fieldLinkCount) || 1;
+          const posArr = new Float32Array(shown.length * 6), colArr = new Float32Array(shown.length * 6);
+          shown.forEach((l, i) => {
+            const a = stars.get(l.a).p, b = stars.get(l.b).p;
+            posArr.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6);
+            // Faint by default (one-paper links nearly vanish), so ~1,900 lines don't saturate the core.
+            const k = 0.006 + 0.16 * Math.pow(Math.log1p(fieldLinkCount(l) - 1) / Math.log1p(max - 1 || 1), 1.6);
+            colArr.set([0.62 * k, 0.72 * k, 0.95 * k, 0.62 * k, 0.72 * k, 0.95 * k], i * 6);
+          });
+          linkGeo.setAttribute("position", new THREE.BufferAttribute(posArr, 3));
+          linkGeo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
+          linkGeo.computeBoundingSphere();
+          net.visibleLinks = shown;
+          renderNetLegend();
+          setHighlight();
+        };
+
+        // Lights up one star's own lines (the hovered star, else the focused one).
+        function setHighlight() {
+          const id = net.hover || net.focus;
+          if (!id || !stars.get(id)?.visible) { hiGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3)); return; }
+          const mine = net.visibleLinks.filter((l) => l.a === id || l.b === id);
+          const arr = new Float32Array(mine.length * 6);
+          mine.forEach((l, i) => { const a = stars.get(l.a).p, b = stars.get(l.b).p; arr.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6); });
+          hiGeo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+          hiGeo.computeBoundingSphere();
+          hiMat.color.set(colorOf(stars.get(id).n.type));
+          // Its strongest neighbors get labels too.
+          net.hotNeighbors = new Set(mine.sort((x, y) => fieldLinkCount(y) - fieldLinkCount(x)).slice(0, 6).map((l) => (l.a === id ? l.b : l.a)));
+          linkLines.material.opacity = 0.55;
+        }
+        net.setHighlight = setHighlight;
+
+        // Screen-space picking: the nearest visible star under the pointer, preferring the one closest to the camera.
+        const v = new THREE.Vector3();
+        function project(st, w, h) {
+          v.copy(st.p).project(camera);
+          if (v.z > 1 || v.z < -1) return null;
+          const dist = camera.position.distanceTo(st.p);
+          const px = (st.r * 1.5 * 0.5 * h) / (2 * dist * Math.tan((camera.fov * Math.PI) / 360));
+          return { x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h, dist, px };
+        }
+        net.project = project;
+        function pick(mx, my) {
+          const w = host.clientWidth, h = host.clientHeight;
+          let best = null;
+          stars.forEach((st) => {
+            if (!st.visible) return;
+            const s = project(st, w, h);
+            if (!s) return;
+            const d = Math.hypot(s.x - mx, s.y - my);
+            if (d > Math.max(7, s.px + 4)) return;
+            const score = d + s.dist * 0.01;
+            if (!best || score < best.score) best = { st, score };
+          });
+          return best ? best.st : null;
+        }
+
+        const canvas = renderer.domElement;
+        let down = null;
+        canvas.addEventListener("pointerdown", (event) => { down = { x: event.clientX, y: event.clientY }; });
+        canvas.addEventListener("pointermove", (event) => {
+          const rect = canvas.getBoundingClientRect();
+          const st = pick(event.clientX - rect.left, event.clientY - rect.top);
+          const id = st ? st.n.id : null;
+          host.classList.toggle("hovering", !!id);
+          if (id !== net.hover) { net.hover = id; setHighlight(); if (!id) linkLines.material.opacity = net.focus ? 0.55 : 1; }
+          if (st) showTip(conceptTip(st.n, `${plural(papersIn(st.n.papers).length, "paper")}${scopeActive() ? " in view" : ""} · click to fly in`), event, $("field-view"));
+          else hideTip();
+        });
+        canvas.addEventListener("pointerleave", () => { net.hover = null; host.classList.remove("hovering"); setHighlight(); hideTip(); });
+        canvas.addEventListener("pointerup", (event) => {
+          if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 5) return;
+          if (net.hover) { hideTip(); net.flyTo(net.hover, { open: true }); }
+        });
+        controls.addEventListener("start", () => { if (!net.fly) setSpin(false); });
+
+        // Smoothly moves the camera to look at a star from a little way off, then optionally opens its page.
+        net.flyTo = function (id, { open = false } = {}) {
+          const st = stars.get(id);
+          if (!st) return;
+          if (!st.visible) { if (open) openConcept(id); return; }
+          setSpin(false);
+          net.focus = id;
+          setHighlight();
+          const dir = camera.position.clone().sub(controls.target).normalize();
+          const endTarget = st.p.clone();
+          const endPos = st.p.clone().add(dir.multiplyScalar(55 + st.r * 7));
+          net.fly = { t0: performance.now(), dur: REDUCED_MOTION ? 0 : 1100, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: endPos, toTarget: endTarget, then: open ? () => openConcept(id) : null };
+        };
+        net.reset = function () {
+          net.focus = null;
+          setHighlight();
+          linkLines.material.opacity = 1;
+          net.fly = { t0: performance.now(), dur: REDUCED_MOTION ? 0 : 1100, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: HOME.pos.clone(), toTarget: HOME.target.clone(), then: () => setSpin(!REDUCED_MOTION) };
+        };
+
+        new ResizeObserver(() => {
+          const w = host.clientWidth, h = host.clientHeight;
+          if (!w || !h) return;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        }).observe(host);
+
+        net.applyFilters();
+      }
+
+      // Labels: the biggest concepts, the hovered/focused one and its strongest neighbors, and anything near the camera
+      // (fading in as you approach). Placed greedily by priority so they never overlap.
+      const LABEL_NEAR = 110, LABEL_FAR = 260;
+      function placeNetLabels() {
+        const host = $("net3d");
+        const w = host.clientWidth, h = host.clientHeight;
+        const boxes = [];
+        const cands = [];
+        net.stars.forEach((st) => {
+          st.show = false;
+          if (!st.visible) return;
+          const s = net.project(st, w, h);
+          if (!s || s.x < -50 || s.x > w + 50 || s.y < -20 || s.y > h + 20) return;
+          const hot = st.n.id === net.hover || st.n.id === net.focus;
+          const near = (net.hover || net.focus) && net.hotNeighbors?.has(st.n.id);
+          const big = net.big.has(st.n.id);
+          const fade = Math.max(0, Math.min(1, (LABEL_FAR - s.dist) / (LABEL_FAR - LABEL_NEAR)));
+          if (!hot && !near && !big && fade <= 0) return;
+          const pri = hot ? 1e6 : near ? 1e5 : big ? 1e4 + papersIn(st.n.papers).length : fade * 1000;
+          cands.push({ st, s, pri, hot, big, opacity: hot || near ? 1 : big ? Math.max(0.55, Math.min(1, 1.25 - s.dist / 1600)) : fade });
+        });
+        cands.sort((a, b) => b.pri - a.pri);
+        // At most 16 labels for nearby stars, nearest first, on top of the always-on ones.
+        let nearShown = 0;
+        cands.forEach((c) => {
+          const nearOnly = c.pri < 1e4;
+          if (nearOnly && nearShown >= 16) return;
+          const x0 = c.s.x + Math.max(4, c.s.px) + 4, y0 = c.s.y - 9;
+          const box = { x0, y0, x1: x0 + c.st.labelW, y1: y0 + 18 };
+          if (!c.hot && boxes.some((b) => b.x0 < box.x1 && b.x1 > box.x0 && b.y0 < box.y1 && b.y1 > box.y0)) return;
+          boxes.push(box);
+          if (nearOnly) nearShown += 1;
+          c.st.show = true;
+          c.st.el.style.transform = `translate(${x0.toFixed(1)}px, ${y0.toFixed(1)}px)`;
+          c.st.el.style.opacity = c.opacity.toFixed(2);
+          c.st.el.className = `nl${c.big ? " big" : ""}${c.hot ? " hot" : ""}`;
+        });
+        net.stars.forEach((st) => { st.el.style.display = st.show ? "flex" : "none"; });
+      }
+
+      const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+      function netTick(now) {
+        if (state.view !== "field" || net.dim !== "3d") { net.running = false; return; }
+        if (net.fly) {
+          const f = net.fly;
+          const k = f.dur ? Math.min(1, (now - f.t0) / f.dur) : 1;
+          const e = easeInOut(k);
+          net.camera.position.lerpVectors(f.fromPos, f.toPos, e);
+          net.controls.target.lerpVectors(f.fromTarget, f.toTarget, e);
+          if (k >= 1) {
+            net.fly = null;
+            if (f.then) setTimeout(f.then, 180);
+          }
+        }
+        net.controls.update();
+        net.renderer.render(net.scene, net.camera);
+        placeNetLabels();
+        requestAnimationFrame(netTick);
+      }
+
+      function setSpin(on) {
+        if (!net.controls) return;
+        net.controls.autoRotate = on;
+        $("net-spin").textContent = on ? "Pause rotation" : "Rotate";
+      }
+
+      function renderNetLegend() {
+        const looseShown = [...net.stars.values()].filter((st) => st.visible && !(adjacency.get(st.n.id) || []).length).length;
+        $("net3d-legend").innerHTML = `
+          <div class="types">${nodeTypes.filter((t) => state.types.has(t)).map((t) => `<span>${dot(t)}${esc(typeOf(t).plural)}</span>`).join("")}</div>
+          <div><b>Color</b> = type · <b>Size</b> = papers${scopeActive() ? " in view" : ""}</div>
+          <div><b>Distance</b> = closer stars share a bigger share of their papers (approximate)</div>
+          <div><b>Lines</b> = shared papers, brighter = more. Hover a star to light up its own.</div>
+          ${looseShown ? `<div><b>Outer shell</b> = ${looseShown} concepts with no shared-paper links</div>` : ""}
+          <div class="how">Drag to rotate · scroll to zoom toward the pointer · right-drag to pan · click a star to fly in</div>`;
+      }
+
+      // Switches the full network between the 3D space and the original 2D graph.
+      async function setNetDim(dim) {
+        net.dim = dim;
+        try { localStorage.setItem("atlas-net-dim", dim); } catch { /* preference only */ }
+        document.querySelectorAll("#net-tools [data-dim]").forEach((b) => b.classList.toggle("on", b.dataset.dim === dim));
+        const is3d = dim === "3d";
+        $("field").style.display = is3d ? "none" : "";
+        $("field-legend").hidden = is3d;
+        $("net3d").hidden = !is3d;
+        $("net-reset").hidden = $("net-spin").hidden = !is3d;
+        hideTip();
+        if (!is3d || state.view !== "field") return;
+        if (!net.scene) {
+          const note = $("net-note");
+          note.textContent = "Placing 228 stars…";
+          note.hidden = false;
+          try {
+            net.loading = net.loading || buildNet3D();
+            await net.loading;
+            note.hidden = true;
+          } catch (error) {
+            console.error(error);
+            note.textContent = `${error.message || "3D couldn't start."} Showing the 2D view.`;
+            setTimeout(() => { note.hidden = true; }, 6000);
+            net.loading = null;
+            setNetDim("2d");
+            return;
+          }
+        }
+        net.applyFilters();
+        if (!net.running && state.view === "field" && net.dim === "3d") {
+          net.running = true;
+          requestAnimationFrame(netTick);
+        }
+      }
+      $("net-tools").addEventListener("click", (event) => {
+        const b = event.target.closest("[data-dim]");
+        if (b) setNetDim(b.dataset.dim);
+      });
+      $("net-reset").addEventListener("click", () => net.reset && net.reset());
+      $("net-overview").addEventListener("click", goOverview);
+      $("net-spin").addEventListener("click", () => setSpin(!net.controls?.autoRotate));
 
       // ---------- Landing: a few landmarks instead of the whole network ----------
       const LANDMARKS = 5;
@@ -2125,7 +2643,7 @@
                 <input type="text" id="hero-search" placeholder="Search a concept, e.g. fixation" autocomplete="off" />
                 <div class="pin-results" id="hero-results" hidden></div>
               </div>
-              <button type="button" class="see-network" data-network="1">See the full network →</button>
+              <button type="button" class="see-network" data-network="1">← Back to the network</button>
             </div>
           </div>
 
@@ -2226,7 +2744,7 @@
         }).filter((d) => d.shared > 0);
       }
       // Pinned concepts are left out: every paper in view covers them, so they'd only add noise.
-      const visibleNeighbors = () => neighborData().filter((d) => conceptOn(d.node) && !state.pins.includes(d.node.id));
+      const visibleNeighbors = () => neighborData().filter((d) => state.showTypes.has(d.node.type) && conceptOn(d.node) && !state.pins.includes(d.node.id));
       const selectedLink = () => (state.connection ? linkByPair.get(pairKey(state.center, state.connection)) : null);
 
       // Real papers have numeric ids; example papers (atlas2_example.json) have ids like "ex3".
@@ -2240,7 +2758,7 @@
       // Atlas › Concept › ↔ Connection › Paper; every step but the last is a link back to that level.
       function renderCrumbs() {
         const steps = [];
-        if (state.view === "field") steps.push({ html: "Full network", hash: null, title: "Every concept and connection" });
+        if (state.view === "landing") steps.push({ html: "Overview", hash: null, title: "Landmarks of the Atlas" });
         if (state.view === "concept") {
           const center = byId.get(state.center);
           steps.push({ html: `${dot(center.type)}${esc(cap(center.label))}`, hash: conceptHash(center.id), title: cap(center.label) });
@@ -2569,7 +3087,7 @@
               const range = rangeActive() ? ` in ${rangeText()}` : "";
               const split = d.split ? `<br/>${d.split.filter((x) => x.n).map((x) => `${esc(x.key)} ${x.n}`).join(" · ")}` : "";
               const found = d.findings ? `<br/>◇ Example findings: ${d.findings.map((f) => DIR[f.direction].sym).join(" ")}` : "";
-              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${liftShort(d.lift)}<br/>${RING_NAMES[d.ring]} · click to see why${split}${found}`), event, $("orbit-wrap"));
+              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · click to see the connection${split}${found}`), event, $("orbit-wrap"));
             })
               .on("mousemove", moveTip)
               .on("mouseleave", (event, d) => {
@@ -2820,7 +3338,7 @@
           </div>
           <div class="row">
             <svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="2.5" fill="#8a93a6"/><circle cx="15" cy="9" r="5.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/><circle cx="15" cy="9" r="8.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/></svg>
-            <span>Inner rings = more tightly tied: a bigger share of their papers are shared</span>
+            <span>Rings rank relevance: shared papers ÷ papers in either concept</span>
           </div>
           <div class="row">
             ${sliceIcon()}
@@ -2885,14 +3403,14 @@
           return { c, A, B, link, n, j: either ? n / either : 0, lift: liftOf(n, papersOf(A).length, papersOf(B).length).lift, ids: new Set(papers.map((p) => p.paper_id)) };
         });
         const range = rangeActive() ? ` · ${rangeText()}` : "";
-        const cards = items.map(({ c, A, B, link, n, lift }, i) => `
+        const cards = items.map(({ c, A, B, link, n, j }, i) => `
           <div class="cmp-card ${compareKey(c) === lastCompared ? "pop" : ""}" role="button" tabindex="0" data-action="cmp-open" data-i="${i}" title="Open this connection">
             <div class="cmp-head">
               <span class="cmp-num">${i + 1}</span>
               <button type="button" class="cmp-x" data-action="cmp-remove" data-i="${i}" aria-label="Remove from comparison">×</button>
             </div>
             <div class="cmp-pair">${dot(A.type)}${esc(cap(A.label))}<span class="arrow">↔</span>${dot(B.type)}${esc(cap(B.label))}</div>
-            <div class="cmp-stats"><strong>${plural(n, "paper")}</strong> · ${liftShort(lift)}${range}</div>
+            <div class="cmp-stats"><strong>${plural(n, "paper")}</strong> · ${pct(j)} overlap${range}</div>
             ${compareMiniChart(link, colorOf(B.type))}
           </div>`).join("");
         lastCompared = null;
@@ -2983,12 +3501,32 @@
         return `<div class="chart-wrap"><svg class="year-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Papers per year">${bars}</svg></div>`;
       }
 
+      // "Show connections to": one row per type, nested under its group; groups collapse.
+      function filterTreeHtml() {
+        const nested = shownTypeTree.some((t) => t.children.some((c) => c.total > 0));
+        const row = (t) => {
+          const kids = t.children.filter((c) => c.total > 0);
+          const open = !state.collapsedTypes.has(t.id);
+          const caret = kids.length
+            ? `<button type="button" class="caret ${open ? "open" : ""}" data-action="toggle-group" data-tid="${esc(t.id)}" aria-expanded="${open}" aria-label="Show or hide ${esc(t.plural)}">▶</button>`
+            : nested ? `<span class="caret-spacer"></span>` : "";
+          return `<div class="fnode" data-tid="${esc(t.id)}">
+            <div class="frow">
+              ${caret}
+              <label><input type="checkbox" data-tid="${esc(t.id)}" />${dot(t.id)} ${esc(t.plural)} <span class="n" data-count></span></label>
+            </div>
+            ${kids.length ? `<div class="fchildren ${open ? "" : "collapsed"}"><div>${kids.map(row).join("")}</div></div>` : ""}
+          </div>`;
+        };
+        return shownTypeTree.filter((t) => !t.parentId).map(row).join("");
+      }
+
       function renderLeft(animate) {
         const center = byId.get(state.center);
         const link = selectedLink();
         const neighbor = link ? byId.get(state.connection) : null;
         $("left").innerHTML = `<div class="pane ${animate ? "swap" : ""}">
-          <button type="button" class="back-link" data-action="field">‹ Atlas home</button>
+          <button type="button" class="back-link" data-action="field">‹ Back to Field</button>
           <div class="card">
             <h1 class="concept-name">${esc(cap(center.label))}</h1>
             ${badge(center.type)}
@@ -2996,7 +3534,6 @@
               ? `<p class="definition"><span class="label">Definition</span><br/>${esc(center.description)}</p>`
               : `<p class="definition empty">No definition in the data yet.</p>`}
             <p class="stats" id="concept-stats"></p>
-            ${pinButton([center.id], "this concept")}
           </div>
           <div class="card">
             <div class="card-head">
@@ -3015,7 +3552,11 @@
               <span>${Y1}</span>
             </div>
             ${neighbor ? `<div class="chart-key"><span><i style="background:var(--bar)"></i>All papers</span><span><i style="background:${colorOf(neighbor.type)}"></i>Shared with ${esc(cap(neighbor.label))}</span></div>` : ""}
+            <hr class="divider" />
+            <p class="label">Show connections to</p>
+            <div class="filters">${filterTreeHtml()}</div>
           </div>
+          ${pinButton([center.id], "this concept")}
         </div>`;
         refreshLeftLive();
       }
@@ -3043,6 +3584,20 @@
           const y = Number(g.dataset.year);
           g.classList.toggle("out", y < lo || y > hi);
         });
+        // A group counts the connections of every type inside it, and is partly checked when only some of them are on.
+        const counts = d3.rollup(neighborData().filter((d) => conceptOn(d.node) && !state.pins.includes(d.node.id)), (v) => v.length, (d) => d.node.type);
+        shownTypeTree.forEach((t) => {
+          const row = document.querySelector(`#left .fnode[data-tid="${CSS.escape(t.id)}"] > .frow`);
+          if (!row) return;
+          const c = d3.sum(t.nodeTypes, (id) => counts.get(id) || 0);
+          const on = t.nodeTypes.filter((id) => state.showTypes.has(id)).length;
+          const box = row.querySelector("input");
+          row.querySelector("[data-count]").textContent = `(${c})`;
+          row.classList.toggle("zero", c === 0);
+          box.disabled = c === 0;
+          box.checked = on === t.nodeTypes.length;
+          box.indeterminate = on > 0 && on < t.nodeTypes.length;
+        });
       }
 
       function setRange(lo, hi) {
@@ -3051,12 +3606,33 @@
       }
 
       $("left").addEventListener("click", (event) => {
-        if (event.target.closest('[data-action="field"]')) goHome();
+        const caret = event.target.closest('[data-action="toggle-group"]');
+        if (caret) {
+          const id = caret.dataset.tid;
+          const open = state.collapsedTypes.has(id);
+          if (open) state.collapsedTypes.delete(id);
+          else state.collapsedTypes.add(id);
+          caret.classList.toggle("open", open);
+          caret.setAttribute("aria-expanded", String(open));
+          caret.closest(".fnode").querySelector(":scope > .fchildren").classList.toggle("collapsed", !open);
+        } else if (event.target.closest('[data-action="field"]')) goField();
         else if (event.target.id === "range-reset") setRange(Y0, Y1);
         else {
           const pin = event.target.closest("[data-pin]");
           if (pin) togglePins(pin.dataset.pin.split(","));
         }
+      });
+      $("left").addEventListener("change", (event) => {
+        const tid = event.target.dataset.tid;
+        if (!tid) return;
+        // Checking a group switches every type inside it.
+        typeOf(tid).nodeTypes.forEach((id) => {
+          if (event.target.checked) state.showTypes.add(id);
+          else state.showTypes.delete(id);
+        });
+        refreshLeftLive();
+        updateOrbit();
+        renderRight({ keepScroll: true });
       });
       $("left").addEventListener("input", (event) => {
         const id = event.target.id;
@@ -3129,10 +3705,8 @@
       }
 
       function renderConnectionsList() {
-        // Very small connections make "× chance" jumpy, so "most above chance" needs at least 3 shared papers.
-        const list = visibleNeighbors().filter((d) => state.connSort !== "lift" || d.shared >= 3);
+        const list = visibleNeighbors();
         if (state.connSort === "least") list.sort((a, b) => a.shared - b.shared || a.node.label.localeCompare(b.node.label));
-        else if (state.connSort === "lift") list.sort((a, b) => b.lift - a.lift || b.shared - a.shared);
         else list.sort((a, b) => b.shared - a.shared || a.node.label.localeCompare(b.node.label));
         const chip = rangeChip();
         return `
@@ -3142,7 +3716,6 @@
               <select data-change="conn-sort">
                 <option value="most" ${state.connSort === "most" ? "selected" : ""}>Most connected</option>
                 <option value="least" ${state.connSort === "least" ? "selected" : ""}>Least connected</option>
-                <option value="lift" ${state.connSort === "lift" ? "selected" : ""}>Most above chance</option>
               </select>
             </label>
           </div>
@@ -3153,7 +3726,7 @@
                 ${dot(d.node.type)}
                 <span class="body">
                   <span class="name">${esc(cap(d.node.label))}</span>
-                  <span class="sub">${esc(typeWord(d.node.type))} · ${liftShort(d.lift)}</span>
+                  <span class="sub">${esc(typeWord(d.node.type))} · ${pct(d.j)} overlap</span>
                 </span>
                 <span class="conn-side">
                   <span class="count">${plural(d.shared, "paper")}</span>
@@ -3209,7 +3782,10 @@
             ${badge(neighbor.type)}
             ${n
               ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>
-                 ${strengthHtml(center, neighbor, n)}`
+                 ${strengthHtml(center, neighbor, n)}
+                 <p class="eyebrow">What these papers have in common</p>
+                 <p class="common">${commonGround(center, neighbor, papers)}</p>
+                 <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>`
               : `<p class="sentence">No shared papers ${pinnedPapers ? "that match your filters" : `in ${rangeText()}`}.</p>`}
             <div class="btn-row">
               <button type="button" class="btn" data-action="open-concept" data-id="${esc(neighbor.id)}">Open ${esc(cap(neighbor.label))} →</button>
@@ -3221,10 +3797,7 @@
           ${n ? `
           <p class="eyebrow" style="margin-top:20px">When they met <span style="text-transform:none;letter-spacing:0">· each dot is a shared paper</span></p>
           <div class="met">${metTimeline(papers, colorOf(neighbor.type))}</div>
-          <p class="met-note">${esc(trendText(papers))}</p>
-          ${alsoInHtml(center, neighbor, papers)}
-          ${n > 1 ? endsHtml(papers) : ""}
-          <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>` : ""}
+          <p class="met-note">${esc(trendText(papers))}</p>` : ""}
           <p class="eyebrow" style="margin-top:20px">Papers (${n})</p>
           <div class="rows">${shown.map((p) => paperRow(p, false, false)).join("")}</div>
           ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-conn-papers">Load more · ${remaining} remaining</button>` : ""}`;
@@ -3275,31 +3848,60 @@
         return `${shape}: ${early} from ${minY}–${mid}, ${late} from ${mid + 1}–${maxY}.`;
       }
 
-      // What else the shared papers cover, one row per type, most frequent first.
-      function alsoInHtml(center, neighbor, papers) {
+      // A 2–3 sentence summary of the shared papers, built only from extracted concepts and years:
+      // which other concepts recur, how the count changed over time, and the earliest and latest paper.
+      function commonGround(center, neighbor, papers) {
         const n = papers.length;
+        const conceptRef = (id, count) => {
+          const c = byId.get(id);
+          return `<span role="button" tabindex="0" class="ref" data-action="open-concept" data-id="${esc(id)}" style="--c:${colorOf(c.type)}">${esc(c.label)}</span>${count ? ` (${count})` : ""}`;
+        };
+        // Spans rather than buttons, so long titles wrap with the sentence instead of breaking out of it.
+        const paperRef = (p) => `“<span role="button" tabindex="0" class="ref plain" data-action="paper" data-id="${p.paper_id}">${esc(paperTitle(p))}</span>” (${esc(p.authors || "Unknown authors")}, ${p.year})`;
+
         const counts = new Map();
         papers.forEach((p) => (conceptsByPaper.get(p.paper_id) || []).forEach((id) => {
-          if (id !== center.id && id !== neighbor.id && !state.pins.includes(id)) counts.set(id, (counts.get(id) || 0) + 1);
+          if (id !== center.id && id !== neighbor.id) counts.set(id, (counts.get(id) || 0) + 1);
         }));
-        const minCount = n >= 5 ? 2 : 1;
-        const rows = nodeTypes.map((t) => {
-          const top = [...counts.entries()]
-            .filter(([id, c]) => byId.get(id).type === t && c >= minCount)
-            .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
-            .slice(0, 3);
-          if (!top.length) return "";
-          return `<div class="also-row"><span class="k">${esc(typeOf(t).plural)}</span><span class="v">${top.map(([id, c]) => `<button type="button" class="chip" data-action="open-concept" data-id="${esc(id)}">${dot(t)}${esc(cap(byId.get(id).label))} <span class="c">${c}</span></button>`).join("")}</span></div>`;
-        }).join("");
-        return `<p class="eyebrow" style="margin-top:20px">Also in these papers <span style="text-transform:none;letter-spacing:0">· out of ${n}</span></p>
-          ${rows ? `<div class="also">${rows}</div>` : `<p class="met-note">No other concept comes up in more than one of these papers.</p>`}`;
-      }
 
-      function endsHtml(papers) {
+        if (n === 1) {
+          const others = [...counts.keys()];
+          return `The one shared paper, ${paperRef(papers[0])}, ${others.length ? `also covers ${listJoin(others.map((id) => conceptRef(id)))}` : "covers no other concepts"}.`;
+        }
+
+        const minCount = n >= 5 ? 2 : 1;
+        // Concepts are grouped under the type that owns the phrasing, so sub-types share their parent's phrase.
+        const phraseOwner = (type) => ancestry(type).find((t) => t.summary)?.id || type;
+        const owners = [...new Set(nodeTypes.map(phraseOwner))];
+        const phrases = owners.map((owner) => {
+          const top = [...counts.entries()]
+            .filter(([id, c]) => phraseOwner(byId.get(id).type) === owner && c >= minCount)
+            .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
+            .slice(0, 2);
+          if (!top.length) return null;
+          const template = typeOf(owner).summary || "also involve {list}";
+          return fillTemplate(template, { list: listJoin(top.map(([id, c]) => conceptRef(id, c))), s: top.length > 1 ? "s" : "" });
+        }).filter(Boolean);
+        const recurring = phrases.length
+          ? `Alongside both concepts, these ${n} papers most often ${listJoin(phrases)}.`
+          : `No other concept comes up in more than one of these papers.`;
+
+        const years = papers.map((p) => p.year);
+        const [minY, maxY] = d3.extent(years);
+        let trend;
+        if (minY === maxY) {
+          trend = `All ${n} were published in ${minY}.`;
+        } else {
+          const mid = Math.floor((minY + maxY) / 2);
+          const early = years.filter((y) => y <= mid).length, late = n - early;
+          const [peakYear, peakCount] = d3.greatest(d3.rollups(years, (v) => v.length, (y) => y), ([y, c]) => c * 10000 + y);
+          const shape = late >= early * 1.5 ? "The count has grown over time" : early >= late * 1.5 ? "Most of them are older" : "They are spread fairly evenly over time";
+          trend = `${shape}: ${early} from ${minY}–${mid} and ${late} from ${mid + 1}–${maxY}${peakCount > 1 ? `, peaking in ${peakYear} with ${peakCount}` : ""}.`;
+        }
+
         const byYear = papers.slice().sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
-        const row = (label, p) => `<button type="button" class="paper-row" data-action="paper" data-id="${p.paper_id}"><span class="lab">${label}</span><span class="p-title">${esc(paperTitle(p))}</span><span class="p-meta">${esc(p.authors || "Unknown authors")} · ${p.year}</span></button>`;
-        return `<p class="eyebrow" style="margin-top:20px">Earliest and most recent</p>
-          <div class="ends">${row("Earliest", byYear[0])}${row("Most recent", byYear[byYear.length - 1])}</div>`;
+        const ends = `The earliest is ${paperRef(byYear[0])} and the most recent is ${paperRef(byYear[byYear.length - 1])}.`;
+        return `${recurring} ${trend} ${ends}`;
       }
 
       function relatedPapers(paperId) {
@@ -3329,7 +3931,7 @@
         const paper = currentPaper();
         if (paper.isExample) return renderExamplePaper(paper);
         const concepts = (conceptsByPaper.get(paper.paper_id) || []).map((id) => byId.get(id));
-        const backLabel = state.connection ? "← Connection" : "← All papers";
+        const backLabel = state.paperTrail.length ? "← Previous paper" : state.connection ? "← Shared papers" : "← All papers";
         const related = relatedPapers(paper.paper_id);
         return `
           <button type="button" class="back-link" data-action="back-paper">${backLabel}</button>
@@ -3337,7 +3939,6 @@
             <p class="eyebrow" style="margin-top:0">Paper</p>
             <h2 class="paper-title">${esc(paperTitle(paper))}</h2>
             <span class="byline">${esc(paper.authors || "Unknown authors")} · ${esc(paper.year)}</span>
-            <div><a class="btn" href="https://scholar.google.com/scholar?q=${encodeURIComponent(paperTitle(paper))}" target="_blank" rel="noopener" title="The data has no links to the papers yet, so this searches Google Scholar for the title">Find on Google Scholar ↗</a></div>
           </div>
 
           <p class="eyebrow" style="margin-top:20px">Concepts in this paper (${concepts.length})</p>
@@ -3347,6 +3948,11 @@
               : `<button type="button" class="chip" data-action="open-concept" data-id="${esc(n.id)}" title="Open ${esc(cap(n.label))}">${dot(n.type)}${esc(cap(n.label))}</button>`).join("")}
           </div>
 
+          <div class="detail-card" style="margin-top:18px">
+            <p class="eyebrow" style="margin-top:0">Summary</p>
+            <p class="placeholder">Summary coming soon.</p>
+            <button type="button" class="btn" disabled title="No link to the original paper in the data yet">Original paper ↗</button>
+          </div>
           ${studyCardPlaceholder(paper)}
 
           <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
@@ -3400,7 +4006,7 @@
 
       function renderExamplePaper(paper) {
         const concepts = paper.concepts.map((id) => byId.get(id));
-        const backLabel = state.connection ? "← Connection" : "← All papers";
+        const backLabel = state.paperTrail.length ? "← Previous paper" : state.connection ? "← Shared papers" : "← All papers";
         const sections = EX.groups.map((g) => {
           if (g.id === "claim") {
             return `<div class="study-sec"><h4>${esc(g.label)} <span>${esc(g.asks)}</span></h4>
@@ -3634,7 +4240,9 @@
             openPaper(isExampleId(id) ? id : Number(id));
             break;
           case "back-paper":
-            closePaper();
+            // Step back to the previous paper if we came from one; otherwise to the paper list (shared papers for a connection).
+            if (state.paperTrail.length) history.back();
+            else { state.keepPapersTab = true; closePaper(); }
             break;
           case "conn":
             selectConnection(id);
@@ -3986,10 +4594,18 @@
         hideTip();
         if (state.view === "concept" && state.center === id) {
           const connChanged = connection !== state.connection;
+          const prevPaper = state.paper;
+          if (connChanged || paper == null) state.paperTrail = [];
+          else if (prevPaper != null && paper !== prevPaper) {
+            // Going back to the paper we came from pops the trail; opening a new one pushes the current paper.
+            if (state.paperTrail[state.paperTrail.length - 1] === paper) state.paperTrail.pop();
+            else state.paperTrail.push(prevPaper);
+          }
           state.connection = connection;
           state.paper = paper;
           if (connChanged) { state.papersShown = PAGE; state.connPapersShown = PAGE; }
-          state.tab = paper != null ? "papers" : connection ? "connections" : connChanged ? "papers" : state.tab;
+          state.tab = paper != null || state.keepPapersTab ? "papers" : connection ? "connections" : connChanged ? "papers" : state.tab;
+          state.keepPapersTab = false;
           renderCrumbs();
           if (connChanged) renderLeft(false);
           renderRight();
@@ -4007,6 +4623,8 @@
         state.papersShown = PAGE;
         state.connSort = "most";
         state.connPapersShown = PAGE;
+        state.showTypes = new Set(nodeTypes);
+        state.paperTrail = [];
         state.orbitLimit = ORBIT_STEP;
         state.hover = null;
         $("field-view").hidden = true;
