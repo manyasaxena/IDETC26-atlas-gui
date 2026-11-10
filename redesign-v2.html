@@ -3761,9 +3761,9 @@
         const link = selectedLink();
         const list = papersIn(link ? link.papers : center.papers).slice();
         const conceptCount = (p) => (conceptsByPaper.get(p.paper_id) || []).length;
-        if (state.papersSort === "oldest") list.sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
+        if (state.papersSort === "oldest") list.sort((a, b) => a.year - b.year || paperTitle(a).localeCompare(paperTitle(b)));
         else if (state.papersSort === "concepts") list.sort((a, b) => conceptCount(b) - conceptCount(a) || b.year - a.year);
-        else list.sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+        else list.sort((a, b) => b.year - a.year || paperTitle(a).localeCompare(paperTitle(b)));
         return list;
       }
 
@@ -3870,7 +3870,7 @@
         const center = byId.get(state.center);
         const neighbor = byId.get(state.connection);
         const link = selectedLink();
-        const papers = papersIn(link.papers).slice().sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
+        const papers = papersIn(link.papers).slice().sort((a, b) => b.year - a.year || paperTitle(a).localeCompare(paperTitle(b)));
         const n = papers.length;
         const shown = papers.slice(0, state.connPapersShown);
         const remaining = papers.length - shown.length;
@@ -3994,7 +3994,7 @@
           trend = `${shape}: ${early} from ${minY}–${mid} and ${late} from ${mid + 1}–${maxY}${peakCount > 1 ? `, peaking in ${peakYear} with ${peakCount}` : ""}.`;
         }
 
-        const byYear = papers.slice().sort((a, b) => a.year - b.year || a.title.localeCompare(b.title));
+        const byYear = papers.slice().sort((a, b) => a.year - b.year || paperTitle(a).localeCompare(paperTitle(b)));
         const ends = `The earliest is ${paperRef(byYear[0])} and the most recent is ${paperRef(byYear[byYear.length - 1])}.`;
         return `${recurring} ${trend} ${ends}`;
       }

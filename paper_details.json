@@ -745,7 +745,7 @@
     "doi": "10.1115/DETC2024-143740",
     "doi_source": "paper number, resolves at doi.org",
     "title_from": "pdf metadata",
-    "summary": "The authors developed LLM4CAD, an approach that lets GPT-4 and GPT-4V generate 3D CAD models of mechanical parts such as gears and springs by writing CAD scripts. They created a dataset of parts, sketches and images with crowdsourced descriptions, and measured whether the scripts ran and how closely the resulting shapes matched. Both models showed promise, and GPT-4V performed best with text-only input rather than text plus images.",
+    "summary": "The authors developed LLM4CAD, an approach that lets GPT-4 and GPT-4V generate 3D CAD models of mechanical parts such as gears and springs by writing CAD scripts. They created a dataset of parts, sketches and images with crowdsourced descriptions, and measured whether the scripts ran and how closely the resulting shapes matched. Both models showed promise: text-only input did best on average, but adding images helped more as the parts got more complex, such as springs and gears.",
     "doi_verified": true
   },
   "57": {
