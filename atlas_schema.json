@@ -1,5 +1,5 @@
 {
-  "about": "Concept types for the Atlas GUI (redesign.html). Nodes in graph_data.json refer to a type by its id. An entry with a 'parent' nests under that entry, so groups and sub-types can go to any depth; an entry with no nodes of its own acts as a group. Entries without a color, definition, or summary inherit them from their parent. 'summary' phrases the type in the connection summary ({list} = the concepts, {s} = plural ending). 'connectionSentences' are keyed by two type ids joined with '+', in the order the types appear below; sub-types fall back to their parents' sentences. {n} = paper count, {A}/{B} = the two concepts, {a B} = with 'a'/'an'. A 'schema' block inside graph_data.json, if present, takes precedence over this file.",
+  "about": "Concept types for the Atlas GUI (redesign.html). Nodes in graph_data.json refer to a type by its id. An entry with a 'parent' nests under that entry, so groups and sub-types can go to any depth; an entry with no nodes of its own acts as a group. 'hint' is a one-line definition shown on hover. Entries without a color, definition, hint, or summary inherit them from their parent. 'summary' phrases the type in the connection summary ({list} = the concepts, {s} = plural ending). 'connectionSentences' are keyed by two type ids joined with '+', in the order the types appear below; sub-types fall back to their parents' sentences. {n} = paper count, {A}/{B} = the two concepts, {a B} = with 'a'/'an'. A 'schema' block inside graph_data.json, if present, takes precedence over this file.",
   "types": [
     {
       "id": "subject",
@@ -7,6 +7,7 @@
       "plural": "Subjects",
       "color": "#4fc3f7",
       "definition": "Agents whose behavior the study was designed to observe.",
+      "hint": "Who or what was studied.",
       "summary": "study {list}"
     },
     {
@@ -15,6 +16,7 @@
       "plural": "Tasks",
       "color": "#81c784",
       "definition": "Activities the subject performs that the study observes.",
+      "hint": "What the subjects did.",
       "summary": "involve {list}"
     },
     {
@@ -23,6 +25,7 @@
       "plural": "Problems",
       "color": "#ffb74d",
       "definition": "Design briefs or prompts given to the subject.",
+      "hint": "What they were asked to design.",
       "summary": "work on {list} design problem{s}"
     },
     {
@@ -31,6 +34,7 @@
       "plural": "Constructs",
       "color": "#ce93d8",
       "definition": "Cognitive or psychological phenomena the study illuminates.",
+      "hint": "The thinking the study measured.",
       "summary": "also measure {list}"
     }
   ],
