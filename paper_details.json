@@ -1,0 +1,932 @@
+{
+  "89": {
+    "pdf": "2000_Lowe_content.pdf",
+    "year": 2000,
+    "title": "An Analysis of the Content of Technical Information Used by Engineering Designers",
+    "authors": [
+      "Alistair Lowe",
+      "Chris McMahon",
+      "Tulan Shah",
+      "Steve Culley"
+    ],
+    "paper_number": "DETC2000/DTM-14545",
+    "doi": "10.1115/DETC2000/DTM-14545",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors examined what kinds of written technical information engineers at two aerospace companies actually rely on, to inform future design information systems. They analysed the text of sample documents and surveyed designers about which attributes help them search. Text documents such as correspondence, reports and manuals need a much richer set of descriptive attributes than drawings or CAD models, and the paper sketches a framework for building taxonomies to index them.",
+    "doi_verified": true
+  },
+  "195": {
+    "pdf": "2001_Kurfman_functional.pdf",
+    "year": 2001,
+    "title": "Functional Modeling Experimental Studies",
+    "authors": [
+      "Mark A. Kurfman",
+      "Robert B. Stone",
+      "Jagan R. Rajan",
+      "Kristin L. Wood"
+    ],
+    "paper_number": "DETC2001/DTM-21709",
+    "doi": "10.1115/DETC2001/DTM-21709",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This study tested whether a published method for deriving functional models gives the same model when different designers apply it to the same product. Three experiments were run with participants of varying design experience. The method mostly produced repeatable models, and the authors identify where it works well and where it could be improved.",
+    "doi_verified": true
+  },
+  "197": {
+    "pdf": "2001_Pache_sketches.pdf",
+    "year": 2001,
+    "title": "Re-Interpretation of Conceptual Design Sketches in Mechanical Engineering",
+    "authors": [
+      "Martin Pache",
+      "Anne Roemer",
+      "Udo Lindemann",
+      "Winfried Hacker"
+    ],
+    "paper_number": "DETC2001/DTM-21711",
+    "doi": "10.1115/DETC2001/DTM-21711",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "A case study of conceptual design sketching in mechanical engineering, focused on how designers reinterpret their own sketches. The authors analyse an example sketch and a sketching sequence, looking at how geometric and functional elements are drawn at different levels of abstraction. They find that reinterpreting a sketch can lead to major changes in the concept, but the mechanism was too rare to confirm, so the paper offers hypotheses for future work.",
+    "doi_verified": true
+  },
+  "151": {
+    "pdf": "2005_Linsey_brainsketching.pdf",
+    "year": 2005,
+    "title": "'Collaborating To Success': An Experimental Study of Group Idea Generation Techniques",
+    "authors": [
+      "J. S. Linsey",
+      "M. G. Green",
+      "J. T. Murphy",
+      "K. L. Wood",
+      "A. B. Markman"
+    ],
+    "paper_number": "DETC2005-85351",
+    "doi": "10.1115/DETC2005-85351",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This experiment compared the ingredients of four group idea generation methods (Brainsketching, Gallery, 6-3-5 and C-Sketch) by varying how ideas are shared and whether they are written, sketched or both. Teams of participants generated ideas under each combination, and the authors also propose a way to count ideas expressed in mixed sketches and words. Individuals picked up many ideas from teammates, passing subsets of ideas around produced more ideas than showing everything at once, and idea quality improved as teams built on each other's work.",
+    "doi_verified": true
+  },
+  "1": {
+    "pdf": "2023_Ma_conceptual.pdf",
+    "year": 2023,
+    "title": "Conceptual Design Generation Using Large Language Models",
+    "authors": [
+      "Kevin Ma",
+      "Daniele Grandi",
+      "Christopher McComb",
+      "Kosa Goucher-Lambert"
+    ],
+    "paper_number": "DETC2023-116838",
+    "doi": "10.1115/DETC2023-116838",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors used large language models to generate solutions for 12 design problems and compared them with crowdsourced solutions to the same problems. Experts rated both sets and computational metrics measured their differences. LLM solutions were rated more feasible and useful, crowdsourced ones more novel, and few-shot prompting made the generated solutions more like the crowd's.",
+    "doi_verified": true
+  },
+  "5": {
+    "pdf": "2023_Barriers_incorporating.pdf",
+    "year": 2023,
+    "title": "Incorporating Social, Policy, and Ethical Considerations in Engineering and Design Education: an Examination of Barriers and Resources",
+    "authors": [
+      "Jana I. Saadi",
+      "Madhurima Das",
+      "Gillian Roeder",
+      "Anastasia K. Ostrowski",
+      "Stella Lee",
+      "Marina Santos",
+      "Cynthia Breazeal",
+      "Catherine D'Ignazio",
+      "Maria C. Yang",
+      "Aditi Verma"
+    ],
+    "paper_number": "DETC2023-116605",
+    "doi": "10.1115/DETC2023-116605",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This survey asked instructors of design courses in engineering and related fields how and why they include social, policy and ethical considerations. Responses show growing awareness that such content matters. Instructors who want to include it are held back by unclear relevance, lack of time and a shortage of teaching materials, which more resources and funding could address.",
+    "doi_verified": true
+  },
+  "7": {
+    "pdf": "2023_Borgman_gathering.pdf",
+    "year": 2023,
+    "title": "Gathering and Communicating Empathic User Understanding in Product Development",
+    "authors": [
+      "Teresia Borgman",
+      "Katja Hölttä-Otto",
+      "Jaana Hyvärinen"
+    ],
+    "paper_number": "DETC2023-115253",
+    "doi": "10.1115/DETC2023-115253",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study looked at how insights about users are gathered and passed on to the wider team in a large global engineering and service company. The authors ran a thematic analysis of ten interviews with staff who either collect or receive user information. Communication broke down because of different disciplinary backgrounds, too little shared time and many handovers, and there was no good way to store and find user insights from past projects.",
+    "doi_verified": true
+  },
+  "8": {
+    "pdf": "2023_Burleson_theoretical.pdf",
+    "year": 2023,
+    "title": "Towards a Theoretical Framework for Using \"Context\" in Engineering Design Processes for Global Health Applications",
+    "authors": [
+      "Grace Burleson",
+      "Kentaro Toyama",
+      "Kathleen Sienko"
+    ],
+    "paper_number": "DETC2023-117027",
+    "doi": "10.1115/DETC2023-117027",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "Drawing on several studies, the paper sharpens what \"context\" means in engineering design for global health and proposes an early framework for working with it. The framework separates categories of context (contextual factors) from strategies for applying them at different design stages. The authors show how it could improve reporting in design research and help judge whether a solution will transfer to another setting.",
+    "doi_verified": true
+  },
+  "13": {
+    "pdf": "2023_Das_paper.pdf",
+    "year": 2023,
+    "title": "Paper or Tablet? The Impact of Digital Tools on Sketching During Engineering Design Concept Generation",
+    "authors": [
+      "Madhurima Das",
+      "May Huang",
+      "Maria Yang"
+    ],
+    "paper_number": "DETC2023-114983",
+    "doi": "10.1115/DETC2023-114983",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This experiment compared sketching on a digital tablet with pen and paper during an engineering concept generation exercise. Sketches were scored for quantity, quality and how well they communicated the idea. Both tools produced similar numbers of equally understandable sketches, pen and paper gave higher-quality sketches, and no gender differences appeared.",
+    "doi_verified": true
+  },
+  "18": {
+    "pdf": "2023_Echerd_relationship.pdf",
+    "year": 2023,
+    "title": "Identifying a Relationship Between Design Concept Representation Style and Consumer Product Preference",
+    "authors": [
+      "Jonathan Echerd",
+      "Brian Sylcott",
+      "Russell Lemken",
+      "Gerald Weckesser",
+      "Jinkun Lee"
+    ],
+    "paper_number": "DETC2023-115059",
+    "doi": "10.1115/DETC2023-115059",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study tested whether the way a product concept is shown affects how consistently consumers state their preferences. Participants rated eyeglass frames shown as hand drawings, CAD models and realistic renderings, compared with physical models, while eye tracking recorded where they looked. Preferences for CAD models were the least consistent with preferences for the physical frames, though this difference vanished for participants with an engineering background.",
+    "doi_verified": true
+  },
+  "21": {
+    "pdf": "2023_Grogan_identification.pdf",
+    "year": 2023,
+    "title": "Identification of Design Strategies and Their Effects on Performance Outcomes in Pair Parameter Design Tasks",
+    "authors": [
+      "Alkım Z. Avşar",
+      "Paul T. Grogan"
+    ],
+    "paper_number": "DETC2023-116499",
+    "doi": "10.1115/DETC2023-116499",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "Using data from an experiment in which pairs completed simple cooperative parameter design tasks, the authors looked for action patterns that make pairs faster. They applied principal component analysis and regression to 192 task observations. Pairs who made small, quick, consistent adjustments finished faster, likely because frequent feedback improved coordination, while lower English ability and less experience were linked to worse performance.",
+    "doi_verified": true
+  },
+  "22": {
+    "pdf": "2023_Grover_quantifying.pdf",
+    "year": 2023,
+    "title": "Towards Quantifying Interviews: Comparing Techniques to Evaluate the Quality of Design Interviews",
+    "authors": [
+      "Micki Grover",
+      "Natasha C. Wright",
+      "Carlye A. Lauff"
+    ],
+    "paper_number": "DETC2023-116929",
+    "doi": "10.1115/DETC2023-116929",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors developed and tested a scoring method for the quality of design research interviews conducted by novice interviewers. Twelve undergraduates trained in design ethnography interviewed people for a dialysis service project in Zimbabwe, and their interviews were scored and compared with expert ratings and the information gained. The scoring method did not align well with either benchmark, so the authors revised its metrics and offer recommendations.",
+    "doi_verified": true
+  },
+  "23": {
+    "pdf": "2023_Harris_evaluating.pdf",
+    "year": 2023,
+    "title": "Evaluating the Dynamics of Designers' Moods Throughout the Collaborative Design Process",
+    "authors": [
+      "Megan Harris",
+      "Christine Toh"
+    ],
+    "paper_number": "DETC2023-111391",
+    "doi": "10.1115/DETC2023-111391",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This longitudinal study tracked the moods of student designers and their teams across a semester-long collaborative project. Sentiment analysis was applied to written self-reflections collected at three points in the project. Time significantly predicted changes in team mood but not individual mood, pointing to a complex link between individual and team emotion during design.",
+    "doi_verified": true
+  },
+  "34": {
+    "pdf": "2023_Kochenberger_protocol.pdf",
+    "year": 2023,
+    "title": "Protocol Study: Patterns of Designer Behaviors When Describing Engineering Problem Domains Through Concept Maps",
+    "authors": [
+      "John Kochenberger",
+      "Chiradeep Sen"
+    ],
+    "paper_number": "DETC2023-116955",
+    "doi": "10.1115/DETC2023-116955",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "A pilot protocol study of how designers describe an engineering problem domain by building concept maps. Ten participants each mapped one of three domains, and their actions were coded second by second, along with patterns of cross-links, grouping and clustering. The results show which parts of mapping are hardest, such as naming concepts and relating distant ones, and how information is generated within and across clusters.",
+    "doi_verified": true
+  },
+  "35": {
+    "pdf": "2023_Kwon_similarities.pdf",
+    "year": 2023,
+    "title": "Similarities and Differences in Human Vs. Computational Representations of Non-Semantic Inspirational Design Stimuli",
+    "authors": [
+      "Elisa Kwon",
+      "Kosa Goucher-Lambert"
+    ],
+    "paper_number": "DETC2023-115108",
+    "doi": "10.1115/DETC2023-115108",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study compared how people and AI models judge the visual and functional similarity of 3D part models used as design inspiration. Thirty-six participants judged similarity in triplets of parts, which were used to build embedding spaces compared with deep-learning embeddings of the same parts. Human and computational similarities largely agreed, especially for very dissimilar pairs, but diverged for similar pairs, and people used abstract cues the AI did not capture.",
+    "doi_verified": true
+  },
+  "36": {
+    "pdf": "2023_Letting_from.pdf",
+    "year": 2023,
+    "title": "From Obstacles to Opportunities: How Perceptions of Psychological Safety Affect Founders' Abilities to Identify Resources",
+    "authors": [
+      "Cynthia Letting",
+      "Nicole Calpin",
+      "Nicolás F. Soria Zurita",
+      "Jessica Menold"
+    ],
+    "paper_number": "DETC2023-116498",
+    "doi": "10.1115/DETC2023-116498",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This mixed-methods study of 32 startup founders examined whether a team's psychological safety affects how well founders find resources to overcome obstacles. Founders' perceptions of psychological safety were measured alongside their ability to name useful resources for current problems. Founders who felt their team was more psychologically safe were better at identifying meaningful resources.",
+    "doi_verified": true
+  },
+  "43": {
+    "pdf": "2023_Makhlouf_who.pdf",
+    "year": 2023,
+    "title": "Who Is This Design For? Promoting Consideration of People During Concept Generation",
+    "authors": [
+      "Thanina E. Makhlouf",
+      "Laura R. Murphy",
+      "Shanna R. Daly",
+      "Colleen E. Seifert"
+    ],
+    "paper_number": "DETC2023-114673",
+    "doi": "10.1115/DETC2023-114673",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This between-subjects experiment tested a simple prompt to make engineering students think about users during concept generation. Half of the mechanical engineering students were asked to draw people in their concept sketches, and afterwards everyone reflected on who each idea was for. Drawing people led to longer, deeper reflections that considered context of use and user values, and fewer claims that a design was \"for everyone\".",
+    "doi_verified": true
+  },
+  "47": {
+    "pdf": "2023_Mitomi_factors.pdf",
+    "year": 2023,
+    "title": "Factors Hindering the Implementation of Prototyping in the Early Stages of New Business Development",
+    "authors": [
+      "Keita Mitomi",
+      "Masashi Honmmi",
+      "Masao Yasugi",
+      "Satoshi Tanaka",
+      "Nobuyuki Ohnaga",
+      "Seiko Shirasaka"
+    ],
+    "paper_number": "DETC2023-113239",
+    "doi": "10.1115/DETC2023-113239",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "Through a grounded theory study at a large Japanese manufacturer, the authors investigated what stops prototyping from working in early-stage new business development. They interviewed members of new technology business projects and analysed project documents. Two barriers emerged: prototyping skill depends on individuals and relies on tacit knowledge, and teams are reluctant to talk with customers, and the paper proposes countermeasures for both.",
+    "doi_verified": true
+  },
+  "48": {
+    "pdf": "2023_Mollan_open.pdf",
+    "year": 2023,
+    "title": "Open Quantum Models and Magnetoencephalography Derived Neural Correlates for Engineering Decision Dynamics",
+    "authors": [
+      "Calahan Mollan",
+      "Susan Bowyer",
+      "Vijitashwa Pandey"
+    ],
+    "paper_number": "DETC2023-116722",
+    "doi": "10.1115/DETC2023-116722",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The paper proposes modelling engineering decision making with open quantum systems, which can explain decision paradoxes that classical probability cannot. It argues that brain activity recorded with magnetoencephalography (MEG) could help set the parameters of such models. The authors outline possible experiments and give preliminary data on how this could work in practice.",
+    "doi_verified": true
+  },
+  "49": {
+    "pdf": "2023_Moore_journey.pdf",
+    "year": 2023,
+    "title": "Journey Mapping the Virtual Design Thinking Experience: Engaging Students Across Disciplines in Human-Centered Design",
+    "authors": [
+      "George Moore",
+      "Vivek Rao",
+      "Kosa Goucher-Lambert",
+      "Alice Agogino"
+    ],
+    "paper_number": "DETC2023-108817",
+    "doi": "10.1115/DETC2023-108817",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study mapped the experiences of six student teams over the phases of a design thinking course, a method the authors call journey mapping. Students' experiences were captured through assessments at each phase and reflections on the whole process. The early research phases were experienced less positively than later ones, and engineering and non-engineering students reflected on the process differently.",
+    "doi_verified": true
+  },
+  "50": {
+    "pdf": "2023_Murphy_impact.pdf",
+    "year": 2023,
+    "title": "The Impact of Facilitation During Idea Generation in Engineering Design",
+    "authors": [
+      "Alexander R. Murphy",
+      "Emily Moseley",
+      "Morgan Weaver",
+      "Julie S. Linsey"
+    ],
+    "paper_number": "DETC2023-113583",
+    "doi": "10.1115/DETC2023-113583",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This experiment tested whether a trained facilitator improves group brainstorming in an engineering design task. Groups generated ideas with a morphological matrix under facilitated, unfacilitated and nominal (individuals working alone) conditions, with idea quantity, task load and psychological safety measured. Facilitated groups produced more ideas than unfacilitated groups but fewer than nominal groups, and facilitation also lowered perceived workload and raised psychological safety.",
+    "doi_verified": true
+  },
+  "52": {
+    "pdf": "2023_Naik_state.pdf",
+    "year": 2023,
+    "title": "Understanding the State of Sanitation in India Through Qualitative Methods and a Septic Tank Sensing Device",
+    "authors": [
+      "Monisha Naik",
+      "Pablo Cotera Rivera",
+      "Meghraj Garad",
+      "Digvijay P. Patil",
+      "Bakul Rao",
+      "Amy M. Bilton"
+    ],
+    "paper_number": "DETC2023-116908",
+    "doi": "10.1115/DETC2023-116908",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "To design a sensor that tells households when to empty their septic tanks, the authors studied sanitation in three municipalities in Maharashtra, India. They combined interviews, questionnaires and measurements of septic tanks. The device only makes sense where a working sludge treatment plant exists, needs different stakeholders involved in each municipality, and should track how long waste is retained rather than years since the last emptying.",
+    "doi_verified": true
+  },
+  "53": {
+    "pdf": "2023_Nandy_adaptive.pdf",
+    "year": 2023,
+    "title": "Adaptive Optimization of Subjective Design Attributes: Characterizing Individual and Aggregate Perceptions",
+    "authors": [
+      "Ananya Nandy",
+      "Kosa Goucher-Lambert"
+    ],
+    "paper_number": "DETC2023-111714",
+    "doi": "10.1115/DETC2023-111714",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "In a study with 56 participants, the authors used interactive Bayesian optimization to find the most comfortable mug design from each person's pairwise choices. Some participants trained the model alone, while others started from a model pre-trained on simulated data or on other people's choices. Combining aggregate and individual decisions produced designs that best matched people's perceptions of comfort.",
+    "doi_verified": true
+  },
+  "58": {
+    "pdf": "2023_Page_steps.pdf",
+    "year": 2023,
+    "title": "Steps Toward Development of a Comprehensive Set-Based Design Process Model: A Case Study",
+    "authors": [
+      "Jonathan Page",
+      "Warren Seering"
+    ],
+    "paper_number": "DETC2023-115315",
+    "doi": "10.1115/DETC2023-115315",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This case study followed a U.S. Navy team applying set-based design to an entire large ship at system-of-systems scale. The researchers used participatory action research to document the process, how teams ruled out options and how they agreed on system-level choices. Reasoning across design representations at different levels of abstraction was especially hard, and the paper draws lessons for set-based design.",
+    "doi_verified": true
+  },
+  "59": {
+    "pdf": "2023_Patel_exploring.pdf",
+    "year": 2023,
+    "title": "Exploring the Role of Individual Differences in System Interpretation",
+    "authors": [
+      "Apurva R. Patel",
+      "Alexander R. Murphy",
+      "Joshua D. Summers",
+      "Chiradeep Sen"
+    ],
+    "paper_number": "DETC2023-117222",
+    "doi": "10.1115/DETC2023-117222",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study tested whether two personal traits, confidence in one's own design ability (self-efficacy) and a preference for quick, firm answers (need for closure), shape how people group a system's parts for a fault-detection task. 147 first-year students from two universities clustered three products shown as component graphs, function graphs and function structures. Neither trait, nor university, gender or first language, was related to cluster size, though the similar complexity of the products limited the test.",
+    "doi_verified": true
+  },
+  "62": {
+    "pdf": "2023_Prabhu_should.pdf",
+    "year": 2023,
+    "title": "Should I Sketch or Should I CAD? Exploring Design Representation Strategies in Design for Additive Manufacturing Tasks",
+    "authors": [
+      "Rohan Prabhu",
+      "Madison Cass"
+    ],
+    "paper_number": "DETC2023-113137",
+    "doi": "10.1115/DETC2023-113137",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This study looked at how fourth-year engineering students switch between sketching and CAD when designing for additive manufacturing. Participants completed a one-hour design task while eye tracking recorded which representations they used, and strategies were compared between high- and low-creativity and high- and low-performance solutions. Students with the most creative designs spent more time in CAD, especially late in the task, while those with the best-performing designs (less build time and material) sketched more.",
+    "doi_verified": true
+  },
+  "64": {
+    "pdf": "2023_Richmond_co.pdf",
+    "year": 2023,
+    "title": "Co-Design in the Himalaya: Embracing Local Knowledge and User Innovation to Address Household Energy Challenges",
+    "authors": [
+      "Robyn C. Richmond",
+      "Daniel J. Sweeney",
+      "Daniel D. Frey",
+      "Sucheta Baliga"
+    ],
+    "paper_number": "DETC2023-115082",
+    "doi": "10.1115/DETC2023-115082",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "A case study of co-designing a cooking stove with someone who cooks on a traditional stove in a remote Himalayan village in India. The authors visited five villages to learn about cooking practices and then worked with this user as a design peer. The process revealed complex patterns of stove use and produced a design that cut household air pollution while keeping features users valued in the traditional stove.",
+    "doi_verified": true
+  },
+  "68": {
+    "pdf": "2023_Saadi_form.pdf",
+    "year": 2023,
+    "title": "Form Attributes to Measure and Understand Aesthetic Preferences",
+    "authors": [
+      "Jana I. Saadi",
+      "Maria C. Yang",
+      "Leah Chong"
+    ],
+    "paper_number": "DETC2023-116601",
+    "doi": "10.1115/DETC2023-116601",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study set out to define a vocabulary of objective form attributes and test whether people's aesthetic preferences carry over from one product to another. Participants rated vase and canopy designs built from combinations of four form attributes, and conjoint analysis measured their preferences. Individual form preferences were consistent between the two products about 61% of the time.",
+    "doi_verified": true
+  },
+  "69": {
+    "pdf": "2023_Schauer_thinking.pdf",
+    "year": 2023,
+    "title": "Thinking Beyond the Default User: The Impact of Gender and Stereotypes on Designers' Interpretation of Users and Their Needs",
+    "authors": [
+      "Anastasia M. K. Schauer",
+      "Margaret Nunn",
+      "Hunter Schaufel",
+      "Katherine Fu"
+    ],
+    "paper_number": "DETC2023-110403",
+    "doi": "10.1115/DETC2023-110403",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This survey experiment examined whether a user's gender and gender-stereotyped tasks change how engineering students interpret that user's needs. 151 undergraduates read a persona and a walkthrough of a makerspace user meeting obstacles, under six conditions, then recalled and rated the obstacles. The user's gender affected how the environment was perceived, and users of unspecified gender were assumed to be men.",
+    "doi_verified": true
+  },
+  "71": {
+    "pdf": "2023_Sibley_dealing.pdf",
+    "year": 2023,
+    "title": "Dealing With Loss: How Do Designers' Resilience and Perceptions of Scarcity Affect Perceptions of Design Performance?",
+    "authors": [
+      "Grace Sibley",
+      "Cynthia Letting",
+      "Jessica Menold"
+    ],
+    "paper_number": "DETC2023-117158",
+    "doi": "10.1115/DETC2023-117158",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "In a controlled study, the authors examined how designers' resilience and perceived resource scarcity affect how they judge their own design performance. Participants completed design work under induced resource scarcity, with measures of resilience and scarcity mindset. Feeling short of time in daily life predicted lower perceived design performance, and more resilient participants were less affected by the induced scarcity.",
+    "doi_verified": true
+  },
+  "74": {
+    "pdf": "2023_Song_effect.pdf",
+    "year": 2023,
+    "title": "Effect of Reflection and Incubation on Artificial-Intelligence-Assisted Design Space Exploration",
+    "authors": [
+      "Hyeonik Song",
+      "Antoni Viros-i-Martin",
+      "Daniel Selva"
+    ],
+    "paper_number": "DETC2023-116576",
+    "doi": "10.1115/DETC2023-116576",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This human-subjects study tested whether pausing to reflect, or pausing to step away (incubation), changes how designers explore a design space with an AI cognitive assistant. Participants explored design alternatives with the AI and had one of the two breaks partway through. Incubation improved design performance much more than reflection, and the two breaks led to different styles of human-AI collaboration.",
+    "doi_verified": true
+  },
+  "76": {
+    "pdf": "2023_Stansfield_user.pdf",
+    "year": 2023,
+    "title": "Understanding the User Perception Gap: Older Adults and Sit-to-Stand Assistance",
+    "authors": [
+      "Stephan Stansfield",
+      "Booker Schelhaas",
+      "Neville Hogan",
+      "Maria Yang"
+    ],
+    "paper_number": "DETC2023-116642",
+    "doi": "10.1115/DETC2023-116642",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study explored why older adults may not adopt sit-to-stand assistive devices. Participants did a standard mobility test, rated their own difficulty standing, were interviewed and reacted to look-and-feel prototypes, while a physical therapist rated videos of them standing. Self-ratings did not track measured mobility even when it signalled fall risk, and participants preferred discreet, light, flexible devices regardless of how much help they needed.",
+    "doi_verified": true
+  },
+  "78": {
+    "pdf": "2023_Vieira_triple.pdf",
+    "year": 2023,
+    "title": "Triple Process Theory and EEG Frequency Band Power: Metacognitive Brain Activity in Open Design",
+    "authors": [
+      "Sonia Liliana Da Silva Vieira",
+      "Udo Kannengiesser",
+      "John S. Gero"
+    ],
+    "paper_number": "DETC2023-115050",
+    "doi": "10.1115/DETC2023-115050",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "Using EEG, this study compared brain activity during spontaneous, deliberate and metacognitive thinking in open-ended design, based on Triple Process Theory. Frequency band power was compared across the three process types. Metacognitive processes showed higher alpha and beta power across all channels, suggesting they help balance effort between spontaneous and deliberate thinking.",
+    "doi_verified": true
+  },
+  "79": {
+    "pdf": "2023_Wang_task.pdf",
+    "year": 2023,
+    "title": "A Task-Decomposed AI-Aided Approach for Generative Conceptual Design",
+    "authors": [
+      "Boheng Wang",
+      "Haoyu Zuo",
+      "Zebin Cai",
+      "Yuan Yin",
+      "Peter Childs",
+      "Lingyun Sun",
+      "Liuqing Chen"
+    ],
+    "paper_number": "DETC2023-109087",
+    "doi": "10.1115/DETC2023-109087",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The paper proposes using large language models for concept generation by splitting the task into functional, behavioural and structural steps, following the Function-Behaviour-Structure model. Prompt templates guide the model at each step, and each step's output feeds the next, with designers choosing along the way. In a conceptual design experiment, this approach produced more reasonable and creative concepts than a baseline.",
+    "doi_verified": true
+  },
+  "81": {
+    "pdf": "2023_Wilson_impact.pdf",
+    "year": 2023,
+    "title": "The Impact of Robotics Expertise on Iterative Robot Design Decisions and Vulnerability to Design Fixation",
+    "authors": [
+      "Cristina G. Wilson",
+      "Kallahan Brown",
+      "Cynthia Sung"
+    ],
+    "paper_number": "DETC2023-116874",
+    "doi": "10.1115/DETC2023-116874",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This study examined how robotics expertise affects iterative robot design and susceptibility to design fixation. 39 attendees of a robotics conference, with 0 to 17 years of experience, designed a ground robot for rough terrain in a 15-minute task using a software tool that logged their decisions. Participants iterated often regardless of expertise, and at every level of experience they tended to fixate on their first concept even when it was not working.",
+    "doi_verified": true
+  },
+  "2": {
+    "pdf": "2024_Agarwal_emulating.pdf",
+    "year": 2024,
+    "title": "Emulating Cognitive Style in Large Language Models",
+    "authors": [
+      "Vasvi Agarwal",
+      "Kathryn Jablokow",
+      "Christopher McComb"
+    ],
+    "paper_number": "DETC2024-143677",
+    "doi": "10.1115/DETC2024-143677",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors tested whether large language models can imitate cognitive style as defined by Kirton's adaption-innovation theory. They prompted LLMs to solve three design problems in an adaptive or an innovative style and rated the solutions for feasibility and how much they changed the existing paradigm. Adaptive prompts gave more feasible, paradigm-preserving solutions and innovative prompts gave more paradigm-changing ones, as the theory predicts.",
+    "doi_verified": true
+  },
+  "3": {
+    "pdf": "2024_Arpini-Lorenzoni_longitudinal.pdf",
+    "year": 2024,
+    "title": "Examining the Longitudinal Psychological Safety of Mentored Senior Capstone Design Teams",
+    "authors": [
+      "Ana Arpini-Lorenzoni",
+      "Robert Hart",
+      "Todd W. Polk",
+      "Alexander R. Murphy"
+    ],
+    "paper_number": "DETC2024-143796",
+    "doi": "10.1115/DETC2024-143796",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This study tracked psychological safety in senior capstone design teams over a two-semester course, with each team mentored by someone from industry or academia. Individual and team psychological safety were measured three times: at the outset, midway and at the end of the course. Psychological safety did not change significantly over time, for individuals or teams, and the type of mentor made no difference.",
+    "doi_verified": true
+  },
+  "10": {
+    "pdf": "2024_Chen_triz.pdf",
+    "year": 2024,
+    "title": "TRIZ-GPT: An LLM-Augmented Method For Problem-Solving",
+    "authors": [
+      "Liuqing Chen",
+      "Yaxuan Song",
+      "Shixian Ding",
+      "Lingyun Sun",
+      "Peter Childs",
+      "Haoyu Zuo"
+    ],
+    "paper_number": "DETC2024-143163",
+    "doi": "10.1115/DETC2024-143163",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The paper presents TRIZ-GPT, a method that uses large language models to guide problem solving with TRIZ, the theory of inventive problem solving. The authors built a collection of TRIZ cases and a step-by-step prompting workflow that turns a concrete problem into a TRIZ problem and generates solutions. A mechanical engineering case study shows GPT-4 producing solutions close to the original ones and suggesting further ways to implement them.",
+    "doi_verified": true
+  },
+  "14": {
+    "pdf": "2024_Das_concept.pdf",
+    "year": 2024,
+    "title": "Concept Chaining Patterns During Ideation Using Digital Tablets",
+    "authors": [
+      "Madhurima Das",
+      "Jessica Meza",
+      "Christine Xu",
+      "Maria C. Yang"
+    ],
+    "paper_number": "DETC2024-142785",
+    "doi": "10.1115/DETC2024-142785",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This controlled experiment compared concept chaining, meaning iterating on one concept in sequence, between sketching on iPads and on paper. Engineering participants generated concepts for prompts with one or several functional requirements. Tablet users chained concepts more despite producing a similar number of related ideas, and prompts with more requirements changed chaining patterns because not every idea addressed every requirement.",
+    "doi_verified": true
+  },
+  "20": {
+    "pdf": "2024_Furiato_reverse.pdf",
+    "year": 2024,
+    "title": "Reverse Engineering Through a Product Teardown Activity and Component-Function Identification",
+    "authors": [
+      "Mikala Y. Furiato",
+      "Alexander R. Murphy"
+    ],
+    "paper_number": "DETC2024-143793",
+    "doi": "10.1115/DETC2024-143793",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study measured how a product teardown affects upper-level engineering students' mental models of everyday products. Students drew mental models of three products, disassembled a hair dryer, drew them again and identified the dryer's components and their functions. Mental model scores did not change and knowledge did not transfer between products; the teardown helped students identify components such as the motor but made their functional reasoning worse.",
+    "doi_verified": true
+  },
+  "24": {
+    "pdf": "2024_Harris_we.pdf",
+    "year": 2024,
+    "title": "We're All in This Together: Evaluating the Impact of Designers' Mood Dynamics on Collaborative Design Project Outcomes",
+    "authors": [
+      "Meg Harris",
+      "Christine Toh"
+    ],
+    "paper_number": "DETC2024-142986",
+    "doi": "10.1115/DETC2024-142986",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "Extending prior work, this study examined whether differences in team members' moods relate to the outcomes of student design projects. Sentiment in self-reflections collected at three points in a semester-long project was compared with project performance and collaboration quality. Teams whose members diverged more in tone, positive tone and negative emotion had worse project outcomes.",
+    "doi_verified": true
+  },
+  "26": {
+    "pdf": "2024_Islam_pedestrian.pdf",
+    "year": 2024,
+    "title": "Assessing Pedestrian Trust in Autonomous Vehicles: a Comparative Study of Immersive Virtual Reality and Non-Immersive Video Media",
+    "authors": [
+      "Marufa Islam",
+      "Jinjuan She",
+      "James Chagdes"
+    ],
+    "paper_number": "DETC2024-140007",
+    "doi": "10.1115/DETC2024-140007",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This within-subject experiment with 50 adults compared immersive virtual reality and ordinary video for studying pedestrian trust in autonomous vehicles. Participants watched seven vehicle behaviours in both media and rated trust, risk and how understandable the behaviours were. VR raised trust and risk ratings overall though understanding was the same, and both media ranked the vehicle behaviours similarly, so video is adequate for comparing behaviours.",
+    "doi_verified": true
+  },
+  "29": {
+    "pdf": "2024_Jung_typology.pdf",
+    "year": 2024,
+    "title": "Typology Development for Synthetic Chemistry Sub-Tasks: Towards Human-Robot Collaboration Task Design in the Wet Lab",
+    "authors": [
+      "Diane N. Jung",
+      "Carson J. Bruns"
+    ],
+    "paper_number": "DETC2024-142677",
+    "doi": "10.1115/DETC2024-142677",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "To inform human-robot collaboration in chemistry labs, the authors studied the manual tasks synthetic chemists perform. Based on observations and surveys, they identified 10 common tasks and analysed the two most frequent, liquid dispensing and solids handling, in detail. They found 40 types of liquid dispensing and 18 of solids handling and measured each one's workload with the NASA-TLX, as a basis for robots that support rather than replace researchers.",
+    "doi_verified": true
+  },
+  "33": {
+    "pdf": "2024_Keeler_picture.pdf",
+    "year": 2024,
+    "title": "A Picture or a Thousand Words: Design Description Crafting to Replicate Human Similarity Judgments in Large Language Models",
+    "authors": [
+      "Matthew Keeler",
+      "Mark Fuge",
+      "Aoran Peng",
+      "Scarlett Miller"
+    ],
+    "paper_number": "DETC2024-143634",
+    "doi": "10.1115/DETC2024-143634",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This study asked whether large language model embeddings of design descriptions can reproduce how people judge the similarity of design sketches. LLM embeddings of crowdsourced text descriptions were compared with an embedding built from human triplet judgments of the same sketches, and descriptions written to a template focused on function, behaviour or structure were also tested. The comparison shows where human and LLM similarity disagree and which ways of describing designs bring the two closer.",
+    "doi_verified": true
+  },
+  "38": {
+    "pdf": "2024_Li_llm4cad.pdf",
+    "year": 2024,
+    "title": "LLM4CAD: Multi-Modal Large Language Models for 3D Computer-Aided Design Generation",
+    "authors": [
+      "Xingang Li",
+      "Yuewan Sun",
+      "Zhenghui Sha"
+    ],
+    "paper_number": "DETC2024-143740",
+    "doi": "10.1115/DETC2024-143740",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors developed LLM4CAD, an approach that lets GPT-4 and GPT-4V generate 3D CAD models of mechanical parts such as gears and springs by writing CAD scripts. They created a dataset of parts, sketches and images with crowdsourced descriptions, and measured whether the scripts ran and how closely the resulting shapes matched. Both models showed promise, and GPT-4V performed best with text-only input rather than text plus images.",
+    "doi_verified": true
+  },
+  "57": {
+    "pdf": "2024_Owens_public.pdf",
+    "year": 2024,
+    "title": "Public Engagement and Participatory Design Preparedness: Adapting Participatory Technology Assessment Methods for Design Science",
+    "authors": [
+      "Jared Owens",
+      "Stephanie Diem",
+      "Mahmud Farooque",
+      "Aditi Verma"
+    ],
+    "paper_number": "DETC2024-133222",
+    "doi": "10.1115/DETC2024-133222",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This project tested whether participatory technology assessment, a public engagement method from science policy, can prepare teams for participatory design of complex sociotechnical systems such as fusion energy. The team of fusion and engagement experts ran two open dialogues with members of the public in Madison, Wisconsin. Early findings suggest the method reveals how the public frames the issue, what it knows and its hopes and concerns, which could shape later design engagements.",
+    "doi_verified": true
+  },
+  "60": {
+    "pdf": "2024_Peng_crack.pdf",
+    "year": 2024,
+    "title": "Crack the Code: Impact of Engineering Design Prompt Objective and Linguistic Characteristics on Understanding and Creativity Perceptions of Students",
+    "authors": [
+      "Aoran Peng",
+      "Dan Johnson",
+      "Scarlett R. Miller"
+    ],
+    "paper_number": "DETC2024-146351",
+    "doi": "10.1115/DETC2024-146351",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study examined whether the objective and wording of engineering design prompts affect how understandable and creative students find them. The authors analysed 45 design prompts by objective and by linguistic features, alongside students' ratings. Prompts with different objectives differed only in word prevalence and were rated similarly, and neither objective nor linguistic features predicted students' ratings.",
+    "doi_verified": true
+  },
+  "63": {
+    "pdf": "2024_Renji_augmenting.pdf",
+    "year": 2024,
+    "title": "Augmenting Engineering Design With AI: Introducing the AI Design Assistant (AIDA)",
+    "authors": [
+      "Naveen Mathews Renji",
+      "Sagar Chakravarthy Mathada Veera",
+      "Bei Yan",
+      "Ting Liao"
+    ],
+    "paper_number": "DETC2024-143765",
+    "doi": "10.1115/DETC2024-143765",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors built AIDA, a web chatbot based on large language models that supports design ideation and rates users' ideas for validity, novelty and feasibility, using a sustainable washing machine as the example. A human-subjects experiment tested the first version. Participants used it smoothly and found it useful, enjoyable and trustworthy, though men and people under 25 trusted it less than other participants.",
+    "doi_verified": true
+  },
+  "66": {
+    "pdf": "2024_Roeder_building.pdf",
+    "year": 2024,
+    "title": "Building Spaces for Design Justice: A Case Study on the Design Justice Pedagogy Summit",
+    "authors": [
+      "Gillian Roeder",
+      "Madhurima Das",
+      "Jana I. Saadi",
+      "Christina Harrington",
+      "Aditi Verma",
+      "Cynthia Breazeal",
+      "Catherine D'Ignazio",
+      "Maria Yang",
+      "Anastasia K. Ostrowski"
+    ],
+    "paper_number": "DETC2024-143792",
+    "doi": "10.1115/DETC2024-143792",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "A case study of the Design Justice Pedagogy Summit, held in August 2022 to help instructors bring design justice into their teaching. Participants were studied through surveys, interviews and design artifacts around the summit and four months later. They became more confident about embedding design justice in their work, valued the community it built, and planned to keep engaging, which the authors turn into guidance for similar spaces.",
+    "doi_verified": true
+  },
+  "70": {
+    "pdf": "2024_Shyam_human.pdf",
+    "year": 2024,
+    "title": "Human-AI Collaboration Among Engineering and Design Professionals: Three Strategies of Generative AI Use",
+    "authors": [
+      "Kevin Ma",
+      "George Moore",
+      "Vikram Shyam",
+      "James Villarrubia",
+      "Kosa Goucher-Lambert",
+      "Eric Reynolds Brubaker"
+    ],
+    "paper_number": "DETC2024-143560",
+    "doi": "10.1115/DETC2024-143560",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This ethnographic study followed an early-stage NASA design team to see how professionals actually use generative AI during a speculative design workflow. The authors observed the team's process and interviewed members afterwards, coding the data inductively. They identified three strategies, intimate co-design with AI, selective delegation to AI and minimal use, along with factors that influenced each person's choice.",
+    "doi_verified": true
+  },
+  "75": {
+    "pdf": "2024_Sprigle_process.pdf",
+    "year": 2024,
+    "title": "Development and Evaluation of a Process to Advance Orphan Assistive Technology Prototypes for Small Batch Production",
+    "authors": [
+      "Stephen Sprigle",
+      "Xavier Simonelli",
+      "Jacob Misch",
+      "Taylor Allen",
+      "Stephen Chininis"
+    ],
+    "paper_number": "DETC2024-140266",
+    "doi": "10.1115/DETC2024-140266",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The project developed and tested a process for taking one-off assistive technology prototypes, built for individual people with disabilities, to small-batch production when the user group is too small for normal commercial development. The four-step process screens each prototype against its target users and existing alternatives, then assesses its function and how best to manufacture it in small numbers. Applied to four devices and reviewed by three experienced assistive technology professionals, it appeared to be a practical, low-cost way to bring such devices to more users.",
+    "doi_verified": true
+  },
+  "80": {
+    "pdf": "2024_Wang_inspired.pdf",
+    "year": 2024,
+    "title": "Inspired by AI? A Novel Generative AI System to Assist Conceptual Automotive Design",
+    "authors": [
+      "Ye Wang",
+      "Nicole B. Damen",
+      "Thomas Gale",
+      "Voho Seo",
+      "Hooman Shayani"
+    ],
+    "paper_number": "DETC2024-142124",
+    "doi": "10.1115/DETC2024-142124",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The authors studied how experienced automotive designers draw inspiration from text and images, to build a generative AI tool that fits their concept design workflow. Through workshops and surveys with design teams, they examined current practice, the limits of off-the-shelf image generators (style bias, weak grasp of design meaning, poor fit with team processes) and how designers would like to interact with AI. They then built a diffusion-model system to support conceptual automotive design.",
+    "doi_verified": true
+  },
+  "82": {
+    "pdf": "2024_Wilson_pro.pdf",
+    "year": 2024,
+    "title": "Investigating Pro-Environmental Attitude for Designing Affective Eco-Feedback",
+    "authors": [
+      "Sara L. Wilson",
+      "Zainab J. Khan",
+      "Bianca Lee",
+      "Supreetha Krishnan",
+      "John E. Fernández",
+      "Maria C. Yang"
+    ],
+    "paper_number": "DETC2024-142009",
+    "doi": "10.1115/DETC2024-142009",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "This study asked whether people's attitudes toward their own environmental behaviour shape how strongly they react emotionally to eco-feedback designs for saving electricity. Workshop content from 67 participants informed ten feedback sketches with positive, negative or neutral framing, which 60 participants then rated for emotional intensity. People with pro-environmental attitudes reacted most strongly to positively and negatively framed messages, and people with neutral or negative attitudes still reacted negatively to negative framing, suggesting feedback should be tailored to attitudes.",
+    "doi_verified": true
+  },
+  "83": {
+    "pdf": "2024_Witherell_facilitating.pdf",
+    "year": 2024,
+    "title": "Facilitating Success: Exploring the Influence of Design Facilitators' Behaviors on Team Members' Responses and Perceptions of Team Climate and Trust",
+    "authors": [
+      "C. J. Witherell",
+      "Aliaa Maar",
+      "Presley Dougherty",
+      "Cynthia Letting",
+      "Jessica Menold"
+    ],
+    "paper_number": "DETC2024-143463",
+    "doi": "10.1115/DETC2024-143463",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "Using data from a design thinking workshop, this mixed-methods study looked at how five facilitators' behaviours affect team conversation, trust and psychological safety. The authors modelled conversation sequences with Markov models and correlated facilitator behaviours with participants' perceptions. Facilitator engagement encouraged participation and support, clarifying prompted questions, engagement and promoting reflection were linked to greater psychological safety, rapport building was not, and participants trusted facilitators who gave more direction.",
+    "doi_verified": true
+  },
+  "85": {
+    "pdf": "2024_Zhu_reading.pdf",
+    "year": 2024,
+    "title": "Reading Users' Minds from What They Say: An Investigation into LLM-based Empathic Mental Inference",
+    "authors": [
+      "Qihao Zhu",
+      "Leah Chong",
+      "Maria Yang",
+      "Jianxi Luo"
+    ],
+    "paper_number": "DETC2024-143961",
+    "doi": "10.1115/DETC2024-143961",
+    "doi_source": "paper number, resolves at doi.org",
+    "title_from": "pdf metadata",
+    "summary": "The study tested whether large language models can infer users' underlying goals and basic psychological needs from what users say, a task central to empathic design. The authors collected data from users and designers to build an empathic accuracy measure and compared several LLMs and prompting techniques against human designers. The LLMs inferred goals and needs about as accurately as the designers, suggesting a way to scale empathic understanding to larger groups of users.",
+    "doi_verified": true
+  }
+}

@@ -1,0 +1,4 @@
+# Paper PDFs must never be copied into or committed to this repo.
+atlas_corpus/
+*.pdf
+*.PDF
