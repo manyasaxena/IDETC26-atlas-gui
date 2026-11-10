@@ -1075,9 +1075,6 @@
     .stat-tile { background: var(--surface-3); border-radius: var(--r-sm); padding: 10px 12px; }
     .stat-tile b { display: block; font-size: 20px; line-height: 1.1; }
     .stat-tile span { display: block; margin-top: 3px; font: 11px var(--mono); color: var(--muted); line-height: 1.35; }
-    .strength { margin: 10px 0 0; color: #d5dbe6; font-size: 13px; line-height: 1.5; }
-    .strength strong { color: var(--text); }
-    .caution { color: #ffcf8a; }
     .met { margin-top: 4px; }
     .met svg { display: block; width: 100%; }
     .met .dotp { cursor: pointer; transition: r 0.15s; }
@@ -1227,96 +1224,7 @@
 
     .error { padding: 24px; color: #ff8a80; font: 13px var(--mono); line-height: 1.6; }
 
-    /* ---------- Example data (Atlas 2 preview) ----------
-       Anything built on atlas2_example.json sits in a dashed amber frame with an "Example data" badge,
-       so it can never be mistaken for real findings. */
-    :root { --ex: #ffc46b; --ex-line: rgba(255, 196, 107, 0.55); --ex-bg: rgba(255, 183, 77, 0.06); }
-    .ex-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 2px 9px;
-      border: 1px dashed var(--ex-line);
-      border-radius: 999px;
-      background: var(--ex-bg);
-      color: var(--ex);
-      font: 600 10.5px var(--mono);
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      white-space: nowrap;
-      vertical-align: 1px;
-    }
-    .ex-zone {
-      position: relative;
-      border: 1.5px dashed var(--ex-line);
-      border-radius: var(--r-lg);
-      background:
-        repeating-linear-gradient(135deg, rgba(255, 196, 107, 0.035) 0 8px, transparent 8px 16px),
-        var(--surface-2);
-      padding: 14px 14px 12px;
-      margin-top: 14px;
-    }
-    .ex-zone > .ex-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-    .ex-zone > .ex-head .t { font: 600 11px var(--mono); color: var(--text); text-transform: uppercase; letter-spacing: 0.6px; }
-    .ex-zone .ex-note { margin: 8px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
-    .cert { display: inline-grid; place-items: center; width: 13px; height: 13px; box-sizing: border-box; border-radius: 50%; font: 700 9px var(--sans); line-height: 1; vertical-align: -1px; flex: 0 0 auto; }
-    .cert-recorded { background: #aab3c5; }
-    .cert-ai { border: 1.5px dashed #9fb6d9; color: #9fb6d9; }
-    .cert-checked { background: #7fd39a; color: #0d0e12; }
-    .cert-key { display: flex; flex-wrap: wrap; gap: 4px 12px; font: 11px var(--mono); color: var(--muted); }
-    .cert-key span { display: inline-flex; align-items: center; gap: 5px; }
-    /* Evidence card */
-    .dir { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; font: 700 12px var(--sans); flex: 0 0 auto; }
-    .dir-increased { background: rgba(139, 197, 255, 0.18); color: #a9d4ff; }
-    .dir-reduced { background: rgba(244, 163, 192, 0.18); color: #f6b6cd; }
-    .dir-noeffect { background: rgba(154, 162, 178, 0.18); color: #c3c9d4; }
-    .dir-mixed { background: rgba(201, 182, 255, 0.18); color: #d6c9ff; }
-    .ev-title { margin: 0 0 10px; font-size: 14px; line-height: 1.4; }
-    .ev-title b { font-weight: 600; }
-    .ev-bars { display: grid; gap: 5px; }
-    .ev-bar { display: grid; grid-template-columns: 20px 92px minmax(0, 1fr) 54px; align-items: center; gap: 8px; font-size: 12.5px; }
-    .ev-bar .track { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
-    .ev-bar .track i { display: block; height: 100%; border-radius: 999px; }
-    .ev-bar .n { font: 11.5px var(--mono); color: var(--muted); text-align: right; }
-    .ev-facts { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px 10px; margin-top: 12px; font-size: 12.5px; line-height: 1.45; }
-    .ev-facts .k { font: 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; padding-top: 1px; }
-    .ev-facts .v { color: #d5dbe6; }
-    .holds { display: grid; gap: 3px; }
-    .holds .hrow { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
-    .holds .hk { color: var(--muted); min-width: 0; }
-    .holds .hv { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
-    .holds .hv .dir { width: 16px; height: 16px; font-size: 10px; border-radius: 4px; }
-    .finding {
-      display: grid;
-      grid-template-columns: 20px minmax(0, 1fr);
-      gap: 8px;
-      width: 100%;
-      text-align: left;
-      background: rgba(13, 14, 18, 0.45);
-      border: 1px solid var(--line);
-      border-radius: var(--r-sm);
-      padding: 9px 10px;
-      margin-top: 6px;
-      cursor: pointer;
-      transition: border-color 0.2s;
-    }
-    .finding:hover { border-color: var(--line-strong); }
-    .finding .st { font-size: 12.5px; line-height: 1.45; color: #e3e7ee; }
-    .finding .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 5px; font: 11px var(--mono); color: var(--muted); }
-    .strength-bars { letter-spacing: 1px; color: #cfd5e0; }
-    .ex-empty { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
-
-    /* Orbit tools: mode switch and split-by */
-    .orbit-tools {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 5;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 6px;
-    }
+    /* Segmented switch (2D / 3D) */
     .seg {
       display: inline-flex;
       gap: 2px;
@@ -1337,85 +1245,6 @@
       white-space: nowrap;
     }
     .seg button.on { background: var(--surface-3); color: var(--text); }
-    .seg button.ex.on { background: rgba(255, 196, 107, 0.16); color: #ffe2b0; }
-    .split-pick { display: flex; align-items: center; gap: 6px; font: 11.5px var(--mono); color: var(--muted); background: rgba(13, 14, 18, 0.9); border: 1px solid var(--line); border-radius: 999px; padding: 4px 4px 4px 12px; }
-    .split-pick select { max-width: 170px; }
-    .orbit-wrap.findings-mode { outline: 1.5px dashed var(--ex-line); outline-offset: -1.5px; }
-    #orbit .split-ring path { stroke: var(--bg); stroke-width: 0.6; }
-    #orbit .spoke.hide { stroke-opacity: 0 !important; }
-    #orbit .f-link { fill: none; stroke-width: 2.2; stroke-linecap: round; }
-    #orbit .f-badge rect { stroke-width: 1; }
-    #orbit .f-badge text { font: 600 10.5px var(--mono); }
-    #orbit .ring.dim, #orbit .ring-label.dim { opacity: 0.25; }
-    .legend-ex { display: grid; gap: 5px; padding-top: 6px; border-top: 1px dashed var(--ex-line); }
-    .legend-split { display: flex; flex-wrap: wrap; gap: 4px 10px; }
-    .legend-split span { display: inline-flex; align-items: center; gap: 5px; }
-    .legend-split i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
-
-    /* Atlas 2 variables in the filter panel */
-    .fp-section.ex-zone { border-top: 1.5px dashed var(--ex-line); margin-top: 16px; padding-top: 14px; }
-    .ex-group { border-top: 1px solid var(--line); padding: 6px 0; }
-    .ex-group:first-of-type { border-top: none; }
-    .ex-group-head {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 4px 0;
-      cursor: pointer;
-      text-align: left;
-    }
-    .ex-group-head .caret { pointer-events: none; }
-    .ex-group-head b { font-size: 13px; }
-    .ex-group-head span { font: 11px var(--mono); color: var(--faint); }
-    .ex-group-head .sel { margin-left: auto; color: var(--ex); }
-    .ex-var { margin: 6px 0 8px 24px; }
-    .ex-var .vl { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-    .ex-var .vl em { font-style: normal; color: var(--faint); }
-    .vchips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .vchip {
-      border: 1px solid var(--line-strong);
-      background: var(--surface-2);
-      border-radius: 999px;
-      padding: 3px 9px;
-      font: 11.5px var(--mono);
-      color: #cfd5e0;
-      cursor: pointer;
-    }
-    .vchip span { color: var(--faint); margin-left: 3px; }
-    .vchip.on { border-color: var(--ex); background: rgba(255, 196, 107, 0.16); color: #ffe2b0; }
-    .vchip:disabled { opacity: 0.35; cursor: not-allowed; }
-    .cert-filter { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
-    .cert-filter .vchip { display: inline-flex; align-items: center; gap: 5px; }
-    .chip-filter.ex { border-style: dashed; border-color: var(--ex-line); background: var(--ex-bg); }
-    .kv .dim { opacity: 0.35; }
-
-    /* Study card */
-    .study-sec { margin-top: 12px; }
-    .study-sec h4 { margin: 0 0 6px; display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
-    .study-sec h4 span { font: 11px var(--mono); color: var(--faint); font-weight: 400; }
-    .kv { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 4px 10px; font-size: 12.5px; }
-    .kv .k { color: var(--muted); }
-    .kv .k em { font-style: normal; color: var(--faint); }
-    .kv .v { display: flex; align-items: center; gap: 6px; color: #e3e7ee; }
-    .ex-papers { margin-top: 18px; }
-    .ex-papers .paper-row { background: rgba(13, 14, 18, 0.35); }
-
-    .preview-note {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-top: 22px;
-      padding: 12px 16px;
-      border: 1.5px dashed var(--ex-line);
-      border-radius: var(--r-md);
-      background: var(--ex-bg);
-      color: #d5dbe6;
-      font-size: 13px;
-      line-height: 1.5;
-    }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -1471,7 +1300,6 @@
           </div>
           <div class="orbit-empty" id="orbit-empty" hidden></div>
           <div class="orbit-legend" id="orbit-legend"></div>
-          <div class="orbit-tools" id="orbit-tools"></div>
         </div>
         <aside class="right bubble-panel">
           <div class="tabs" id="tabs">
@@ -1525,20 +1353,17 @@
       const tooltip = $("tooltip");
 
       // ---------- Load data ----------
-      let raw, schemaFile = null, exampleRaw = null;
+      let raw, schemaFile = null;
       try {
         if (location.protocol === "file:") throw new Error("This page has to be served over http to load graph_data.json.");
-        const [response, schemaResponse, exampleResponse] = await Promise.all([
+        const [response, schemaResponse] = await Promise.all([
           fetch("./graph_data.json"),
-          fetch("./atlas_schema.json").catch(() => null),
-          fetch("./atlas2_example.json").catch(() => null)
+          fetch("./atlas_schema.json").catch(() => null)
         ]);
         if (!response.ok) throw new Error(`Could not load graph_data.json (HTTP ${response.status}).`);
         raw = await response.json();
         if (schemaResponse && schemaResponse.ok) schemaFile = await schemaResponse.json();
         else if (!raw.schema) console.warn("No atlas_schema.json found; type names and colors are generated from the data.");
-        if (exampleResponse && exampleResponse.ok) exampleRaw = await exampleResponse.json();
-        else console.warn("No atlas2_example.json found; the Atlas 2 preview panels are hidden.");
       } catch (error) {
         $("app").innerHTML = `<div class="error">${esc(error.message)}<br/>From the project folder run <code>python3 -m http.server 8000</code> and open http://localhost:8000/redesign.html</div>`;
         console.error(error);
@@ -1671,44 +1496,6 @@
       const [Y0, Y1] = (raw.meta && raw.meta.year_range) || d3.extent([...paperById.values()], (p) => p.year);
       const nodeR = d3.scaleSqrt().domain([0, d3.max(nodes, (n) => n.paperCount)]).range([3, 20]);
 
-      // ---------- Example data (Atlas 2 preview) ----------
-      // atlas2_example.json holds ten made-up papers in a guessed Atlas 2 format. They are kept apart from
-      // the real papers: they never change real counts, and everything built on them is labelled "Example data".
-      const EX = (() => {
-        if (!exampleRaw) return null;
-        const papers = (exampleRaw.papers || []).map((p) => ({ ...p, paper_id: p.id, isExample: true, concepts: (p.concepts || []).map(String).filter((id) => byId.has(id)) }));
-        const variables = exampleRaw.variables || [];
-        const findings = papers.flatMap((p) => (p.findings || [])
-          .filter((f) => byId.has(String(f.iv)) && byId.has(String(f.dv)))
-          .map((f, i) => ({ ...f, iv: String(f.iv), dv: String(f.dv), id: `${p.id}-${i}`, paper: p })));
-        const byPair = new Map();
-        const byConcept = new Map();
-        findings.forEach((f) => {
-          const key = pairKey(f.iv, f.dv);
-          if (!byPair.has(key)) byPair.set(key, []);
-          byPair.get(key).push(f);
-          [f.iv, f.dv].forEach((id) => {
-            if (!byConcept.has(id)) byConcept.set(id, []);
-            byConcept.get(id).push(f);
-          });
-        });
-        return {
-          papers,
-          paperById: new Map(papers.map((p) => [p.id, p])),
-          variables,
-          varById: new Map(variables.map((v) => [v.id, v])),
-          groups: exampleRaw.groups || [],
-          certainty: exampleRaw.certainty || [],
-          findings,
-          byPair,
-          byConcept
-        };
-      })();
-      const exampleBadge = (text = "Example data") => `<span class="ex-badge" title="Made-up data in a guessed Atlas 2 format, for trying out the design. Not real findings.">◇ ${esc(text)}</span>`;
-      const CERT = { recorded: { mark: "", label: "Recorded" }, ai: { mark: "", label: "AI-extracted, not checked yet" }, checked: { mark: "✓", label: "Checked by a person" } };
-      const certMark = (c) => `<span class="cert cert-${esc(c)}" title="${esc(CERT[c]?.label || c)}">${CERT[c]?.mark ?? "?"}</span>`;
-      const certKey = () => `<div class="cert-key">${Object.keys(CERT).map((c) => `<span>${certMark(c)}${esc(CERT[c].label.replace(", not checked yet", ""))}</span>`).join("")}</div>`;
-
       // ---------- State ----------
       const state = {
         view: "field",
@@ -1718,14 +1505,6 @@
         minPapers: 1,
         pins: [],
         filtersOpen: false,
-        // Atlas 2 filters (example data only): chosen values per variable, a minimum per number, and which certainties count.
-        exValues: new Map(),
-        exMin: new Map(),
-        exCert: new Set(["recorded", "ai", "checked"]),
-        exOpen: new Set(["study"]),
-        // Orbit: "together" (shared papers) or "findings" (example Atlas 2 findings), and what to split nodes by.
-        orbitMode: "together",
-        splitBy: "",
         center: null,
         tab: "papers",
         connection: null,
@@ -1847,22 +1626,6 @@
       const inScope = (p) => inRange(p) && (!pinnedPapers || pinnedPapers.has(p.paper_id));
       const papersIn = (list) => (scopeActive() ? list.filter(inScope) : list);
       const papersInRange = (list) => (rangeActive() ? list.filter(inRange) : list);
-      // How much more often two concepts share papers than if they were unrelated:
-      // shared papers ÷ (papers of A × papers of B ÷ all papers in view).
-      function liftOf(nShared, aCount, bCount) {
-        const total = scopeCount();
-        const expected = total ? (aCount * bCount) / total : 0;
-        return { lift: expected ? nShared / expected : 0, expected };
-      }
-      const liftText = (lift) => (lift >= 10 ? lift.toFixed(0) : lift.toFixed(1)) + "×";
-      // Short form for lists and tooltips.
-      const liftShort = (lift) => (lift >= 1.15 ? `${liftText(lift)} chance` : lift > 0.87 ? "about chance" : `below chance (${liftText(lift)})`);
-      // "studied together 2.0× more often than chance", in plain words, for any lift.
-      function liftPhrase(lift) {
-        if (lift >= 1.15) return `studied together <strong>${liftText(lift)} more often</strong> than chance`;
-        if (lift > 0.87) return `studied together <strong>about as often as chance</strong> would predict`;
-        return `studied together <strong>less often than chance</strong> (${liftText(lift)})`;
-      }
       // A concept is shown when its type is on and it has enough papers in the year range.
       const conceptOn = (n) => state.types.has(n.type) && papersInRange(n.papers).length >= state.minPapers;
       const papersOf = (node) => papersIn(node.papers);
@@ -1931,12 +1694,12 @@
         else goHome();
       }
       function route() {
-        const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+|ex\d+))?\/?$/);
+        const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+))?\/?$/);
         const id = m && decodeURIComponent(m[1]);
         if (/^#\/overview\/?$/.test(location.hash)) { showLanding(); return; }
         if (!id || !byId.has(id)) { showField(); return; }
         const conn = m[2] ? decodeURIComponent(m[2]) : null;
-        const paper = m[3] ? (isExampleId(m[3]) ? m[3] : Number(m[3])) : null;
+        const paper = m[3] ? Number(m[3]) : null;
         showConcept(id, {
           connection: conn && linkByPair.has(pairKey(id, conn)) ? conn : null,
           paper: paper != null && getPaper(paper) ? paper : null
@@ -2021,10 +1784,7 @@
         <div class="more">
           <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
           <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
-          <p><strong>× chance.</strong> How many times more often two concepts share papers than you'd expect if they were unrelated. Common concepts (like Engineering Students) share many papers with everything, so a big count can still be "about chance".</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
-          ${EX ? `<p>${exampleBadge()} <strong>Atlas 2 preview.</strong> Panels in a dashed amber frame use ${EX.papers.length} made-up papers to show how findings, certainty and study details could look once Atlas 2 data exists. They are not real findings and never change the real counts.</p>
-          <p><strong>Certainty marks</strong> (on example data):</p>${certKey()}` : ""}
         </div>`;
       const glossary = $("glossary");
       $("help-btn").addEventListener("click", () => { glossary.hidden = false; });
@@ -2647,8 +2407,6 @@
             </div>
           </div>
 
-          ${EX ? `<div class="preview-note">${exampleBadge("Atlas 2 preview")}<span>Some panels (findings, evidence, study cards and the Paper / Study / Measurement / Claim filters) are filled with <strong>${EX.papers.length} made-up example papers</strong> so you can try the Atlas 2 design. They always sit in a dashed amber frame like this one, and never change the real counts. Try <button type="button" class="link-btn" data-open="8238" style="font-size:13px">cognitive fixation</button>.</span></div>` : ""}
-
           ${!inView ? `<div class="gap-box land-gap"><strong>0 papers: possible gap</strong><p>No paper covers every concept you pinned${rangeActive() ? ` in ${rangeText()}` : ""}. Open Filters to see the closest combinations that do.</p></div>` : ""}
 
           <section class="land-section">
@@ -2739,18 +2497,15 @@
           const sharedPapers = papersIn(link.papers);
           const shared = sharedPapers.length;
           const total = papersOf(node).length;
-          const { lift } = liftOf(shared, centerCount, total);
-          return { node, link, sharedPapers, shared, total, lift, either: centerCount + total - shared, j: shared ? shared / (centerCount + total - shared) : 0 };
+          return { node, link, sharedPapers, shared, total, either: centerCount + total - shared, j: shared ? shared / (centerCount + total - shared) : 0 };
         }).filter((d) => d.shared > 0);
       }
       // Pinned concepts are left out: every paper in view covers them, so they'd only add noise.
       const visibleNeighbors = () => neighborData().filter((d) => state.showTypes.has(d.node.type) && conceptOn(d.node) && !state.pins.includes(d.node.id));
       const selectedLink = () => (state.connection ? linkByPair.get(pairKey(state.center, state.connection)) : null);
 
-      // Real papers have numeric ids; example papers (atlas2_example.json) have ids like "ex3".
-      const isExampleId = (id) => typeof id === "string" && /^ex\d+$/.test(id);
-      const getPaper = (id) => (isExampleId(id) ? EX?.paperById.get(id) || null : paperById.get(id) || null);
-      const conceptIdsOfPaper = (p) => (p.isExample ? p.concepts : conceptsByPaper.get(p.paper_id) || []);
+      const getPaper = (id) => paperById.get(id) || null;
+      const conceptIdsOfPaper = (p) => conceptsByPaper.get(p.paper_id) || [];
       function currentPaper() {
         return state.tab === "papers" && state.paper != null ? getPaper(state.paper) : null;
       }
@@ -2768,7 +2523,7 @@
           }
           if (state.paper != null) {
             const p = getPaper(state.paper);
-            steps.push({ html: `${p.isExample ? "Example paper" : "Paper"}: ${esc(trunc(paperTitle(p), 38))}`, hash: null, title: paperTitle(p) });
+            steps.push({ html: `Paper: ${esc(trunc(paperTitle(p), 38))}`, hash: null, title: paperTitle(p) });
           }
         }
         $("crumb-trail").innerHTML = steps.map((s, i) => {
@@ -2790,9 +2545,7 @@
       // d3.arc measures angles clockwise from 12 o'clock; the layout measures them from 3 o'clock.
       const arcAngles = (g) => ({ startAngle: g.start + Math.PI / 2, endAngle: g.end + Math.PI / 2 });
       const spokeG = orbitRoot.append("g");
-      const findingG = orbitRoot.append("g");
       const orbitNodeG = orbitRoot.append("g");
-      const splitG = orbitRoot.append("g");
       const centerG = orbitRoot.append("g").attr("class", "center-node");
       const labelG = orbitRoot.append("g");
       const sectorLabelG = orbitRoot.append("g");
@@ -2985,24 +2738,9 @@
         });
       }
 
-      // Example findings between the center and each neighbor that pass the Atlas 2 filters.
-      function findingPartners(centerId) {
-        const map = new Map();
-        if (!EX) return map;
-        (EX.byConcept.get(centerId) || []).filter(exFindingPasses).forEach((f) => {
-          const other = f.iv === centerId ? f.dv : f.iv;
-          if (!map.has(other)) map.set(other, []);
-          map.get(other).push(f);
-        });
-        return map;
-      }
-
       function updateOrbit(duration = 650) {
         const center = byId.get(state.center);
-        const findingsMode = state.orbitMode === "findings" && !!EX;
-        const partners = findingsMode ? findingPartners(center.id) : null;
-        const typed = visibleNeighbors().filter((d) => !partners || partners.has(d.node.id)).sort(byRelevance);
-        typed.forEach((d) => { d.findings = partners ? partners.get(d.node.id) : null; });
+        const typed = visibleNeighbors().sort(byRelevance);
         const base = typed.slice(0, state.orbitLimit);
         const baseIds = new Set(base.map((d) => d.node.id));
         const paper = currentPaper();
@@ -3013,10 +2751,8 @@
         extras.forEach((d) => { d.ring = 2; });
         const shown = base.concat(extras);
         const centerSize = Math.max(12, nodeR(papersOf(center).length));
-        Object.assign(orbit, { center, shown, inPaper, typedCount: typed.length, centerSize, findingsMode });
-        shown.forEach((d) => { d.split = splitCounts(d); });
-        // The legend and tools are drawn first so label placement sees their final size.
-        renderOrbitTools();
+        Object.assign(orbit, { center, shown, inPaper, typedCount: typed.length, centerSize });
+        // The legend is drawn first so label placement sees its final size.
         renderOrbitLegend();
 
         const groups = layoutOrbit(shown);
@@ -3085,9 +2821,7 @@
               styleOrbit();
               highlightRow(d.node.id, true);
               const range = rangeActive() ? ` in ${rangeText()}` : "";
-              const split = d.split ? `<br/>${d.split.filter((x) => x.n).map((x) => `${esc(x.key)} ${x.n}`).join(" · ")}` : "";
-              const found = d.findings ? `<br/>◇ Example findings: ${d.findings.map((f) => DIR[f.direction].sym).join(" ")}` : "";
-              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · click to see the connection${split}${found}`), event, $("orbit-wrap"));
+              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · click to see the connection`), event, $("orbit-wrap"));
             })
               .on("mousemove", moveTip)
               .on("mouseleave", (event, d) => {
@@ -3127,18 +2861,11 @@
           .transition(t)
           .attr("transform", (d) => `translate(${d.lab.x},${d.lab.y})`);
         centerLabel.raise();
-        drawSplitRings(shown, t);
-        drawFindings(shown, t);
-        $("orbit-wrap").classList.toggle("findings-mode", findingsMode);
-        ringG.selectAll("circle").classed("dim", findingsMode);
-        ringLabelG.selectAll("text").classed("dim", findingsMode);
 
         const empty = $("orbit-empty");
         empty.hidden = shown.length > 0;
         if (!shown.length) {
-          empty.textContent = findingsMode
-            ? "No example findings involve this concept (or none match your filters). Try cognitive fixation or divergent thinking."
-            : !papersOf(center).length && scopeActive()
+          empty.textContent = !papersOf(center).length && scopeActive()
             ? "No papers match your filters."
             : !neighborData().length
               ? scopeActive() ? "No connections that match your filters." : "No connections for this concept in the graph."
@@ -3154,7 +2881,6 @@
         const faded = (id) => !!inPaper && !inPaper.has(id);
 
         spokeG.selectAll("line.spoke")
-          .classed("hide", () => !!orbit.findingsMode)
           .classed("sel", (d) => d.node.id === sel)
           .classed("faded", (d) => d.node.id !== sel && faded(d.node.id))
           .classed("lit", (d) => !!inPaper && !faded(d.node.id))
@@ -3193,140 +2919,6 @@
         return `<svg width="30" height="18" aria-hidden="true">${paths}</svg>`;
       }
 
-      // ---------- Split by ----------
-      const DECADES = d3.range(Math.floor(Y0 / 10) * 10, Y1 + 1, 10);
-      const DECADE_COLORS = ["#3d5580", "#4f72ab", "#6d95d0", "#97baea", "#cfe3ff"];
-      const SPLIT_COLORS = ["#8bc5ff", "#f4a3c0", "#a5e3b0", "#d6c9ff", "#ffd59a", "#80cbc4"];
-      const NOT_CODED = "#3a3f4d";
-      const SPLIT_VARS = ["subject_expertise", "task_team", "setting", "method", "condition_tool"];
-      const splitIsExample = () => state.splitBy && state.splitBy !== "decade";
-
-      // Slices for one orbit node: decades of its shared papers (real), or values of an Atlas 2 variable
-      // among example papers covering both concepts, with every real shared paper counted as "not coded yet".
-      function splitKeys() {
-        if (state.splitBy === "decade") return DECADES.map((d) => `${d}s`);
-        const def = EX?.varById.get(state.splitBy);
-        if (!def) return [];
-        return [...(def.kind === "yesno" ? ["yes", "no"] : def.values || []), "not coded yet"];
-      }
-      function splitColor(key, i) {
-        if (state.splitBy === "decade") return DECADE_COLORS[Math.min(i, DECADE_COLORS.length - 1)];
-        return key === "not coded yet" ? NOT_CODED : SPLIT_COLORS[i % SPLIT_COLORS.length];
-      }
-      function splitCounts(d) {
-        if (!state.splitBy) return null;
-        const keys = splitKeys();
-        const counts = new Map(keys.map((k) => [k, 0]));
-        if (state.splitBy === "decade") {
-          d.sharedPapers.forEach((p) => { const k = `${Math.floor(p.year / 10) * 10}s`; counts.set(k, (counts.get(k) || 0) + 1); });
-        } else {
-          const def = EX.varById.get(state.splitBy);
-          EX.papers.filter((p) => p.concepts.includes(state.center) && p.concepts.includes(d.node.id) && exPaperPasses(p)).forEach((p) => {
-            const v = p.values?.[def.id];
-            const k = v && state.exCert.has(v.certainty) ? fmtValue(v, def) : "not coded yet";
-            counts.set(k, (counts.get(k) || 0) + 1);
-          });
-          counts.set("not coded yet", counts.get("not coded yet") + d.shared);
-        }
-        return keys.map((k, i) => ({ key: k, n: counts.get(k) || 0, color: splitColor(k, i) }));
-      }
-      const splitPie = d3.pie().sort(null).value((x) => x.n);
-      function drawSplitRings(shown, t) {
-        const data = state.splitBy ? shown.filter((d) => d.split && d3.sum(d.split, (x) => x.n)) : [];
-        splitG.selectAll("g.split-ring").data(data, (d) => d.node.id).join(
-          (enter) => enter.append("g").attr("class", "split-ring").style("opacity", 0).attr("pointer-events", "none"),
-          (update) => update,
-          (exit) => exit.remove()
-        )
-          .each(function (d) {
-            const arc = d3.arc().innerRadius(d.size + 2.5).outerRadius(d.size + 7);
-            d3.select(this).selectAll("path").data(splitPie(d.split.filter((x) => x.n))).join("path")
-              .attr("d", arc)
-              .attr("fill", (a) => a.data.color);
-          })
-          .transition(t)
-          .style("opacity", 1)
-          .attr("transform", (d) => `translate(${d.x},${d.y})`);
-      }
-
-      // ---------- Findings mode ----------
-      const DIR_COLORS = { increased: "#8bc5ff", reduced: "#f4a3c0", "no effect": "#9aa2b2", mixed: "#c9b6ff" };
-      // Marker ids per direction (set up at load time, before the DIR table further down exists).
-      const DIR_MARK = { increased: "increased", reduced: "reduced", "no effect": "noeffect", mixed: "mixed" };
-      function drawFindings(shown, t) {
-        const data = orbit.findingsMode ? shown.filter((d) => d.findings && d.findings.length) : [];
-        const center = orbit.center;
-        // One arrow per neighbor, drawn from cause (IV) to effect (DV); its badge counts each direction.
-        const items = data.map((d) => {
-          const fs = d.findings;
-          const fromCenter = fs.filter((f) => f.iv === center.id).length >= fs.length / 2;
-          const dirs = Object.keys(DIR).map((k) => ({ k, n: fs.filter((f) => f.direction === k).length })).filter((x) => x.n);
-          const main = dirs.length === 1 ? dirs[0].k : "mixed";
-          const [sx, sy, ex, ey, sr, er] = fromCenter ? [0, 0, d.x, d.y, orbit.centerSize, d.size] : [d.x, d.y, 0, 0, d.size, orbit.centerSize];
-          const len = Math.hypot(ex - sx, ey - sy) || 1;
-          const ux = (ex - sx) / len, uy = (ey - sy) / len;
-          return {
-            d, main, dirs,
-            x1: sx + ux * (sr + 3), y1: sy + uy * (sr + 3), x2: ex - ux * (er + 9), y2: ey - uy * (er + 9),
-            mx: (sx + ex) / 2, my: (sy + ey) / 2,
-            label: dirs.map((x) => `${DIR[x.k].sym}${x.n}`).join(" ")
-          };
-        });
-        const g = findingG.selectAll("g.f-item").data(items, (x) => x.d.node.id).join(
-          (enter) => {
-            const e = enter.append("g").attr("class", "f-item").style("opacity", 0);
-            e.append("path").attr("class", "f-link");
-            const b = e.append("g").attr("class", "f-badge");
-            b.append("rect").attr("rx", 7);
-            b.append("text").attr("text-anchor", "middle").attr("dy", "0.35em");
-            return e;
-          },
-          (update) => update,
-          (exit) => exit.remove()
-        );
-        g.select("path")
-          .attr("d", (x) => `M${x.x1},${x.y1}L${x.x2},${x.y2}`)
-          .attr("stroke", (x) => DIR_COLORS[x.main])
-          .attr("marker-end", (x) => `url(#arrow-${DIR_MARK[x.main]})`);
-        g.select(".f-badge").attr("transform", (x) => `translate(${x.mx},${x.my})`);
-        g.select(".f-badge text").text((x) => x.label).attr("fill", (x) => DIR_COLORS[x.main]);
-        g.select(".f-badge rect")
-          .attr("x", (x) => -(x.label.length * 3.6 + 6)).attr("y", -9)
-          .attr("width", (x) => x.label.length * 7.2 + 12).attr("height", 18)
-          .attr("fill", "rgba(13,14,18,0.92)")
-          .attr("stroke", (x) => DIR_COLORS[x.main]);
-        g.transition(t).style("opacity", 1);
-      }
-      // Arrowheads for each direction color.
-      const defs = orbitSvg.append("defs");
-      Object.entries(DIR_COLORS).forEach(([k, color]) => {
-        defs.append("marker").attr("id", `arrow-${DIR_MARK[k]}`).attr("viewBox", "0 0 10 10").attr("refX", 2).attr("refY", 5)
-          .attr("markerWidth", 6).attr("markerHeight", 6).attr("orient", "auto-start-reverse")
-          .append("path").attr("d", "M0,0L10,5L0,10z").attr("fill", color);
-      });
-
-      function renderOrbitTools() {
-        const options = [`<option value="" ${!state.splitBy ? "selected" : ""}>Nothing</option>`, `<option value="decade" ${state.splitBy === "decade" ? "selected" : ""}>Decade</option>`]
-          .concat(EX ? [`<optgroup label="◇ Example data (Atlas 2)">${SPLIT_VARS.map((vid) => EX.varById.get(vid)).filter(Boolean).map((def) => `<option value="${esc(def.id)}" ${state.splitBy === def.id ? "selected" : ""}>${esc(def.parentType ? `${typeOf(def.parentType)?.label.toLowerCase()} › ${def.label}` : def.label)}</option>`).join("")}</optgroup>`] : []);
-        $("orbit-tools").innerHTML = `
-          ${EX ? `<div class="seg" role="group" aria-label="What the orbit shows">
-            <button type="button" class="${state.orbitMode === "together" ? "on" : ""}" data-mode="together">Studied together</button>
-            <button type="button" class="ex ${state.orbitMode === "findings" ? "on" : ""}" data-mode="findings" title="Example data: made-up Atlas 2 findings">◇ Findings</button>
-          </div>` : ""}
-          <label class="split-pick">Split by <select id="split-by">${options.join("")}</select></label>`;
-      }
-      $("orbit-tools").addEventListener("click", (event) => {
-        const b = event.target.closest("[data-mode]");
-        if (!b || b.dataset.mode === state.orbitMode) return;
-        state.orbitMode = b.dataset.mode;
-        updateOrbit(450);
-      });
-      $("orbit-tools").addEventListener("change", (event) => {
-        if (event.target.id !== "split-by") return;
-        state.splitBy = event.target.value;
-        updateOrbit(300);
-      });
-
       function renderOrbitLegend() {
         const shownCount = orbit.shown.length;
         const more = orbit.typedCount > state.orbitLimit;
@@ -3344,10 +2936,6 @@
             ${sliceIcon()}
             <span>Slices group the concept types</span>
           </div>
-          ${orbit.findingsMode ? `<div class="legend-ex"><div>${exampleBadge("Findings · example data")}</div><span>Arrows run from cause to effect: ↑ increased · ↓ reduced · ○ no effect · ± mixed. Only pairs with example findings are shown.</span></div>` : ""}
-          ${state.splitBy ? `<div class="row" style="align-items:flex-start"><svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="5" fill="#8a93a6"/><circle cx="15" cy="9" r="7.5" fill="none" stroke="#6d95d0" stroke-width="3"/></svg>
-            <span>${splitIsExample() ? `<span style="display:block;margin-bottom:4px">${exampleBadge()}</span>` : ""}Ring = shared papers split by ${esc(state.splitBy === "decade" ? "decade" : EX.varById.get(state.splitBy).label)}:
-              <span class="legend-split">${splitKeys().map((k, i) => `<span><i style="background:${splitColor(k, i)}"></i>${esc(k)}</span>`).join("")}</span></span></div>` : ""}
           ${orbit.typedCount ? `<div class="legend-more">
             <span>Showing ${shownCount} of ${orbit.typedCount}</span>
             ${more ? `<button type="button" class="pill-btn" data-action="orbit-more">Show more</button>` : ""}
@@ -3400,7 +2988,7 @@
           const papers = papersIn(link.papers);
           const n = papers.length;
           const either = papersOf(A).length + papersOf(B).length - n;
-          return { c, A, B, link, n, j: either ? n / either : 0, lift: liftOf(n, papersOf(A).length, papersOf(B).length).lift, ids: new Set(papers.map((p) => p.paper_id)) };
+          return { c, A, B, link, n, j: either ? n / either : 0, ids: new Set(papers.map((p) => p.paper_id)) };
         });
         const range = rangeActive() ? ` · ${rangeText()}` : "";
         const cards = items.map(({ c, A, B, link, n, j }, i) => `
@@ -3700,8 +3288,7 @@
           </div>
           ${chips ? `<div class="chip-row">${chips}</div>` : ""}
           <div class="rows">${rowsWithStagger(shown, (p, isNew) => paperRow(p, state.papersSort === "concepts", isNew)) || `<div class="empty-note">No papers${rangeActive() ? ` in ${rangeText()}` : ""}.</div>`}</div>
-          ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-papers">Load more · ${remaining} remaining</button>` : ""}
-          ${examplePapersHtml(byId.get(state.center))}`;
+          ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-papers">Load more · ${remaining} remaining</button>` : ""}`;
       }
 
       function renderConnectionsList() {
@@ -3782,7 +3369,7 @@
             ${badge(neighbor.type)}
             ${n
               ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>
-                 ${strengthHtml(center, neighbor, n)}
+                 ${strengthHtml(n)}
                  <p class="eyebrow">What these papers have in common</p>
                  <p class="common">${commonGround(center, neighbor, papers)}</p>
                  <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>`
@@ -3793,7 +3380,6 @@
             </div>
             ${pinButton([center.id, neighbor.id], "both")}
           </div>
-          ${evidenceCard(center, neighbor)}
           ${n ? `
           <p class="eyebrow" style="margin-top:20px">When they met <span style="text-transform:none;letter-spacing:0">· each dot is a shared paper</span></p>
           <div class="met">${metTimeline(papers, colorOf(neighbor.type))}</div>
@@ -3803,18 +3389,10 @@
           ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-conn-papers">Load more · ${remaining} remaining</button>` : ""}`;
       }
 
-      // Strength in plain words: share of each concept's papers, and how it compares with chance.
-      function strengthHtml(center, neighbor, n) {
-        const a = papersOf(center).length, b = papersOf(neighbor).length;
-        const { lift, expected } = liftOf(n, a, b);
-        const exp = expected < 1 ? "less than one" : expected < 10 ? expected.toFixed(1) : Math.round(expected);
+      function strengthHtml(n) {
         return `<div class="stat-tiles">
             <div class="stat-tile"><b>${n}</b><span>shared ${n === 1 ? "paper" : "papers"}</span></div>
-            <div class="stat-tile"><b>${liftText(lift)}</b><span>vs. chance</span></div>
-            <div class="stat-tile"><b>${Math.round((n / a) * 100)}%</b><span>of ${esc(cap(center.label))}'s papers</span></div>
-            <div class="stat-tile"><b>${Math.round((n / b) * 100)}%</b><span>of ${esc(cap(neighbor.label))}'s papers</span></div>
-          </div>
-          <p class="strength">These two are ${liftPhrase(lift)}. If they were unrelated you'd expect about ${exp} shared ${expected >= 0.95 && expected < 1.05 ? "paper" : "papers"}${scopeActive() ? " among the papers in view" : ""}; there ${n === 1 ? "is" : "are"} ${n}.${n < 3 ? ` <span class="caution">With so few papers, read this lightly.</span>` : ""}</p>`;
+          </div>`;
       }
 
       // The shared papers as dots on a year axis, stacked when a year has several.
@@ -3929,7 +3507,6 @@
 
       function renderPaperDetail() {
         const paper = currentPaper();
-        if (paper.isExample) return renderExamplePaper(paper);
         const concepts = (conceptsByPaper.get(paper.paper_id) || []).map((id) => byId.get(id));
         const backLabel = state.paperTrail.length ? "← Previous paper" : state.connection ? "← Shared papers" : "← All papers";
         const related = relatedPapers(paper.paper_id);
@@ -3953,7 +3530,6 @@
             <p class="placeholder">Summary coming soon.</p>
             <button type="button" class="btn" disabled title="No link to the original paper in the data yet">Original paper ↗</button>
           </div>
-          ${studyCardPlaceholder(paper)}
 
           <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
           <div class="rows">
@@ -3964,230 +3540,6 @@
                 <span class="why">${esc(relatedSentence(shared))}</span>
               </button>`).join("") || `<div class="empty-note">No other papers share concepts with this one.</div>`}
           </div>`;
-      }
-
-      // ---------- Study card (Atlas 2) ----------
-      const fmtValue = (v, def) => (def?.kind === "yesno" ? (v.value ? "yes" : "no") : def?.kind === "number" ? String(v.value) : String(v.value));
-      const DIR = {
-        increased: { sym: "↑", cls: "increased", word: "increased" },
-        reduced: { sym: "↓", cls: "reduced", word: "reduced" },
-        "no effect": { sym: "○", cls: "noeffect", word: "no effect" },
-        mixed: { sym: "±", cls: "mixed", word: "mixed" }
-      };
-      const dirChip = (d) => `<span class="dir dir-${DIR[d]?.cls || "noeffect"}" title="${esc(DIR[d]?.word || d)}">${DIR[d]?.sym || "?"}</span>`;
-      const strengthBars = (st) => (st ? `<span class="strength-bars" title="${esc(st)} effect">${{ weak: "▮▯▯", moderate: "▮▮▯", strong: "▮▮▮" }[st] || ""}</span> ${esc(st)}` : "");
-      // "Using an LLM assistant ↑ cognitive fixation" style one-liner with its paper and certainty.
-      function findingHtml(f, { showPaper = true } = {}) {
-        return `<button type="button" class="finding" data-action="paper" data-id="${esc(f.paper.id)}" title="Open the example paper">
-          ${dirChip(f.direction)}
-          <span>
-            <span class="st">${esc(f.statement)}</span>
-            <span class="meta">
-              ${f.strength ? `<span>${strengthBars(f.strength)}</span>` : ""}
-              <span>${esc(f.hedging === "hedged" ? "hedged claim" : "firm claim")}</span>
-              <span>${certMark(f.certainty)} ${esc(CERT[f.certainty]?.label.replace(", not checked yet", "") || "")}</span>
-              ${showPaper ? `<span>${esc(f.paper.title.replace(/^Example study ([A-Z]):.*/, "Example study $1"))} · ${f.paper.year}</span>` : ""}
-            </span>
-          </span>
-        </button>`;
-      }
-
-      // A real paper has no Atlas 2 values yet: say so, and point to an example of what the card will hold.
-      function studyCardPlaceholder(paper) {
-        if (!EX) return "";
-        const mine = new Set(conceptsByPaper.get(paper.paper_id) || []);
-        const example = EX.papers.slice().sort((a, b) => b.concepts.filter((id) => mine.has(id)).length - a.concepts.filter((id) => mine.has(id)).length)[0];
-        return `<div class="ex-zone">
-          <div class="ex-head"><span class="t">Study details</span>${exampleBadge("Atlas 2 preview")}</div>
-          <p class="placeholder" style="font-size:13px">Not coded yet. In Atlas 2 this card will list the paper's values under Paper, Study, Measurement and Claim, each marked by how certain it is.</p>
-          ${example ? `<button type="button" class="btn" data-action="paper" data-id="${esc(example.id)}">See an example study card →</button>` : ""}
-        </div>`;
-      }
-
-      function renderExamplePaper(paper) {
-        const concepts = paper.concepts.map((id) => byId.get(id));
-        const backLabel = state.paperTrail.length ? "← Previous paper" : state.connection ? "← Shared papers" : "← All papers";
-        const sections = EX.groups.map((g) => {
-          if (g.id === "claim") {
-            return `<div class="study-sec"><h4>${esc(g.label)} <span>${esc(g.asks)}</span></h4>
-              ${(paper.findings || []).length ? paper.findings.map((f, i) => findingHtml(EX.findings.find((x) => x.id === `${paper.id}-${i}`) || { ...f, paper }, { showPaper: false })).join("") : `<p class="placeholder">No findings coded.</p>`}
-            </div>`;
-          }
-          const rows = EX.variables.filter((v) => v.group === g.id && paper.values?.[v.id]).map((v) => {
-            const val = paper.values[v.id];
-            const dim = state.exCert.has(val.certainty) ? "" : "dim";
-            return `<span class="k ${dim}">${v.parentType ? `<em>${esc(typeOf(v.parentType)?.label.toLowerCase() || v.family)} ›</em> ` : v.family && v.family !== v.label ? `<em>${esc(v.family)} ›</em> ` : ""}${esc(v.label)}</span><span class="v ${dim}" ${dim ? `title="Hidden by your certainty filter"` : ""}>${certMark(val.certainty)}${esc(fmtValue(val, v))}</span>`;
-          }).join("");
-          return rows ? `<div class="study-sec"><h4>${esc(g.label)} <span>${esc(g.asks)}</span></h4><div class="kv">${rows}</div></div>` : "";
-        }).join("");
-        return `
-          <button type="button" class="back-link" data-action="back-paper">${backLabel}</button>
-          <div class="ex-zone">
-            <div class="ex-head"><span class="t">Example paper</span>${exampleBadge()}</div>
-            <h2 class="paper-title">${esc(paper.title)}</h2>
-            <span class="byline">${esc(paper.authors)} · ${esc(paper.year)}</span>
-            <p class="ex-note">A made-up paper to show what an Atlas 2 study card could hold. Not a real study.</p>
-          </div>
-
-          <p class="eyebrow" style="margin-top:20px">Concepts in this paper (${concepts.length})</p>
-          <div class="chips">
-            ${concepts.map((n) => n.id === state.center
-              ? `<span class="chip current" title="The concept you're viewing">${dot(n.type)}${esc(cap(n.label))}</span>`
-              : `<button type="button" class="chip" data-action="open-concept" data-id="${esc(n.id)}">${dot(n.type)}${esc(cap(n.label))}</button>`).join("")}
-          </div>
-
-          <div class="ex-zone">
-            <div class="ex-head"><span class="t">Study card</span>${exampleBadge()}</div>
-            ${certKey()}
-            ${sections}
-          </div>`;
-      }
-
-      // ---------- Atlas 2 filters (example data) ----------
-      // A paper passes when, for every variable with a choice, it has a value of a certainty that's switched on and that value is chosen.
-      const exFilterCount = () => (EX ? [...state.exValues.values()].filter((set) => set.size).length + state.exMin.size + (state.exCert.size < 3 ? 1 : 0) : 0);
-      const valueKey = (val, def) => fmtValue(val, def);
-      function exValueOk(val, def) {
-        if (!val || !state.exCert.has(val.certainty)) return false;
-        if (def.kind === "number") return !state.exMin.has(def.id) || Number(val.value) >= state.exMin.get(def.id);
-        const chosen = state.exValues.get(def.id);
-        return !chosen || !chosen.size || chosen.has(valueKey(val, def));
-      }
-      function exPaperPasses(p) {
-        for (const def of EX.variables) {
-          if (def.group === "claim") continue;
-          const active = def.kind === "number" ? state.exMin.has(def.id) : state.exValues.get(def.id)?.size;
-          if (active && !exValueOk(p.values?.[def.id], def)) return false;
-        }
-        return true;
-      }
-      const FINDING_FIELD = { finding_direction: "direction", finding_strength: "strength", finding_hedging: "hedging" };
-      function exFindingPasses(f) {
-        if (!state.exCert.has(f.certainty) || !exPaperPasses(f.paper)) return false;
-        return Object.entries(FINDING_FIELD).every(([vid, field]) => {
-          const chosen = state.exValues.get(vid);
-          return !chosen || !chosen.size || chosen.has(String(f[field]));
-        });
-      }
-      function exChips() {
-        if (!EX) return [];
-        const chips = [];
-        state.exValues.forEach((set, vid) => { if (set.size) chips.push({ html: `${esc(EX.varById.get(vid).label)}: ${esc([...set].join(" or "))}`, kind: "val", v: vid }); });
-        state.exMin.forEach((min, vid) => chips.push({ html: `${esc(EX.varById.get(vid).label)} ≥ ${min}`, kind: "min", v: vid }));
-        if (state.exCert.size < 3) chips.push({ html: `Certainty: ${esc([...state.exCert].map((c) => CERT[c].label.replace(", not checked yet", "")).join(", ") || "none")}`, kind: "cert", v: "" });
-        return chips;
-      }
-      const NUM_STEPS = { sample_size: [20, 50, 100], task_duration: [30, 60, 120] };
-
-      function exFiltersHtml() {
-        if (!EX) return "";
-        const papersWith = (def, val) => EX.papers.filter((p) => p.values?.[def.id] && state.exCert.has(p.values[def.id].certainty) && valueKey(p.values[def.id], def) === val).length;
-        const findingsWith = (field, val) => EX.findings.filter((f) => state.exCert.has(f.certainty) && String(f[field]) === val).length;
-        const groups = EX.groups.map((g) => {
-          const vars = EX.variables.filter((v) => v.group === g.id);
-          const selected = vars.filter((v) => (v.kind === "number" ? state.exMin.has(v.id) : state.exValues.get(v.id)?.size)).length;
-          const open = state.exOpen.has(g.id);
-          const body = !open ? "" : vars.map((def) => {
-            const label = `${def.parentType ? `<em>${esc(typeOf(def.parentType)?.label.toLowerCase() || def.family)} ›</em> ` : def.family && def.family !== def.label ? `<em>${esc(def.family)} ›</em> ` : ""}${esc(def.label)} ${certMark(def.obtained === "record" ? "recorded" : def.obtained === "judge" ? "checked" : "ai")}`;
-            let chips;
-            if (def.kind === "number") {
-              const steps = NUM_STEPS[def.id] || [];
-              const cur = state.exMin.get(def.id);
-              chips = [`<button type="button" class="vchip ${cur == null ? "on" : ""}" data-ex="min" data-v="${esc(def.id)}" data-val="">any</button>`]
-                .concat(steps.map((n) => `<button type="button" class="vchip ${cur === n ? "on" : ""}" data-ex="min" data-v="${esc(def.id)}" data-val="${n}">≥ ${n}</button>`)).join("");
-            } else {
-              const values = def.kind === "yesno" ? ["yes", "no"] : def.values || [];
-              const chosen = state.exValues.get(def.id) || new Set();
-              chips = values.map((val) => {
-                const n = g.id === "claim" ? findingsWith(FINDING_FIELD[def.id], val) : papersWith(def, val);
-                return `<button type="button" class="vchip ${chosen.has(val) ? "on" : ""}" data-ex="val" data-v="${esc(def.id)}" data-val="${esc(val)}" ${n || chosen.has(val) ? "" : "disabled"}>${esc(val)}<span>${n}</span></button>`;
-              }).join("");
-            }
-            return `<div class="ex-var"><div class="vl">${label}</div><div class="vchips">${chips}</div></div>`;
-          }).join("");
-          return `<div class="ex-group">
-            <button type="button" class="ex-group-head" data-ex="group" data-v="${esc(g.id)}" aria-expanded="${open}">
-              <span class="caret ${open ? "open" : ""}">▶</span><b>${esc(g.label)}</b><span>${esc(g.asks)}</span>${selected ? `<span class="sel">${selected} chosen</span>` : ""}
-            </button>
-            ${body}
-          </div>`;
-        }).join("");
-        const passing = EX.papers.filter(exPaperPasses).length;
-        return `<section class="fp-section ex-zone">
-          <div class="ex-head"><span class="t">Atlas 2 variables</span>${exampleBadge()}</div>
-          <p class="fp-hint">Real papers have no Atlas 2 values yet, so these filter only the ${EX.papers.length} example papers and their findings (evidence cards, study cards, findings in the orbit). Counts are example papers${EX.findings.length ? ", or findings for Claim" : ""}. The mark by each variable shows how it's usually obtained.</p>
-          <p class="label" style="margin-top:4px"><span>Count values that are</span></p>
-          <div class="cert-filter">${Object.keys(CERT).map((c) => `<button type="button" class="vchip ${state.exCert.has(c) ? "on" : ""}" data-ex="cert" data-v="${c}">${certMark(c)}${esc(CERT[c].label.replace(", not checked yet", ""))}</button>`).join("")}</div>
-          ${groups}
-          <p class="ex-note">${passing} of ${EX.papers.length} example papers match.</p>
-        </section>`;
-      }
-
-      // ---------- Evidence card (Atlas 2) ----------
-      // What the example findings say about this pair: direction counts, the findings themselves,
-      // evidence quality, certainty, and the conditions each direction came from ("holds when").
-      const HOLDS_VARS = ["subject_expertise", "task_team", "setting", "condition_tool"];
-      function evidenceCard(center, neighbor) {
-        if (!EX) return "";
-        const coded = EX.byPair.get(pairKey(center.id, neighbor.id)) || [];
-        if (!coded.length) {
-          return `<div class="ex-zone"><div class="ex-empty">${exampleBadge("Atlas 2 preview")}<span>No findings coded for this pair in the example data. In Atlas 2, what these papers found would appear here.</span></div></div>`;
-        }
-        const all = coded.filter(exFindingPasses);
-        if (!all.length) {
-          return `<div class="ex-zone"><div class="ex-empty">${exampleBadge()}<span>${plural(coded.length, "example finding")} for this pair, but none match your Atlas 2 filters.</span></div></div>`;
-        }
-        // One block per direction of cause (IV → DV), most findings first.
-        const blocks = d3.groups(all, (f) => `${f.iv}>${f.dv}`).sort((a, b) => b[1].length - a[1].length).map(([, fs]) => {
-          const iv = byId.get(fs[0].iv), dv = byId.get(fs[0].dv);
-          const counts = Object.keys(DIR).map((d) => ({ d, n: fs.filter((f) => f.direction === d).length })).filter((x) => x.n);
-          const max = d3.max(counts, (x) => x.n) || 1;
-          const colors = { increased: "#8bc5ff", reduced: "#f4a3c0", "no effect": "#9aa2b2", mixed: "#c9b6ff" };
-          const studies = (k) => `${k} ${k === 1 ? "study" : "studies"}`;
-          const bars = counts.map(({ d, n }) => `<div class="ev-bar">${dirChip(d)}<span>${esc(DIR[d].word)}</span><span class="track"><i style="width:${(n / max) * 100}%;background:${colors[d]}"></i></span><span class="n">${studies(n)}</span></div>`).join("");
-          const papers = [...new Set(fs.map((f) => f.paper))];
-          const sizes = papers.map((p) => p.values?.sample_size?.value).filter((v) => v != null).sort((a, b) => a - b);
-          const median = sizes.length ? sizes[Math.floor(sizes.length / 2)] : null;
-          const causal = papers.filter((p) => p.values?.causal_design?.value === true).length;
-          const validated = papers.filter((p) => p.values?.measure_validated?.value === true).length;
-          const checked = fs.filter((f) => f.certainty === "checked").length;
-          const disagree = counts.length > 1;
-          const holds = HOLDS_VARS.map((vid) => {
-            const def = EX.varById.get(vid);
-            const groups = d3.groups(fs.filter((f) => f.paper.values?.[vid]), (f) => fmtValue(f.paper.values[vid], def));
-            // Only conditions that actually differ between the findings say anything about when they hold.
-            if (groups.length < 2) return "";
-            return `<div class="hrow"><span class="hk">${esc(def.label)}:</span>${groups.map(([val, gfs]) => `<span class="hv">${esc(val)} ${gfs.map((f) => dirChip(f.direction)).join("")}</span>`).join("")}</div>`;
-          }).filter(Boolean).join("");
-          return `<div style="margin-top:6px">
-            <p class="ev-title">Effect of <b>${esc(cap(iv.label))}</b> on <b>${esc(dv.label)}</b> · ${plural(fs.length, "finding")}</p>
-            <div class="ev-bars">${bars}</div>
-            ${disagree ? `<p class="ex-note" style="color:#ffcf8a">The findings disagree. See “Holds when” for the conditions behind each.</p>` : ""}
-            <div class="ev-facts">
-              <span class="k">Evidence</span><span class="v">median sample ${median ?? "?"} · ${causal} of ${studies(papers.length)} with a causal design · ${validated} with validated measures</span>
-              <span class="k">Certainty</span><span class="v">${certMark("checked")} ${checked} checked by a person · ${certMark("ai")} ${fs.length - checked} AI-extracted</span>
-              ${holds ? `<span class="k">Holds when</span><span class="v holds">${holds}</span>` : ""}
-            </div>
-            ${fs.map((f) => findingHtml(f)).join("")}
-          </div>`;
-        }).join("");
-        return `<div class="ex-zone">
-          <div class="ex-head"><span class="t">What was found</span>${exampleBadge()}</div>
-          ${blocks}
-          <p class="ex-note">${all.length < coded.length ? `Showing ${all.length} of ${coded.length} findings that match your Atlas 2 filters. ` : ""}Made-up findings from ${EX.papers.length} example papers, to show how Atlas 2 could explain a connection. Not real results; real counts above are unaffected.</p>
-        </div>`;
-      }
-
-      // Example papers on this concept, at the bottom of its paper list.
-      function examplePapersHtml(center) {
-        if (!EX) return "";
-        const list = EX.papers.filter((p) => p.concepts.includes(center.id) && (!state.connection || p.concepts.includes(state.connection)) && exPaperPasses(p));
-        if (!list.length) return "";
-        return `<div class="ex-zone ex-papers">
-          <div class="ex-head"><span class="t">Example papers (${list.length})</span>${exampleBadge()}</div>
-          <div class="rows">${list.map((p) => `<button type="button" class="paper-row" data-action="paper" data-id="${esc(p.id)}"><span class="p-title">${esc(p.title)}</span><span class="p-meta">${esc(p.authors)} · ${p.year} · ${plural((p.findings || []).length, "finding")}</span></button>`).join("")}</div>
-          <p class="ex-note">Made-up papers with Atlas 2 study cards. Not counted in the real papers above.</p>
-        </div>`;
       }
 
       function updateTabs() {
@@ -4237,7 +3589,7 @@
         switch (el.dataset.action) {
           case "paper":
           case "paper-push":
-            openPaper(isExampleId(id) ? id : Number(id));
+            openPaper(Number(id));
             break;
           case "back-paper":
             // Step back to the previous paper if we came from one; otherwise to the paper list (shared papers for a connection).
@@ -4301,18 +3653,12 @@
       });
 
       // ---------- Filters: one shared panel, and the active filters under the top bar ----------
-      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0) + exFilterCount();
+      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0);
 
       function pinButton(ids, what) {
         const on = ids.every((id) => state.pins.includes(id));
         return `<button type="button" class="pin-btn ${on ? "on" : ""}" data-action="pin" data-pin="${esc(ids.join(","))}" data-ids="${esc(ids.join(","))}"
           title="Only count papers that include ${esc(what)}">${on ? "✓ Narrowed to papers with " + esc(what) : "＋ Narrow to papers with " + esc(what)}</button>`;
-      }
-
-      function clearExFilters() {
-        state.exValues = new Map();
-        state.exMin = new Map();
-        state.exCert = new Set(["recorded", "ai", "checked"]);
       }
 
       // Pins all the given concepts, or unpins them if they're all pinned already.
@@ -4373,7 +3719,6 @@
           ${rangeActive() ? chip(`Years ${rangeText()}`, "range") : ""}
           ${state.minPapers > 1 ? chip(`Concepts with ≥ ${state.minPapers} papers`, "min") : ""}
           ${hidden.length ? chip(`Hiding ${listJoin(hidden.map((t) => typeOf(t).plural.toLowerCase()))}`, "types") : ""}
-          ${exChips().map((c) => `<span class="chip-filter ex" title="Filters the example papers only"><span>◇ ${c.html}</span><button type="button" data-fb="ex-${c.kind}" data-v="${esc(c.v)}" aria-label="Remove filter">×</button></span>`).join("")}
           <button type="button" class="link-btn clear-all" data-fb="all">Clear all</button>`;
         bar.hidden = false;
       }
@@ -4385,10 +3730,7 @@
         if (what === "range" || what === "all") state.range = [Y0, Y1];
         if (what === "min" || what === "all") state.minPapers = 1;
         if (what === "types" || what === "all") state.types = new Set(nodeTypes);
-        if (what === "all") { state.pins = []; clearExFilters(); }
-        if (what === "ex-val") state.exValues.delete(el.dataset.v);
-        if (what === "ex-min") state.exMin.delete(el.dataset.v);
-        if (what === "ex-cert") state.exCert = new Set(["recorded", "ai", "checked"]);
+        if (what === "all") state.pins = [];
         applyFilters();
       });
 
@@ -4483,8 +3825,7 @@
               <button type="button" data-fp="min+" ${state.minPapers >= 50 ? "disabled" : ""} aria-label="More">+</button>
               <span class="note">${nodes.filter(conceptOn).length} of ${nodes.length} concepts shown</span>
             </div>
-          </section>
-          ${exFiltersHtml()}`;
+          </section>`;
         panel.querySelectorAll("input[data-partial='true']").forEach((box) => { box.indeterminate = true; });
         refreshFilterRange();
       }
@@ -4518,31 +3859,11 @@
         }
         const item = event.target.closest(".search-item[data-id]");
         if (item) { togglePins([item.dataset.id]); $("pin-input")?.focus(); return; }
-        const ex = event.target.closest("[data-ex]");
-        if (ex) {
-          const { v, val } = ex.dataset;
-          if (ex.dataset.ex === "group") {
-            if (state.exOpen.has(v)) state.exOpen.delete(v); else state.exOpen.add(v);
-            renderFilterPanel();
-            return;
-          }
-          if (ex.dataset.ex === "val") {
-            const set = state.exValues.get(v) || new Set();
-            if (set.has(val)) set.delete(val); else set.add(val);
-            state.exValues.set(v, set);
-          } else if (ex.dataset.ex === "min") {
-            if (val === "") state.exMin.delete(v); else state.exMin.set(v, Number(val));
-          } else if (ex.dataset.ex === "cert") {
-            if (state.exCert.has(v)) { if (state.exCert.size > 1) state.exCert.delete(v); } else state.exCert.add(v);
-          }
-          applyFilters();
-          return;
-        }
         const el = event.target.closest("[data-fp]");
         if (!el) return;
         switch (el.dataset.fp) {
           case "close": setFiltersOpen(false); return;
-          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); clearExFilters(); break;
+          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); break;
           case "unpin": state.pins = state.pins.filter((id) => id !== el.dataset.v); break;
           case "min-": state.minPapers = Math.max(1, state.minPapers - 1); break;
           case "min+": state.minPapers = Math.min(50, state.minPapers + 1); break;
