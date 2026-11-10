@@ -17,18 +17,18 @@
     :root {
       /* Near-black page with a slight blue tint; panels just a little lighter, with soft borders. */
       --bg: #07080d;
-      --surface: #0e1119;
-      --surface-2: #141824;
-      --surface-3: #1c2131;
-      --line: rgba(160, 180, 235, 0.09);
-      --line-strong: rgba(160, 180, 235, 0.17);
-      --text: #e6eaf4;
-      --muted: #a2aac0;
-      --faint: #858da5;
-      --bar: #3a4158;
-      --nav-bg: #161b29;
-      --nav-bg-hover: #1e2436;
-      --nav-border: rgba(170, 195, 255, 0.32);
+      --surface: #151c2b;
+      --surface-2: #1d2638;
+      --surface-3: #273147;
+      --line: rgba(170, 190, 240, 0.12);
+      --line-strong: rgba(170, 190, 240, 0.22);
+      --text: #e8ecf6;
+      --muted: #a9b1c7;
+      --faint: #959db4;
+      --bar: #46506b;
+      --nav-bg: #26304a;
+      --nav-bg-hover: #2f3a58;
+      --nav-border: rgba(170, 195, 255, 0.4);
       --nav-text: #e3e8f5;
       --accent: #8bc5ff;
       --highlight: #4fc3f7;
@@ -498,8 +498,8 @@
     #landing-view { position: absolute; inset: 0; overflow-y: auto; animation: fadeIn 0.35s var(--ease); background: var(--page); color: var(--text); }
 
     #landing-view {
-      /* Overview cards: a touch darker than the other panels. */
-      --surface: #0c0f17;
+      /* Overview cards: lighter blue-gray so they stand out from the near-black page. */
+      --surface: #182134;
       --page: var(--bg);
       --soft: #cbd5f0;
       --up: #7fd39a;
@@ -794,17 +794,23 @@
     }
     /* Panels appear one after another: left, centre, right. Under half a second in all. */
     @keyframes panelIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-    #concept-view.enter > .left,
-    #concept-view.enter > .orbit-wrap,
-    #concept-view.enter > .right { animation: panelIn 0.2s ease-out both; }
-    #concept-view.enter > .orbit-wrap { animation-delay: 0.1s; }
-    #concept-view.enter > .right { animation-delay: 0.2s; }
+    /* Each panel fades in on its own; revealPanels() staggers them 150 ms apart. */
+    #concept-view > .panel-in { animation: panelIn 0.22s ease-out both; }
     .bubble-panel {
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--r-xl);
       box-shadow: var(--shadow);
       min-height: 0;
+    }
+    /* Concept pages: sidebars are lighter blue-gray cards, and the cards inside them one step lighter again. */
+    #concept-view > .left, #concept-view > .right {
+      --surface: #182134;
+      --surface-2: #222d43;
+      --surface-3: #2d3a55;
+      --line: rgba(170, 190, 240, 0.14);
+      --line-strong: rgba(170, 190, 240, 0.26);
+      border-color: rgba(170, 190, 240, 0.16);
     }
     .left { overflow-y: auto; padding: 14px; }
     .pane { display: flex; flex-direction: column; gap: 12px; }
@@ -986,20 +992,21 @@
     .filters .n { color: var(--faint); font-family: var(--mono); font-size: 12px; }
     .divider { border: none; border-top: 1px solid var(--line); margin: 16px 0 14px; }
 
+    /* The orbit sits on its own tone, between the page and the sidebars, with a faint glow behind the centre. */
     .orbit-wrap {
-      --bg: #0e1119;
+      --bg: #121828;
       position: relative;
       min-width: 0;
       min-height: 0;
       overflow: hidden;
       border-radius: var(--r-xl);
-      background: var(--surface);
-      border: 1px solid var(--line);
+      background: radial-gradient(ellipse 65% 60% at 50% 52%, #1a2540 0%, #121828 48%, #0e1220 100%);
+      border: 1px solid rgba(170, 190, 240, 0.11);
       box-shadow: var(--shadow);
     }
     #orbit { width: 100%; height: 100%; display: block; cursor: grab; }
     #orbit:active { cursor: grabbing; }
-    #orbit .ring { fill: none; stroke: #262c40; stroke-dasharray: 5 7; }
+    #orbit .ring { fill: none; stroke: #2a3350; stroke-dasharray: 5 7; }
     #orbit .ring-label {
       fill: var(--muted);
       font: 500 10px var(--mono);
@@ -1397,6 +1404,61 @@
       cursor: pointer;
     }
     .tour-replay:hover { background: var(--nav-bg-hover); border-color: var(--accent); }
+    .help-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 16px; }
+    .help-row .tour-replay { margin: 0; }
+    .gr-toggle { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+    .gr-toggle .switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--nav-border);
+      background: var(--surface-3);
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .gr-toggle .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--muted); transition: transform 0.2s var(--ease), background 0.2s; }
+    .gr-toggle .switch[aria-checked="true"] { background: #2f4a7d; }
+    .gr-toggle .switch[aria-checked="true"]::after { transform: translateX(18px); background: #dce8ff; }
+    .gr-toggle .state { min-width: 22px; color: var(--text); font-weight: 600; }
+
+    /* ---------- Guided reveal (each time a concept opens) ---------- */
+    /* Hidden panels keep their space (opacity only), so nothing shifts as they appear. */
+    .gr-anim { transition: opacity 0.9s ease; }
+    .gr-hide { opacity: 0 !important; }
+    .gr-pop {
+      position: fixed;
+      z-index: 85;
+      max-width: 270px;
+      background: var(--surface-2);
+      border: 1px solid var(--line-strong);
+      border-radius: 14px;
+      padding: 10px 14px;
+      color: #dfe4f0;
+      font-size: 13.5px;
+      line-height: 1.45;
+      box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.9);
+      animation: grIn 0.45s ease-out both;
+      transition: opacity 0.35s ease;
+    }
+    .gr-pop.out { opacity: 0; }
+    @keyframes grIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .gr-pop[class*="arrow-"]::before { content: ""; position: absolute; width: 10px; height: 10px; background: inherit; border: inherit; border-width: 0 0 1px 1px; }
+    .gr-pop.arrow-left::before { left: -6px; top: 16px; transform: rotate(45deg); }
+    .gr-pop.arrow-right::before { right: -6px; top: 16px; transform: rotate(-135deg); }
+    .gr-pop.arrow-up::before { top: -6px; left: 18px; transform: rotate(135deg); }
+    .gr-pop.arrow-down::before { bottom: -6px; left: calc(50% - 5px); transform: rotate(-45deg); }
+    .gr-pop .gr-step { display: block; margin-bottom: 4px; font: 11px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
+    .gr-pop .gr-acts { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
+    .gr-pop .gr-acts .skip { background: none; border: none; color: var(--muted); font: 12.5px var(--sans); cursor: pointer; padding: 4px 2px; }
+    .gr-pop .gr-acts .skip:hover { color: var(--text); }
+    .gr-pop .gr-acts .next { border: 1px solid var(--nav-border); border-radius: 999px; background: var(--nav-bg); color: var(--nav-text); padding: 6px 14px; font: 600 12.5px var(--sans); cursor: pointer; white-space: nowrap; }
+    .gr-pop .gr-acts .next:hover { background: var(--nav-bg-hover); border-color: var(--accent); }
+    .gr-pop .gr-acts .nav { display: flex; gap: 6px; }
+    .gr-pop .gr-acts .back { border: 1px solid var(--line-strong); border-radius: 999px; background: none; color: var(--muted); padding: 6px 12px; font: 12.5px var(--sans); cursor: pointer; white-space: nowrap; }
+    .gr-pop .gr-acts .back:hover { color: var(--text); border-color: var(--nav-border); }
+    @media (prefers-reduced-motion: reduce) { .gr-anim { transition: none; } .gr-pop { animation: none; } }
 
     /* ---------- Walkthrough ---------- */
     /* While it runs, every area starts hidden and is revealed one at a time; the page itself can't be clicked. */
@@ -1437,8 +1499,9 @@
     .tour-pop .nav { display: flex; gap: 6px; }
     .tour-pop .back { border: 1px solid var(--line-strong); border-radius: 999px; background: none; color: var(--muted); padding: 8px 14px; font: 13px var(--sans); cursor: pointer; }
     .tour-pop .back:hover { color: var(--text); border-color: var(--nav-border); }
-    .tour-pop .dots { display: flex; gap: 4px; }
-    .tour-pop .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--surface-3); }
+    .tour-pop button { white-space: nowrap; }
+    .tour-pop .dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-width: 0; flex: 1 1 auto; }
+    .tour-pop .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--surface-3); }
     .tour-pop .dots i.on { background: var(--accent); }
     @media (prefers-reduced-motion: reduce) { .tour-pop { transition: none; } }
     .modal-head h2 { margin: 0; font-size: 20px; }
@@ -1569,7 +1632,14 @@
         <h2 id="glossary-title">Glossary</h2>
         <button type="button" class="modal-close" id="glossary-close" aria-label="Close">×</button>
       </div>
-      <button type="button" class="tour-replay" id="tour-replay">▶ Replay the walkthrough</button>
+      <div class="help-row">
+        <button type="button" class="tour-replay" id="tour-replay">▶ Replay the walkthrough</button>
+        <span class="gr-toggle" title="On: the next concept you open shows a short guide, one part at a time with Next / Back / Skip (once). Concepts after that fade in by themselves.">
+          Concept page guide
+          <button type="button" class="switch" id="gr-toggle" role="switch" aria-checked="true" aria-label="Concept page guide"></button>
+          <span class="state" id="gr-toggle-state">On</span>
+        </span>
+      </div>
       <div id="glossary-body"></div>
     </div>
   </div>
@@ -1765,10 +1835,6 @@
         planType: "task",
         planCenter: null,
         planRare: false,
-        // Filters: shared by every view and kept as you move around.
-        types: new Set(nodeTypes),
-        minPapers: 1,
-        pins: [],
         // Which concepts get a name label: at least this many papers (network and concept page each keep their own).
         labelMinNet: 45,
         labelMinOrbit: 1,
@@ -1786,12 +1852,30 @@
         paperTrail: [],
         keepPapersTab: false,
         orbitLimit: ORBIT_STEP,
-        range: [Y0, Y1],
         // Recently visited concepts and connections, newest first.
         trail: [],
         hover: null
       };
       const TRAIL_SHOWN = 5;
+
+      // Each level keeps its own filters: the network's change only the network, the concept page's only concept
+      // pages (including their connections and papers), and the overview is never filtered. state.types, .range,
+      // .minPapers and .pins read and write the current level's set; withFilters() reads another level's on purpose.
+      const newFilters = () => ({ types: new Set(nodeTypes), minPapers: 1, pins: [], range: [Y0, Y1], pinned: null });
+      const FILTERS = { network: newFilters(), concept: newFilters(), overview: newFilters() };
+      let filterOverride = null;
+      const levelOfView = () => (state.view === "concept" ? "concept" : state.view === "field" ? "network" : "overview");
+      const F = () => FILTERS[filterOverride || levelOfView()];
+      function withFilters(level, fn) {
+        const prev = filterOverride;
+        filterOverride = level;
+        try { return fn(); } finally { filterOverride = prev; }
+      }
+      ["types", "minPapers", "pins", "range"].forEach((key) => Object.defineProperty(state, key, {
+        get: () => F()[key],
+        set: (value) => { F()[key] = value; },
+        enumerable: true
+      }));
 
       // ---------- Helpers ----------
       function esc(value) {
@@ -1895,15 +1979,16 @@
       const rangeText = () => `${state.range[0]}–${state.range[1]}`;
       const inRange = (p) => p.year >= state.range[0] && p.year <= state.range[1];
       // The papers in view: inside the year range and, when concepts are pinned, covering every pinned concept.
-      let pinnedPapers = null;
       function recomputeScope() {
-        if (!state.pins.length) { pinnedPapers = null; return; }
-        const sets = state.pins.map((id) => new Set(byId.get(id).papers.map((p) => p.paper_id)));
-        sets.sort((a, b) => a.size - b.size);
-        pinnedPapers = new Set([...sets[0]].filter((id) => sets.every((set) => set.has(id))));
+        Object.values(FILTERS).forEach((f) => {
+          if (!f.pins.length) { f.pinned = null; return; }
+          const sets = f.pins.map((id) => new Set(byId.get(id).papers.map((p) => p.paper_id)));
+          sets.sort((a, b) => a.size - b.size);
+          f.pinned = new Set([...sets[0]].filter((id) => sets.every((set) => set.has(id))));
+        });
       }
-      const scopeActive = () => rangeActive() || !!pinnedPapers;
-      const inScope = (p) => inRange(p) && (!pinnedPapers || pinnedPapers.has(p.paper_id));
+      const scopeActive = () => rangeActive() || !!F().pinned;
+      const inScope = (p) => inRange(p) && (!F().pinned || F().pinned.has(p.paper_id));
       const papersIn = (list) => (scopeActive() ? list.filter(inScope) : list);
       const papersInRange = (list) => (rangeActive() ? list.filter(inRange) : list);
       // A concept is shown when its type is on and it has enough papers in the year range.
@@ -2172,9 +2257,11 @@
         state.view = "field";
         state.center = null;
         hideTip();
+        cancelGuided();
         $("concept-view").hidden = true;
         $("landing-view").hidden = true;
         $("field-view").hidden = false;
+        renderFilterBar();
         renderCrumbs();
         resizeField();
         updateField();
@@ -2821,9 +2908,9 @@
         }).join("");
 
         const [tlo, thi] = trendRange();
-        const section = (key, html) => `<section class="land-section reveal ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}">${html}</section>`;
+        const section = (key, html) => `<section class="land-section reveal ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
         view.innerHTML = `<div class="landing">
-          <div class="hero">
+          <div class="hero" data-tour="ov-hero">
             <div>
               <p class="kicker">Design Engineering Atlas</p>
               <h1>What has design research studied, and what goes together?</h1>
@@ -2909,7 +2996,8 @@
       function watchReveals() {
         const pending = [...$("landing-view").querySelectorAll(".reveal:not(.in)")];
         if (!pending.length) return;
-        const show = (el) => { el.classList.add("in"); state.landingSeen.add(el.dataset.section); };
+        // Reading the layout first makes the browser register the hidden state, so the fade always plays.
+        const show = (el) => { void el.offsetWidth; el.classList.add("in"); state.landingSeen.add(el.dataset.section); };
         if (!("IntersectionObserver" in window)) { pending.forEach(show); return; }
         if (revealObserver) revealObserver.disconnect();
         revealObserver = new IntersectionObserver((entries) => {
@@ -3012,9 +3100,11 @@
         state.view = "landing";
         state.center = null;
         hideTip();
+        cancelGuided();
         $("concept-view").hidden = true;
         $("field-view").hidden = true;
         $("landing-view").hidden = false;
+        renderFilterBar();
         renderCrumbs();
         renderLanding();
       }
@@ -3603,7 +3693,7 @@
         const [lo, hi] = state.range;
         const active = rangeActive();
         $("concept-stats").innerHTML = `Appears in ${plural(center.paperCount, "paper")}${center.firstYear ? ` · first seen ${center.firstYear}` : ""}`
-          + (scopeActive() ? `<br/><strong>${papersOf(center).length}</strong> ${pinnedPapers ? "match your filters" : `in ${rangeText()}`}` : "");
+          + (scopeActive() ? `<br/><strong>${papersOf(center).length}</strong> ${F().pinned ? "match your filters" : `in ${rangeText()}`}` : "");
         $("range-text").textContent = active ? rangeText() : "All years";
         $("range-text").classList.toggle("active", active);
         $("range-reset").style.visibility = active ? "visible" : "hidden";
@@ -3755,7 +3845,7 @@
       // When concepts are pinned: concepts often studied with this one overall, but never in the narrowed papers.
       function gapsListHtml() {
         const center = byId.get(state.center);
-        if (!pinnedPapers || !papersOf(center).length) return "";
+        if (!F().pinned || !papersOf(center).length) return "";
         const shownIds = new Set(visibleNeighbors().map((d) => d.node.id));
         const missing = (adjacency.get(center.id) || [])
           .filter(({ id }) => !shownIds.has(id) && !state.pins.includes(id) && conceptOn(byId.get(id)))
@@ -3766,7 +3856,7 @@
         if (!missing.length) return "";
         return `<div class="gaps-list">
           <p class="eyebrow" style="margin-top:0">Possible gaps</p>
-          <p class="fp-hint" style="margin:0 0 8px">Studied with ${esc(cap(center.label))} elsewhere, but in none of the ${plural(pinnedPapers.size, "paper")} that include ${listJoin(state.pins.map((id) => esc(cap(byId.get(id).label))))}.</p>
+          <p class="fp-hint" style="margin:0 0 8px">Studied with ${esc(cap(center.label))} elsewhere, but in none of the ${plural(F().pinned.size, "paper")} that include ${listJoin(state.pins.map((id) => esc(cap(byId.get(id).label))))}.</p>
           <div class="rows">${missing.map((d) => `
             <div class="conn-row" role="button" tabindex="0" data-action="open-concept" data-id="${esc(d.node.id)}">
               ${dot(d.node.type)}
@@ -3801,7 +3891,7 @@
                  <p class="eyebrow">What these papers have in common</p>
                  <p class="common">${commonGround(center, neighbor, papers)}</p>
                  <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>`
-              : `<p class="sentence">No shared papers ${pinnedPapers ? "that match your filters" : `in ${rangeText()}`}.</p>`}
+              : `<p class="sentence">No shared papers ${F().pinned ? "that match your filters" : `in ${rangeText()}`}.</p>`}
             <div class="btn-row">
               <button type="button" class="btn" data-action="open-concept" data-id="${esc(neighbor.id)}">Open ${esc(cap(neighbor.label))} →</button>
             </div>
@@ -4129,7 +4219,7 @@
         }).filter((d) => d.n > 0).sort((a, b) => b.n - a.n);
       }
 
-      function scopeCount() { return pinnedPapers ? [...pinnedPapers].filter((id) => inRange(paperById.get(id))).length : papersIn([...paperById.values()]).length; }
+      function scopeCount() { return F().pinned ? [...F().pinned].filter((id) => inRange(paperById.get(id))).length : papersIn([...paperById.values()]).length; }
       const totalPapers = paperById.size;
 
       function renderFilterBar() {
@@ -4196,7 +4286,7 @@
             <h2>Filters</h2>
             <button type="button" class="link-btn" data-fp="reset" ${filterCount() ? "" : "hidden"}>Reset all</button>
           </div>
-          <p class="fp-hint">They apply on every page.</p>
+          <p class="fp-hint">${isNet ? "These change the network only." : "These change concept pages only."}</p>
 
           <section class="fp-section">
             <p class="label"><span>${isNet ? "Concept types" : "Show connections to"}</span></p>
@@ -4248,14 +4338,30 @@
       }
 
       function renderNetSide() {
-        const side = $("net-side");
-        side.innerHTML = filterBlockHtml("network");
-        side.querySelectorAll("input[data-partial='true']").forEach((box) => { box.indeterminate = true; });
+        withFilters("network", () => {
+          const side = $("net-side");
+          side.innerHTML = filterBlockHtml("network");
+          side.querySelectorAll("input[data-partial='true']").forEach((box) => { box.indeterminate = true; });
+        });
         refreshFilterRange();
       }
 
       // While a year slider is dragged, only the parts that follow it update (so the drag keeps working).
       function refreshFilterRange() {
+        withFilters("network", refreshNetRange);
+        // Each block's reset button and paper count follow its own level.
+        document.querySelectorAll(".fp").forEach((fp) => withFilters(fp.dataset.ctx, () => {
+          const reset = fp.querySelector('[data-fp="reset"]');
+          if (reset) reset.hidden = !filterCount();
+          const meter = fp.querySelector(".scope-meter");
+          if (meter) {
+            const count = scopeCount();
+            meter.querySelector("i").style.width = `${(count / totalPapers) * 100}%`;
+            meter.querySelector("strong").textContent = count;
+          }
+        }));
+      }
+      function refreshNetRange() {
         const [lo, hi] = state.range;
         const span = Y1 - Y0 || 1;
         const side = $("net-side");
@@ -4269,12 +4375,6 @@
           if (Number(q("hi").value) !== hi) q("hi").value = hi;
           q("lo").style.zIndex = lo >= Y1 - 1 ? 3 : 1;
         }
-        document.querySelectorAll('.fp [data-fp="reset"]').forEach((b) => { b.hidden = !filterCount(); });
-        const count = scopeCount();
-        document.querySelectorAll(".fp .scope-meter").forEach((meter) => {
-          meter.querySelector("i").style.width = `${(count / totalPapers) * 100}%`;
-          meter.querySelector("strong").textContent = count;
-        });
       }
 
       // One set of listeners for every filter block.
@@ -4354,16 +4454,186 @@
         if (first) { event.preventDefault(); togglePins([first.dataset.id]); refocusPin(fp.dataset.ctx); }
       });
 
-      // Left panel, then centre, then right: a quick, subtle fade each time a concept or connection opens.
-      let revealTimer = null;
-      function revealPanels() {
+      // Fades the given panels in one after another (left, then centre, then right), 150 ms apart.
+      // Only the panels that changed are passed, so moving within a page doesn't flash everything.
+      const PANEL_EL = { left: () => $("left"), orbit: () => $("orbit-wrap"), right: () => document.querySelector("#concept-view > .right") };
+      function revealPanels(parts = ["left", "orbit", "right"]) {
         if (REDUCED_MOTION) return;
-        const view = $("concept-view");
-        view.classList.remove("enter");
-        void view.offsetWidth;
-        view.classList.add("enter");
-        clearTimeout(revealTimer);
-        revealTimer = setTimeout(() => view.classList.remove("enter"), 500);
+        parts.forEach((part, i) => {
+          const el = PANEL_EL[part]();
+          el.classList.remove("panel-in");
+          void el.offsetWidth;
+          el.style.animationDelay = `${i * 150}ms`;
+          el.classList.add("panel-in");
+          clearTimeout(el._panelTimer);
+          el._panelTimer = setTimeout(() => el.classList.remove("panel-in"), 220 + i * 150 + 50);
+        });
+      }
+
+      // ---------- Revealing a concept page ----------
+      // The first concept someone opens: a guided reveal. Each part (left sidebar, orbit, right sidebar, top bar)
+      // appears with a one-line note and waits for Next; Back steps back, Skip shows everything. Only once.
+      // Every concept after that: the parts fade in one after another by themselves, no notes.
+      const GR_KEY = "atlas-guided-reveal";          // "off" turns the guide off
+      const GR_DONE_KEY = "atlas-guided-reveal-seen"; // set once the guide has been shown
+      const SLOW_PAUSE = 650;                         // gap between parts in the plain slow reveal
+      let guidedOn = (() => { try { return localStorage.getItem(GR_KEY) !== "off"; } catch { return true; } })();
+      let guidedSeen = (() => { try { return localStorage.getItem(GR_DONE_KEY) === "1"; } catch { return false; } })();
+      // paced: the guide (waits for Next). slow: the plain reveal (runs by itself, never blocks).
+      const gr = { mode: null, timers: [], pops: [], swallowClick: false, i: -1 };
+      const GR_STEPS = [
+        { el: () => $("left"), side: "right", text: "What this concept is, and how often it’s been studied over time." },
+        { el: () => $("orbit-wrap"), side: "inside-bottom-right", text: "Concepts studied alongside this one. Closer means more often." },
+        { el: () => document.querySelector("#concept-view > .right"), side: "left", text: "The papers behind it, and its strongest connections." },
+        { el: () => $("where"), also: () => $("trail-bar"), side: "below", text: "Where you are now. Click a lit level to step back." }
+      ];
+      const guidedTargets = () => [$("left"), $("orbit-wrap"), document.querySelector("#concept-view > .right"), $("where"), $("trail-bar")];
+      const canAnimate = () => !REDUCED_MOTION && !document.body.classList.contains("touring");
+      const guidedWanted = () => canAnimate() && guidedOn && !guidedSeen;
+
+      function renderGuidedToggle() {
+        $("gr-toggle").setAttribute("aria-checked", String(guidedOn && !guidedSeen));
+        $("gr-toggle-state").textContent = guidedOn && !guidedSeen ? "On" : "Off";
+      }
+      renderGuidedToggle();
+      // On: show the guide again on the next concept opened (once). Off: don't show it.
+      $("gr-toggle").addEventListener("click", () => {
+        const turnOn = !(guidedOn && !guidedSeen);
+        guidedOn = turnOn;
+        guidedSeen = !turnOn;
+        try {
+          localStorage.setItem(GR_KEY, turnOn ? "on" : "off");
+          if (turnOn) localStorage.removeItem(GR_DONE_KEY); else localStorage.setItem(GR_DONE_KEY, "1");
+        } catch {}
+        renderGuidedToggle();
+        if (!turnOn) cancelGuided();
+      });
+
+      // Hides every part at once (no fade-out of the old content) so each can fade in on its turn.
+      function hideAllParts() {
+        guidedTargets().forEach((el) => { el.classList.remove("panel-in", "gr-anim"); el.classList.add("gr-hide"); });
+        void document.body.offsetWidth;
+        guidedTargets().forEach((el) => el.classList.add("gr-anim"));
+      }
+      function showPart(i, on = true) {
+        const step = GR_STEPS[i];
+        step.el().classList.toggle("gr-hide", !on);
+        step.also?.()?.classList.toggle("gr-hide", !on);
+      }
+
+      // The guide: one part at a time, moving only when Next (or Back) is pressed. Marked as seen as soon as it
+      // starts, so it only ever happens on the first concept opened.
+      function startGuidedReveal() {
+        cancelGuided();
+        guidedSeen = true;
+        try { localStorage.setItem(GR_DONE_KEY, "1"); } catch {}
+        renderGuidedToggle();
+        gr.mode = "paced";
+        gr.i = -1;
+        hideAllParts();
+        gr.timers.push(setTimeout(() => revealGuidedStep(0), 200));
+      }
+      // Shows parts 0..i (hiding any later ones, for Back) and the note for part i.
+      function revealGuidedStep(i) {
+        gr.i = i;
+        GR_STEPS.forEach((_, j) => showPart(j, j <= i));
+        clearGuidedPops();
+        showGuidedPop(GR_STEPS[i], GR_STEPS[i].el(), i);
+      }
+      function nextGuided() {
+        if (gr.mode !== "paced") return;
+        if (gr.i < GR_STEPS.length - 1) revealGuidedStep(gr.i + 1);
+        else cancelGuided();
+      }
+      function backGuided() {
+        if (gr.mode === "paced" && gr.i > 0) revealGuidedStep(gr.i - 1);
+      }
+
+      // Every other time: the parts fade in one after another by themselves.
+      function startSlowReveal() {
+        cancelGuided();
+        gr.mode = "slow";
+        hideAllParts();
+        GR_STEPS.forEach((_, i) => gr.timers.push(setTimeout(() => showPart(i), 120 + i * SLOW_PAUSE)));
+        gr.timers.push(setTimeout(() => { gr.mode = null; }, 120 + (GR_STEPS.length - 1) * SLOW_PAUSE + 60));
+      }
+
+      // Shows everything now and removes any note.
+      function finishGuided() {
+        gr.timers.forEach(clearTimeout);
+        gr.timers = [];
+        gr.mode = null;
+        guidedTargets().forEach((el) => el.classList.remove("gr-hide"));
+      }
+      function clearGuidedPops() {
+        gr.pops.forEach((pop) => { pop.classList.add("out"); setTimeout(() => pop.remove(), 380); });
+        gr.pops = [];
+      }
+      function cancelGuided() { finishGuided(); clearGuidedPops(); }
+
+      function showGuidedPop(step, el, i) {
+        const last = i === GR_STEPS.length - 1;
+        const pop = document.createElement("div");
+        pop.className = "gr-pop";
+        pop.setAttribute("role", "dialog");
+        pop.innerHTML = `<span class="gr-step">${i + 1} of ${GR_STEPS.length}</span>${esc(step.text)}
+          <span class="gr-acts">
+            ${last ? "<span></span>" : `<button type="button" class="skip" data-gr="skip">Skip</button>`}
+            <span class="nav">
+              ${i ? `<button type="button" class="back" data-gr="back">← Back</button>` : ""}
+              <button type="button" class="next" data-gr="next">${last ? "Done" : "Next →"}</button>
+            </span>
+          </span>`;
+        document.body.appendChild(pop);
+        const r = el.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight, gap = 14, pad = 10;
+        let x, y, arrow;
+        if (step.side === "right") { x = r.right + gap; y = r.top + 70; arrow = "arrow-left"; }
+        else if (step.side === "left") { x = r.left - gap - w; y = r.top + 70; arrow = "arrow-right"; }
+        else if (step.side === "below") {
+          // Under the trail row when it's showing, so the note doesn't cover the recent chips.
+          const trail = $("trail-bar");
+          const under = trail.hidden ? r.bottom : Math.max(r.bottom, trail.getBoundingClientRect().bottom);
+          x = r.left + 8; y = under + gap; arrow = "arrow-up";
+        }
+        else { x = r.right - w - 20; y = r.bottom - h - 20; arrow = ""; }
+        if (arrow) pop.classList.add(arrow);
+        pop.style.left = `${Math.max(pad, Math.min(innerWidth - w - pad, x))}px`;
+        pop.style.top = `${Math.max(pad, Math.min(innerHeight - h - pad, y))}px`;
+        gr.pops.push(pop);
+        pop.querySelector(".next").focus({ preventScroll: true });
+      }
+      document.addEventListener("click", (event) => {
+        const b = event.target.closest("[data-gr]");
+        if (!b) return;
+        if (b.dataset.gr === "next") nextGuided();
+        else if (b.dataset.gr === "back") backGuided();
+        else cancelGuided();
+      });
+      // Guide: only its buttons (or Enter / → / ← / Escape) move it; other clicks do nothing, so
+      // nothing hidden gets clicked by accident. Slow reveal: a click goes through and shows everything.
+      document.addEventListener("pointerdown", (event) => {
+        if (event.target.closest && event.target.closest(".gr-pop")) return;
+        if (gr.mode === "paced") { event.preventDefault(); event.stopPropagation(); gr.swallowClick = true; }
+        else if (gr.mode === "slow") finishGuided();
+      }, true);
+      document.addEventListener("click", (event) => {
+        if (!gr.swallowClick) return;
+        gr.swallowClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+      }, true);
+      document.addEventListener("keydown", (event) => {
+        if (gr.mode === "paced") {
+          if (event.key === "Enter" || event.key === "ArrowRight") { event.preventDefault(); event.stopPropagation(); nextGuided(); }
+          else if (event.key === "ArrowLeft") { event.preventDefault(); event.stopPropagation(); backGuided(); }
+          else if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancelGuided(); }
+        } else if (gr.mode === "slow") finishGuided();
+      }, true);
+      window.addEventListener("resize", () => { if (gr.mode === "paced") placeGuidedAgain(); });
+      function placeGuidedAgain() {
+        if (gr.i < 0) return;
+        clearGuidedPops();
+        showGuidedPop(GR_STEPS[gr.i], GR_STEPS[gr.i].el(), gr.i);
       }
 
       // Shows a concept, and optionally one of its connections and/or a paper, as given by the address.
@@ -4387,13 +4657,15 @@
           state.tab = paper != null || state.keepPapersTab ? "papers" : connection ? "connections" : connChanged ? "papers" : state.tab;
           state.keepPapersTab = false;
           renderCrumbs();
-          if (connChanged) { revealPanels(); renderLeft(false); }
+          if (gr.mode === "slow") finishGuided();
+          if (connChanged) { revealPanels(["right"]); renderLeft(false); }
           renderRight();
           updateOrbit();
           return;
         }
         const fromField = state.view !== "concept";
         state.view = "concept";
+        renderFilterBar();
         state.center = id;
         state.connection = connection;
         state.paper = paper;
@@ -4409,11 +4681,13 @@
         $("landing-view").hidden = true;
         const view = $("concept-view");
         view.hidden = false;
-        revealPanels();
+        if (guidedWanted()) startGuidedReveal();
+        else if (canAnimate()) startSlowReveal();
+        else revealPanels(fromField ? ["left", "orbit", "right"] : ["left", "right"]);
         renderCrumbs();
         fitOrbitViewBox(false);
         if (fromField) orbitSvg.call(orbitZoom.transform, d3.zoomIdentity);
-        renderLeft(!fromField);
+        renderLeft(false);
         renderRight();
         updateOrbit(fromField ? 750 : 650);
       }
@@ -4436,7 +4710,7 @@
         { title: "Recent trail", hash: "#/", show: ["where", "trail"], focus: "trail",
           text: "Concepts and connections you open collect here as chips, so you can jump back to them." },
         { title: "Filters", hash: "#/", show: ["where", "trail", "filters"], focus: "filters",
-          text: "Filters narrow what you see by type, years and paper count. They apply on every page." },
+          text: "These filters narrow the network by type, years and paper count. Each page keeps its own." },
         { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network",
           text: "Each star is a concept. Color is its type, size is how many papers study it, nearby stars are often studied together, and lines are shared papers." },
         { title: TOUR_TASK.label.replace(/^./, (c) => c.toUpperCase()), hash: conceptHash(TOUR_TASK.id), show: ["where", "trail", "left", "orbit"], focus: "orbit",
@@ -4445,19 +4719,38 @@
           { title: "A connection", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "trail", "left", "orbit", "right"], focus: "right", tab: "connections",
             text: `Click an orbiting concept to open the connection. ${cap(TOUR_PAIR.n.label)} shares ${plural(TOUR_PAIR.k, "paper")} with ${tourName}.` },
           { title: "The papers", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "left", "orbit", "right", "trail", "search", "help", "filterbar"], focus: "right", tab: "papers",
-            text: "These are the papers that study both. Open one to see its concepts and related papers. Replay this anytime from the ? button." }
-        ] : [])
+            text: "These are the papers that study both. Open one to see its summary and a link to the original." }
+        ] : []),
+        { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero"], focus: "ov-hero", scroll: "ov-hero", place: "below",
+          text: "The overview is a quick way in. \"Explore the network\" takes you back to the stars." },
+        { title: "What gets studied most?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks"], focus: "ov-landmarks", scroll: "ov-landmarks", place: "above",
+          text: "The most studied concepts of each type. Click any name to open its page." },
+        { title: "How has the field changed?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends"], focus: "ov-trends", scroll: "ov-trends", place: "above",
+          text: "Pick a range of years, then see which concepts are rising, falling or steady." },
+        { title: "Planning a study?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", place: "above",
+          text: `Start from what you know, like ${tourName}, and see what usually goes with it. Replay this tour anytime from the ? button.` }
       ];
       const tour = { on: false, i: 0 };
       const tourEl = (key) => document.querySelector(`[data-tour="${key}"]`);
       const TOUR_KEY = "atlas-walkthrough-done";
 
       function startTour() {
+        cancelGuided();
         tour.on = true;
         tour.i = 0;
         hideTip();
         document.body.classList.add("touring");
         showTourStep();
+      }
+      // After the last step: the top of the overview, with its sections fading in again as you scroll down.
+      function landOnOverview() {
+        if (state.view !== "landing") { navigate("#/overview"); return; }
+        state.landingSeen.clear();
+        $("landing-view").scrollTop = 0;
+        renderLanding();
+        // Let the freshly drawn (hidden) sections paint once before they start fading in.
+        if (revealObserver) revealObserver.disconnect();
+        requestAnimationFrame(() => requestAnimationFrame(watchReveals));
       }
       function endTour() {
         tour.on = false;
@@ -4472,11 +4765,27 @@
         const go = () => {
           if (step.tab && state.tab !== step.tab) document.querySelector(`#tabs [data-tab="${step.tab}"]`)?.click();
           renderTrail();
+          if (step.hash === "#/overview") {
+            // Overview sections normally fade in as you scroll; during the tour, show them right away.
+            document.querySelectorAll("#landing-view .reveal").forEach((sec) => {
+              if (step.show.includes(sec.dataset.tour)) { sec.classList.add("in", "seen"); state.landingSeen.add(sec.dataset.section); }
+            });
+            // Scroll the section into view; for "above", leave room over its heading for the popup.
+            const target = step.scroll && tourEl(step.scroll);
+            if (target) {
+              const lv = $("landing-view");
+              const room = step.place === "above" ? 240 : 24;
+              const top = lv.scrollTop + target.getBoundingClientRect().top - lv.getBoundingClientRect().top - room;
+              lv.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION ? "auto" : "smooth" });
+            }
+          }
           document.querySelectorAll("[data-tour]").forEach((el) => {
             el.classList.toggle("tour-on", step.show.includes(el.dataset.tour));
             el.classList.toggle("tour-focus", el.dataset.tour === step.focus);
           });
-          renderTourPop(step);
+          // Wait for a smooth scroll to settle before pointing at the section.
+          if (step.scroll && !REDUCED_MOTION) setTimeout(() => renderTourPop(step), 450);
+          else renderTourPop(step);
         };
         if (location.hash !== step.hash && !(step.hash === "#/" && !location.hash)) {
           navigate(step.hash);
@@ -4511,7 +4820,9 @@
         let x = (innerWidth - pw) / 2, y = (innerHeight - ph) / 2;
         if (el) {
           const r = el.getBoundingClientRect();
-          if (r.height < 80) { x = r.left; y = r.bottom + gap; }
+          if (step.place === "above") { x = r.left; y = r.top - ph - gap; }
+          else if (step.place === "below") { x = r.right - pw; y = r.bottom + gap; }
+          else if (r.height < 80) { x = r.left; y = r.bottom + gap; }
           else if (r.right + gap + pw < innerWidth - pad) { x = r.right + gap; y = r.top + 20; }
           else if (r.left - gap - pw > pad) { x = r.left - gap - pw; y = r.top + 20; }
           else { x = r.left + (r.width - pw) / 2; y = r.top + 70; }
@@ -4524,16 +4835,18 @@
         if (act === "skip") endTour();
         else if (act === "back" && tour.i > 0) { tour.i -= 1; showTourStep(); }
         else if (act === "next") {
-          if (tour.i >= TOUR_STEPS.length - 1) endTour();
+          if (tour.i >= TOUR_STEPS.length - 1) { endTour(); landOnOverview(); }
           else { tour.i += 1; showTourStep(); }
         }
       });
       window.addEventListener("resize", () => { if (tour.on) placeTourPop(TOUR_STEPS[tour.i]); });
       // First visit only, and only when arriving at the start (not from a shared link to a concept).
+      // ?tour=1 in the address always starts it (handy for showing it to someone, or after it's been seen).
       function maybeStartTour() {
         let done = false;
         try { done = localStorage.getItem(TOUR_KEY) === "1"; } catch {}
-        if (!done && /^(#\/?)?$/.test(location.hash)) setTimeout(startTour, 300);
+        const forced = new URLSearchParams(location.search).get("tour") === "1";
+        if (forced || (!done && /^(#\/?(overview)?)?$/.test(location.hash))) setTimeout(startTour, 300);
       }
 
       recomputeScope();
