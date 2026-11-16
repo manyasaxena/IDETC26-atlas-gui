@@ -1051,7 +1051,7 @@
       pointer-events: none;
     }
     #orbit text.nb-name { opacity: 0; transition: opacity 0.25s; }
-    #orbit text.nb-name.show { opacity: 1; }
+    #orbit text.nb-name.show { opacity: 1; pointer-events: auto; cursor: pointer; }
     #orbit text.center-name { font-weight: 600; font-size: 14px; }
     .orbit-legend {
       position: absolute;
@@ -1095,6 +1095,28 @@
       pointer-events: none;
     }
     .orbit-top > * { pointer-events: auto; }
+    .orbit-compare {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      z-index: 2;
+      background: rgba(17, 20, 31, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font: 12px var(--mono);
+      color: var(--muted);
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+    }
+    .orbit-compare:hover { color: var(--text); border-color: var(--line-strong); }
+    .orbit-compare[aria-pressed="true"] { color: var(--text); border-color: #fff; }
+    .compare-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .compare-tiles .stat-tile b { font-size: 20px; }
+    /* Concept page sections fading in one after another. */
+    .sec-anim { transition: opacity 0.8s ease, transform 0.8s ease !important; }
+    .sec-wait { opacity: 0 !important; transform: translateY(8px); }
+    @media (prefers-reduced-motion: reduce) { .sec-anim { transition: none !important; } }
     .btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .btn-row .btn { margin-top: 0; }
     .conn-side { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
@@ -1609,6 +1631,7 @@
             <div class="orbit-note" id="orbit-note" hidden></div>
           </div>
           <div class="orbit-empty" id="orbit-empty" hidden></div>
+          <button type="button" class="orbit-compare" id="orbit-compare" aria-pressed="false" title="Pick any two concepts around the center and see how often they're studied together">Compare two</button>
           <div class="orbit-legend" id="orbit-legend"></div>
         </div>
         <aside class="right bubble-panel" data-tour="right">
@@ -3233,7 +3256,99 @@
       const ringLabelG = orbitRoot.append("g");
       const orbitZoom = d3.zoom().scaleExtent([0.5, 5]).on("zoom", (event) => orbitRoot.attr("transform", event.transform));
       orbitSvg.call(orbitZoom).on("dblclick.zoom", null);
-      orbitSvg.on("click", () => { if (state.connection || state.paper != null) clearConnection(); });
+      orbitSvg.on("click", () => { if (!state.compareMode && (state.connection || state.paper != null)) clearConnection(); });
+
+      // ---------- Orbit clicks: open a connection, or pick concepts to compare ----------
+      // Compare mode: pick any two concepts around the center (they don't have to be linked to each other) and the
+      // right panel compares them. Not kept in the address; opening another concept ends it.
+      state.compareMode = false;
+      state.compare = [];
+      function pickOrbit(event, d) {
+        event.stopPropagation();
+        hideTip();
+        if (state.compareMode) toggleCompare(d.node.id);
+        else selectConnection(d.node.id);
+      }
+      function toggleCompare(id) {
+        const i = state.compare.indexOf(id);
+        if (i >= 0) state.compare.splice(i, 1);
+        else {
+          state.compare.push(id);
+          if (state.compare.length > 2) state.compare.shift();
+        }
+        state.connPapersShown = PAGE;
+        if (state.paper != null) { navigate(conceptHash(state.center)); return; }
+        renderRight();
+        styleOrbit();
+      }
+      function setCompareMode(on) {
+        // Starting from an open connection, its other concept is the first pick.
+        state.compare = on && state.connection ? [state.connection] : [];
+        state.compareMode = on;
+        state.connPapersShown = PAGE;
+        updateCompareUI();
+        if (state.connection || state.paper != null) navigate(conceptHash(state.center));
+        else { renderRight(); styleOrbit(); }
+      }
+      function updateCompareUI() {
+        const b = $("orbit-compare");
+        b.textContent = state.compareMode ? "Stop comparing" : "Compare two";
+        b.setAttribute("aria-pressed", String(state.compareMode));
+      }
+      $("orbit-compare").addEventListener("click", () => setCompareMode(!state.compareMode));
+
+      // Two concepts side by side: papers with each, papers with both, and whether the graph links them.
+      function renderCompare() {
+        const center = byId.get(state.center);
+        const [a, b] = state.compare.map((id) => byId.get(id));
+        const head = `<div class="panel-head"><h2>Compare</h2><button type="button" class="more-btn" data-action="compare-off">Done</button></div>`;
+        if (!b) {
+          return `${head}<div class="detail-card">
+              <p class="eyebrow" style="margin-top:0">Compare two concepts</p>
+              <p class="sentence">${a ? `${dot(a.type)}<strong>${esc(cap(a.label))}</strong> picked. Now pick a second concept` : "Pick two concepts"} around ${esc(cap(center.label))}.</p>
+              <p class="common-note">Click their dots or names in the orbit. They don't have to be linked to each other.</p>
+            </div>`;
+        }
+        const pa = papersOf(a), pb = papersOf(b);
+        const inB = new Set(pb.map((p) => p.paper_id));
+        const both = pa.filter((p) => inB.has(p.paper_id))
+          .sort((x, y) => y.year - x.year || paperTitle(x).localeCompare(paperTitle(y)));
+        const either = pa.length + pb.length - both.length;
+        const withCenter = both.filter((p) => (conceptsByPaper.get(p.paper_id) || []).includes(center.id)).length;
+        const link = linkByPair.get(pairKey(a.id, b.id));
+        const linked = link && !link.flagged
+          ? `<p class="common">They're linked in the graph: the relationship was extracted in ${plural(papersIn(link.papers).length, "paper")}.</p>
+             <div class="btn-row"><button type="button" class="btn" data-action="open-pair" data-ids="${esc(a.id)},${esc(b.id)}">Open as a connection →</button></div>`
+          : link
+            ? `<p class="common">Their link in the data is flagged and hidden. ${esc(FLAGGED_NOTE)}</p>`
+            : `<p class="common">They're not linked in the graph: no paper's extraction relates them to each other directly.</p>`;
+        const shown = both.slice(0, state.connPapersShown);
+        const range = rangeActive() ? ` between ${state.range[0]} and ${state.range[1]}` : "";
+        return `${head}
+          <div class="detail-card">
+            <p class="eyebrow" style="margin-top:0">Comparing</p>
+            <div class="pair">
+              <span class="nb" style="text-decoration-color:${colorOf(a.type)}">${esc(cap(a.label))}</span>
+              <span class="arrow">↔</span>
+              <span class="nb" style="text-decoration-color:${colorOf(b.type)}">${esc(cap(b.label))}</span>
+            </div>
+            <div class="compare-tiles">
+              <div class="stat-tile"><b>${pa.length}</b><span>with ${esc(a.label)}</span></div>
+              <div class="stat-tile"><b>${pb.length}</b><span>with ${esc(b.label)}</span></div>
+              <div class="stat-tile"><b>${both.length}</b><span>with both</span></div>
+            </div>
+            <p class="sentence">${both.length
+              ? `${plural(both.length, "paper")} include both${range}: ${pct(either ? both.length / either : 0)} of the ${plural(either, "paper")} with either. ${withCenter} of them also include ${esc(cap(center.label))}.`
+              : `No paper includes both${range}.`}</p>
+            ${linked}
+          </div>
+          ${both.length ? `
+          <p class="eyebrow" style="margin-top:20px">When they met <span style="text-transform:none;letter-spacing:0">· each dot is a paper with both</span></p>
+          <div class="met">${metTimeline(both, colorOf(b.type))}</div>
+          <p class="eyebrow" style="margin-top:20px">Papers with both (${both.length})</p>
+          <div class="rows">${shown.map((p) => paperRow(p, false, false)).join("")}</div>
+          ${both.length > shown.length ? `<button type="button" class="load-more" data-action="more-conn-papers">Load more · ${both.length - shown.length} remaining</button>` : ""}` : ""}`;
+      }
 
       ringG.selectAll("circle").data(RINGS).join("circle").attr("class", "ring").attr("r", (r) => r);
       ringLabelG.selectAll("text").data(RINGS).join("text")
@@ -3499,7 +3614,7 @@
               styleOrbit();
               highlightRow(d.node.id, true);
               const range = rangeActive() ? ` in ${rangeText()}` : "";
-              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · click to see the connection`), event, $("orbit-wrap"));
+              showTip(conceptTip(d.node, `${plural(d.shared, "shared paper")}${range} · ${pct(d.j)} overlap<br/>${RING_NAMES[d.ring]} · ${state.compareMode ? "click to compare" : "click to see the connection"}`), event, $("orbit-wrap"));
             })
               .on("mousemove", moveTip)
               .on("mouseleave", (event, d) => {
@@ -3508,11 +3623,7 @@
                 highlightRow(d.node.id, false);
                 hideTip();
               })
-              .on("click", (event, d) => {
-                event.stopPropagation();
-                hideTip();
-                selectConnection(d.node.id);
-              });
+              .on("click", pickOrbit);
             return g;
           },
           (update) => update,
@@ -3525,7 +3636,11 @@
           .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
         labelG.selectAll("text.nb-name").data(shown, key).join(
-          (enter) => enter.append("text").attr("class", "name nb-name").attr("transform", "translate(0,0)"),
+          // Names are clickable too (same as the dot), so a click on a label doesn't fall through and close the connection.
+          (enter) => enter.append("text").attr("class", "name nb-name").attr("transform", "translate(0,0)")
+            .on("click", pickOrbit)
+            .on("mouseenter", (event, d) => { state.hover = d.node.id; styleOrbit(); highlightRow(d.node.id, true); })
+            .on("mouseleave", (event, d) => { state.hover = null; styleOrbit(); highlightRow(d.node.id, false); }),
           (update) => update,
           (exit) => exit.remove()
         )
@@ -3555,23 +3670,32 @@
       function styleOrbit() {
         const { center, inPaper } = orbit;
         if (!center) return;
-        const sel = state.connection, hov = state.hover;
+        // Selected: the open connection, or the concepts picked for comparing.
+        const picked = state.compareMode ? state.compare.slice() : state.connection ? [state.connection] : [];
+        const isSel = (id) => picked.includes(id);
+        const hov = state.hover;
         const faded = (id) => !!inPaper && !inPaper.has(id);
 
         spokeG.selectAll("line.spoke")
-          .classed("sel", (d) => d.node.id === sel)
-          .classed("faded", (d) => d.node.id !== sel && faded(d.node.id))
+          .classed("sel", (d) => isSel(d.node.id))
+          .classed("faded", (d) => !isSel(d.node.id) && faded(d.node.id))
           .classed("lit", (d) => !!inPaper && !faded(d.node.id))
-          .style("stroke", (d) => (d.node.id === sel ? colorOf(d.node.type) : null));
+          .style("stroke", (d) => (isSel(d.node.id) ? colorOf(d.node.type) : null));
         orbitNodeG.selectAll("g.onode")
           .classed("faded", (d) => faded(d.node.id))
-          .classed("sel", (d) => d.node.id === sel)
+          .classed("sel", (d) => isSel(d.node.id))
           .classed("hov", (d) => d.node.id === hov);
         labelG.selectAll("text.nb-name")
-          .classed("show", (d) => !faded(d.node.id) && (d.lab.placed || d.node.id === hov || d.node.id === sel));
+          .classed("show", (d) => !faded(d.node.id) && (d.lab.placed || d.node.id === hov || isSel(d.node.id)));
         centerG.classed("faded", faded(center.id));
 
-        orbitNodeG.selectAll("g.onode").filter((d) => d.node.id === hov || d.node.id === sel).raise();
+        // Selected, then hovered, on top. Only moved when they aren't already the last ones: moving the hovered node
+        // makes the browser re-fire its hover events, which used to loop and swallow clicks on other nodes.
+        const onTop = [...picked, hov].filter((id, i, a) => id && a.indexOf(id) === i)
+          .map((id) => orbitNodeG.selectAll("g.onode").filter((d) => d.node.id === id).node()).filter(Boolean);
+        const parent = orbitNodeG.node();
+        const tail = [...parent.children].slice(-onTop.length);
+        if (onTop.length && onTop.some((el, i) => tail[i] !== el)) onTop.forEach((el) => parent.appendChild(el));
         labelG.selectAll("text.nb-name").filter((d) => d.node.id === hov).raise();
 
         const paper = currentPaper();
@@ -3579,6 +3703,11 @@
         if (paper) {
           const count = conceptIdsOfPaper(paper).length;
           note.textContent = `Highlighting the ${plural(count, "concept")} in “${paperTitle(paper)}”`;
+          note.hidden = false;
+        } else if (state.compareMode) {
+          note.textContent = state.compare.length < 2
+            ? `Comparing: click ${state.compare.length ? "one more concept" : "two concepts"} around ${cap(center.label)}`
+            : "Comparing: click a concept to swap it in, or a picked one to drop it";
           note.hidden = false;
         } else {
           note.hidden = true;
@@ -4103,9 +4232,10 @@
         updateTabs();
         const body = $("right-body");
         const scroll = body.scrollTop;
-        const html = state.tab === "papers"
-          ? state.paper != null ? renderPaperDetail() : renderPapersList()
-          : state.connection ? renderConnectionDetail() : renderConnectionsList();
+        const html = state.compareMode && state.paper == null ? renderCompare()
+          : state.tab === "papers"
+            ? state.paper != null ? renderPaperDetail() : renderPapersList()
+            : state.connection ? renderConnectionDetail() : renderConnectionsList();
         body.innerHTML = `<div class="pane ${keepScroll ? "" : "swap"}">${html}</div>`;
         body.scrollTop = keepScroll ? scroll : 0;
         appendFrom = null;
@@ -4119,7 +4249,8 @@
 
       $("tabs").addEventListener("click", (event) => {
         const tab = event.target.closest("[data-tab]");
-        if (!tab || tab.dataset.tab === state.tab) return;
+        if (!tab || (tab.dataset.tab === state.tab && !state.compareMode)) return;
+        if (state.compareMode) { state.compareMode = false; state.compare = []; updateCompareUI(); }
         state.tab = tab.dataset.tab;
         renderRight();
         updateOrbit();
@@ -4155,6 +4286,17 @@
           case "open-concept":
             openConcept(id);
             break;
+          case "compare-off":
+            setCompareMode(false);
+            break;
+          case "open-pair": {
+            const [a, b] = el.dataset.ids.split(",");
+            state.compareMode = false;
+            state.compare = [];
+            updateCompareUI();
+            navigate(conceptHash(a, b));
+            break;
+          }
           case "more-papers":
             appendFrom = state.papersShown;
             state.papersShown += PAGE;
@@ -4570,13 +4712,49 @@
         if (gr.mode === "paced" && gr.i > 0) revealGuidedStep(gr.i - 1);
       }
 
-      // Every other time: the parts fade in one after another by themselves.
+      // Every other time: the page builds up section by section by itself: each card of the left sidebar, then the
+      // orbit, then the tabs and each section of the right sidebar, then the top bar. A click or key shows it all.
+      const SEC_GAP = 380;      // gap between sections
+      const SEC_GAP_FAST = 220; // when only the right sidebar changes (another connection, a paper)
+      function revealUnits() {
+        const units = [];
+        paneSections($("left")).forEach((el) => units.push({ part: 0, el }));
+        units.push({ part: 1, el: null });
+        [$("tabs"), ...rightSections()].forEach((el) => units.push({ part: 2, el }));
+        units.push({ part: 3, el: null });
+        return units;
+      }
+      // Each sidebar's content sits in one .pane wrapper; its children are the sections.
+      const paneSections = (box) => [...(box.querySelector(":scope > .pane")?.children || box.children)];
+      const rightSections = () => paneSections($("right-body"));
       function startSlowReveal() {
         cancelGuided();
         gr.mode = "slow";
         hideAllParts();
-        GR_STEPS.forEach((_, i) => gr.timers.push(setTimeout(() => showPart(i), 120 + i * SLOW_PAUSE)));
-        gr.timers.push(setTimeout(() => { gr.mode = null; }, 120 + (GR_STEPS.length - 1) * SLOW_PAUSE + 60));
+        // Sections are collected once the page has rendered (showConcept renders right after this call).
+        gr.timers.push(setTimeout(() => {
+          const units = revealUnits();
+          units.forEach((u) => u.el && u.el.classList.add("sec-anim", "sec-wait"));
+          const shown = new Set();
+          units.forEach((u, k) => gr.timers.push(setTimeout(() => {
+            if (!shown.has(u.part)) { shown.add(u.part); showPart(u.part); }
+            if (u.el) u.el.classList.remove("sec-wait");
+          }, k * SEC_GAP)));
+          gr.timers.push(setTimeout(() => { gr.mode = null; clearSections(); }, units.length * SEC_GAP + 900));
+        }, 120));
+      }
+      // Only the right sidebar changed: its sections fade in one after another, a little faster.
+      function staggerRight() {
+        if (!canAnimate()) return;
+        cancelGuided();
+        gr.mode = "slow";
+        const els = rightSections();
+        els.forEach((el) => el.classList.add("sec-anim", "sec-wait"));
+        els.forEach((el, i) => gr.timers.push(setTimeout(() => el.classList.remove("sec-wait"), 60 + i * SEC_GAP_FAST)));
+        gr.timers.push(setTimeout(() => { gr.mode = null; clearSections(); }, 60 + els.length * SEC_GAP_FAST + 900));
+      }
+      function clearSections() {
+        document.querySelectorAll(".sec-wait, .sec-anim").forEach((el) => el.classList.remove("sec-wait", "sec-anim"));
       }
 
       // Shows everything now and removes any note.
@@ -4585,6 +4763,7 @@
         gr.timers = [];
         gr.mode = null;
         guidedTargets().forEach((el) => el.classList.remove("gr-hide"));
+        clearSections();
       }
       function clearGuidedPops() {
         gr.pops.forEach((pop) => { pop.classList.add("out"); setTimeout(() => pop.remove(), 380); });
@@ -4666,6 +4845,8 @@
         if (state.view === "concept" && state.center === id) {
           const connChanged = connection !== state.connection;
           const prevPaper = state.paper;
+          // Arriving at a connection (e.g. with Back) ends comparing.
+          if (connection && state.compareMode) { state.compareMode = false; state.compare = []; updateCompareUI(); }
           if (connChanged || paper == null) state.paperTrail = [];
           else if (prevPaper != null && paper !== prevPaper) {
             // Going back to the paper we came from pops the trail; opening a new one pushes the current paper.
@@ -4679,8 +4860,13 @@
           state.keepPapersTab = false;
           renderCrumbs();
           if (gr.mode === "slow") finishGuided();
-          if (connChanged) { revealPanels(["right"]); renderLeft(false); }
+          if (connChanged) renderLeft(false);
           renderRight();
+          // The right sidebar's sections fade in one by one (a quick panel fade while the walkthrough runs).
+          if (connChanged || paper !== prevPaper) {
+            if (canAnimate()) staggerRight();
+            else if (connChanged) revealPanels(["right"]);
+          }
           updateOrbit();
           return;
         }
@@ -4688,6 +4874,9 @@
         state.view = "concept";
         renderFilterBar();
         state.center = id;
+        state.compareMode = false;
+        state.compare = [];
+        updateCompareUI();
         state.connection = connection;
         state.paper = paper;
         state.tab = paper != null || !connection ? "papers" : "connections";
@@ -4714,7 +4903,7 @@
       }
 
       // ---------- Walkthrough ----------
-      // One example throughout: planning a study, starting from concept generation.
+      // A tour of what the Atlas is and what each part shows, using one example concept (concept generation).
       const TOUR_TASK = byId.get("6600") || nodes.filter((n) => n.type === "task").sort((a, b) => b.paperCount - a.paperCount)[0];
       const TOUR_PAIR = (() => {
         const best = (adjacency.get(TOUR_TASK.id) || []).map(({ id, link }) => ({ n: byId.get(id), k: link.shared }))
@@ -4724,32 +4913,32 @@
       // "concept generation task" reads as "concept generation" in a sentence.
       const tourName = TOUR_TASK.label.replace(/ task$/i, "");
       const TOUR_STEPS = [
-        { title: "Welcome to the Atlas", hash: "#/", show: [], focus: null,
-          text: `You're planning a study and need a task. Let's see what's commonly used with ${tourName}.` },
+        { title: "Welcome to the Design Engineering Atlas", hash: "#/", show: [], focus: null,
+          text: `The Atlas maps ${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, ${Y0}–${Y1}. For each paper it records who was studied, what they did, what they were designing, and what thinking the study looked at.` },
         { title: "Where am I", hash: "#/", show: ["where"], focus: "where",
-          text: "This bar shows where you are. Lit levels take you back; dim ones are deeper levels still ahead." },
+          text: "This bar shows where you are, from the overview down to a single paper. Lit levels take you back; dim ones are deeper levels still ahead." },
         { title: "Recent trail", hash: "#/", show: ["where", "trail"], focus: "trail",
           text: "Concepts and connections you open collect here as chips, so you can jump back to them." },
         { title: "Filters", hash: "#/", show: ["where", "trail", "filters"], focus: "filters",
-          text: "These filters narrow the network by type, years and paper count. Each page keeps its own." },
+          text: "Filters narrow what you see by concept type, years and how many papers a concept appears in. Each page keeps its own." },
         { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network",
-          text: "Each star is a concept. Color is its type, size is how many papers study it, nearby stars are often studied together, and lines are shared papers." },
+          text: "Each star is a concept drawn from the papers: a subject, task, problem or construct. Color shows its type and size how many papers include it. Concepts studied together sit closer, and lines connect concepts the papers relate to each other." },
         { title: TOUR_TASK.label.replace(/^./, (c) => c.toUpperCase()), hash: conceptHash(TOUR_TASK.id), show: ["where", "trail", "left", "orbit"], focus: "orbit",
-          text: "This is its concept page. The concepts studied most often with it orbit around it, closest ring first." },
+          text: `Every concept has its own page; this one is ${tourName}. On the left: what it is and how often it's been studied over time. Around it: the concepts studied with it most, closest ring first.` },
         ...(TOUR_PAIR ? [
           { title: "A connection", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "trail", "left", "orbit", "right"], focus: "right", tab: "connections",
-            text: `Click an orbiting concept to open the connection. ${cap(TOUR_PAIR.n.label)} shares ${plural(TOUR_PAIR.k, "paper")} with ${tourName}.` },
+            text: `Click a concept in the orbit to see how it relates to the center. Here, ${TOUR_PAIR.n.label} and ${tourName} come up together in ${plural(TOUR_PAIR.k, "paper")}. "Compare two" lets you set any two concepts side by side.` },
           { title: "The papers", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "left", "orbit", "right", "trail", "search", "help", "filterbar"], focus: "right", tab: "papers",
-            text: "These are the papers that study both. Open one to see its summary and a link to the original." }
+            text: "These are the papers behind the connection. Open one to see a short summary and a link to the original paper." }
         ] : []),
         { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero"], focus: "ov-hero", scroll: "ov-hero", place: "below",
-          text: "The overview is a quick way in. \"Explore the network\" takes you back to the stars." },
+          text: "The overview sums up the whole Atlas on one page. \"Explore the network\" takes you back to the stars." },
         { title: "What gets studied most?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks"], focus: "ov-landmarks", scroll: "ov-landmarks", place: "above",
-          text: "The most studied concepts of each type. Click any name to open its page." },
+          text: "The most studied concepts of each type, by number of papers. Click any name to open its page." },
         { title: "How has the field changed?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends"], focus: "ov-trends", scroll: "ov-trends", place: "above",
-          text: "Pick a range of years, then see which concepts are rising, falling or steady." },
-        { title: "Planning a study?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", place: "above",
-          text: `Start from what you know, like ${tourName}, and see what usually goes with it. Replay this tour anytime from the ? button.` }
+          text: "Which concepts are rising, falling or holding steady: each one's share of papers in the earlier half of the years you pick, compared with the later half." },
+        { title: "What goes together?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", place: "above",
+          text: "Pick any concept to see what's most often studied alongside it, or what rarely is. Replay this tour anytime from the ? button." }
       ];
       const tour = { on: false, i: 0 };
       const tourEl = (key) => document.querySelector(`[data-tour="${key}"]`);
