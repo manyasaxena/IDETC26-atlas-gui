@@ -6,7 +6,7 @@
       "label": "Subject",
       "plural": "Subjects",
       "color": "#4fc3f7",
-      "definition": "Agents whose behavior the study was designed to observe.",
+      "definition": "A subject is any agent (human, AI, or machine) whose behavior in performing the task the study was designed to observe.",
       "hint": "Who or what was studied.",
       "summary": "study {list}"
     },
@@ -15,7 +15,7 @@
       "label": "Task",
       "plural": "Tasks",
       "color": "#81c784",
-      "definition": "Activities the subject performs that the study observes.",
+      "definition": "A task is an activity with a definable input and output that the study exists, at least in part, to watch happen; it is what subjects do, not what researchers do with the results.",
       "hint": "What the subjects did.",
       "summary": "involve {list}"
     },
@@ -24,8 +24,8 @@
       "label": "Problem",
       "plural": "Problems",
       "color": "#ffb74d",
-      "definition": "Design briefs or prompts given to the subject.",
-      "hint": "What they were asked to design.",
+      "definition": "A problem is the concrete brief or prompt given to subjects to work on, the thing they are asked to design or solve, distinct from the activities they perform in response to it.",
+      "hint": "What they were asked to design or solve.",
       "summary": "work on {list} design problem{s}"
     },
     {
@@ -33,8 +33,8 @@
       "label": "Construct",
       "plural": "Constructs",
       "color": "#ce93d8",
-      "definition": "Cognitive or psychological phenomena the study illuminates.",
-      "hint": "The thinking the study measured.",
+      "definition": "A construct is a mental process or psychological state occurring within the subject that would exist as a meaningful phenomenon in cognitive psychology independent of any design context; for non-human subjects, constructs are a functional analogy.",
+      "hint": "The mental process or state the study looked at.",
       "summary": "also measure {list}"
     }
   ],
