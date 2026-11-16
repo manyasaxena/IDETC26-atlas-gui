@@ -1557,7 +1557,7 @@
 
     .error { padding: 24px; color: #ff8a80; font: 13px var(--mono); line-height: 1.6; }
 
-    /* Segmented switch (2D / 3D) */
+    /* Segmented switch */
     .seg {
       display: inline-flex;
       gap: 2px;
@@ -1615,10 +1615,6 @@
           <span class="vc-label">View</span>
           <button type="button" class="vc-btn" id="net-spin" hidden>Pause rotation</button>
           <button type="button" class="vc-btn" id="net-reset" hidden>Reset view</button>
-          <div class="seg" role="group" aria-label="2D or 3D">
-            <button type="button" data-dim="3d">3D</button>
-            <button type="button" data-dim="2d">2D</button>
-          </div>
         </div>
         </div>
       </section>
@@ -2076,7 +2072,7 @@
           + (paper != null ? `/paper/${paper}` : "");
       }
       const openConcept = (id) => navigate(conceptHash(id));
-      // Home is the full network (3D stars, or 2D); the landmarks overview lives at #/overview.
+      // Home is the full 3D network; the landmarks overview lives at #/overview.
       const goHome = () => navigate("#/");
       const goField = goHome;
       const goOverview = () => navigate("#/overview");
@@ -2288,6 +2284,8 @@
       window.addEventListener("resize", resizeField);
 
       function showField() {
+        // Coming back from a concept, connection or the overview: the 3D view flies back out to the full, zoomed-out network.
+        const fromElsewhere = state.view !== "field";
         state.view = "field";
         state.center = null;
         hideTip();
@@ -2299,7 +2297,7 @@
         renderCrumbs();
         resizeField();
         updateField();
-        setNetDim(net.dim);
+        setNetDim(net.dim).then(() => { if (fromElsewhere && net.dim === "3d" && net.scene && net.reset) net.reset(); });
       }
 
       // ---------- Full network in 3D ----------
@@ -2307,7 +2305,8 @@
       // toward the ones whose papers they share the biggest share of, and pushed away from everything else.
       // Concepts with no links sit evenly on an outer shell.
       const net = {
-        dim: (() => { try { return localStorage.getItem("atlas-net-dim") === "2d" ? "2d" : "3d"; } catch { return "3d"; } })(),
+        // Always 3D. The flat 2D graph is only a fallback for browsers where 3D can't start (no WebGL).
+        dim: "3d",
         scene: null,
         loading: null
       };
@@ -2683,11 +2682,9 @@
           <div class="how">Drag to rotate · scroll to zoom toward the pointer · right-drag to pan · click a star to fly in</div>`;
       }
 
-      // Switches the full network between the 3D space and the original 2D graph.
+      // Shows the full network in 3D (or the flat 2D graph, only if 3D can't start).
       async function setNetDim(dim) {
         net.dim = dim;
-        try { localStorage.setItem("atlas-net-dim", dim); } catch { /* preference only */ }
-        document.querySelectorAll("#net-tools [data-dim]").forEach((b) => b.classList.toggle("on", b.dataset.dim === dim));
         const is3d = dim === "3d";
         $("field").style.display = is3d ? "none" : "";
         $("field-legend").hidden = is3d;
@@ -2705,7 +2702,7 @@
             note.hidden = true;
           } catch (error) {
             console.error(error);
-            note.textContent = `${error.message || "3D couldn't start."} Showing the 2D view.`;
+            note.textContent = `${error.message || "3D couldn't start in this browser."} Showing a flat view instead.`;
             setTimeout(() => { note.hidden = true; }, 6000);
             net.loading = null;
             setNetDim("2d");
@@ -2718,10 +2715,6 @@
           requestAnimationFrame(netTick);
         }
       }
-      $("net-tools").addEventListener("click", (event) => {
-        const b = event.target.closest("[data-dim]");
-        if (b) setNetDim(b.dataset.dim);
-      });
       $("net-reset").addEventListener("click", () => net.reset && net.reset());
       $("net-overview").addEventListener("click", goOverview);
       $("net-spin").addEventListener("click", () => setSpin(!net.controls?.autoRotate));
