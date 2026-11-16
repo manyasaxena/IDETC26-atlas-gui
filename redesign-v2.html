@@ -1700,7 +1700,8 @@
         description: (n.description || "").trim(),
         papers: n.papers || [],
         paperCount: (n.papers || []).length,
-        firstYear: Number(n.first_year) || null
+        firstYear: Number(n.first_year) || null,
+        placeholder: n.is_placeholder === true
       }));
       const byId = new Map(nodes.map((n) => [n.id, n]));
 
@@ -1797,18 +1798,28 @@
       });
       conceptsByPaper.forEach((ids) => ids.sort((a, b) => typeRank(byId.get(a).type) - typeRank(byId.get(b).type) || byId.get(a).label.localeCompare(byId.get(b).label)));
 
-      // Some node pairs appear more than once in the edge list; their paper lists are identical, so keep one.
-      // An edge's papers are exactly the papers its two concepts share, so shared counts come from that list.
+      // An edge's papers are the papers in which that relationship was extracted (what its weight counts).
+      // A few node pairs appear more than once, under different edge types; their papers are merged into one link.
       const linkByPair = new Map();
       const pairKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
       raw.edges.forEach((e) => {
         const a = String(e.source), b = String(e.target);
         if (!byId.has(a) || !byId.has(b)) return;
         const key = pairKey(a, b);
-        if (linkByPair.has(key)) return;
-        linkByPair.set(key, { a, b, papers: e.papers || [], shared: (e.papers || []).length });
+        const link = linkByPair.get(key) || { a, b, papers: [], shared: 0, flagged: byId.get(a).type === byId.get(b).type };
+        const have = new Set(link.papers.map((p) => p.paper_id));
+        (e.papers || []).forEach((p) => { if (!have.has(p.paper_id)) { have.add(p.paper_id); link.papers.push(p); } });
+        link.shared = link.papers.length;
+        linkByPair.set(key, link);
       });
-      const links = [...linkByPair.values()];
+      // Links are meant to join two different types. The data's same-type links (two constructs, or two tasks) came
+      // from an extraction error, so they're flagged and left out of the network, the concept lists and the planner.
+      // They stay reachable by a direct connection URL, with a warning. Set to true to show them everywhere again.
+      const SHOW_FLAGGED_LINKS = false;
+      const flaggedLinks = [...linkByPair.values()].filter((l) => l.flagged);
+      const links = [...linkByPair.values()].filter((l) => SHOW_FLAGGED_LINKS || !l.flagged);
+      const hiddenFlagged = (id) => (SHOW_FLAGGED_LINKS ? 0 : flaggedLinks.filter((l) => l.a === id || l.b === id).length);
+      const FLAGGED_NOTE = "Links between two concepts of the same type are hidden: the extraction should only link different types, and these came from an error in it.";
       const adjacency = new Map();
       links.forEach((l) => {
         if (!adjacency.has(l.a)) adjacency.set(l.a, []);
@@ -2698,10 +2709,15 @@
       const TREND_MORE = 6;
       const TREND_MIN_PAPERS = 6;
       const TREND_MIN_SPAN = 3;
-      // Placeholder concepts from the extraction (not real concepts); hidden from the overview lists for now.
+      // Placeholder concepts from the extraction (marked is_placeholder in the data), not real concepts. The paper
+      // leaves them out of its links and figures, so they're hidden from the overview lists and the planner too.
+      // The label list is a fallback for data without the flag.
       const PLACEHOLDER_LABELS = new Set(["no design object", "multi-phase design process"]);
-      const isPlaceholder = (n) => PLACEHOLDER_LABELS.has(n.label.toLowerCase());
+      const isPlaceholder = (n) => n.placeholder || PLACEHOLDER_LABELS.has(n.label.toLowerCase());
       const placeholders = nodes.filter(isPlaceholder);
+      const placeholderNote = () => (placeholders.length
+        ? `<p class="land-note">Not shown: ${listJoin(placeholders.map((n) => `“${esc(n.label)}”`))}. These are placeholders from the extraction, not real concepts, and the paper leaves them out too.</p>`
+        : "");
       const overviewOn = (n) => conceptOn(n) && !isPlaceholder(n) && !state.pins.includes(n.id);
 
       const lc = (type) => colorOf(type);
@@ -2825,7 +2841,9 @@
           const n = papersOf(center).length;
           return `<p class="plan-hint">${esc(cap(center.label))} isn't linked to anything ${state.planRare ? "rare " : ""}in the data yet${n <= 1 ? " (it's in only one paper)" : ""}. Try another, or switch to ${state.planRare ? "Most common" : "Less common"}.</p>`;
         }
-        const note = sameTypeLinked(center.type) ? "" : `<p class="land-note">Other ${esc(typeOf(center.type).plural.toLowerCase())} aren't linked to each other in this data.</p>`;
+        const note = sameTypeLinked(center.type) ? "" : hiddenFlagged(center.id)
+          ? `<p class="land-note">Other ${esc(typeOf(center.type).plural.toLowerCase())} aren't shown. ${esc(FLAGGED_NOTE)}</p>`
+          : `<p class="land-note">Other ${esc(typeOf(center.type).plural.toLowerCase())} aren't linked to each other in this data.</p>`;
         return `<div class="plan-grid">${groups.map(({ t, items, base }) => {
           const title = t === center.type ? `Other ${typeOf(t).plural.toLowerCase()}` : typeOf(t).plural;
           const rows = items.map((d) => `<button type="button" class="lm-row" data-pair="${esc(center.id)}|${esc(d.n.id)}" title="See the papers that combine both">
@@ -2925,7 +2943,7 @@
             <h2>What gets studied most?</h2>
             <p class="sub">Bars show how many papers study each concept.${scopeActive() ? ` Counting the ${inView} papers that match your filters.` : ""}</p>
             <div class="type-grid">${typeCards}</div>
-            ${placeholders.length ? `<p class="land-note">Hidden for now: ${listJoin(placeholders.map((n) => `“${esc(n.label)}”`))}, which are placeholders, not real concepts.</p>` : ""}`)}
+            ${placeholderNote()}`)}
 
           ${section("trends", `
             <h2>How has the field changed?</h2>
@@ -2983,7 +3001,8 @@
                 <p class="plan-hint" id="plan-hint"></p>
               </div>
             </div>
-            <div id="plan-body"></div>`)}
+            <div id="plan-body"></div>
+            ${placeholderNote()}`)}
         </div>
 `;
         refreshTrends();
@@ -3839,6 +3858,7 @@
                 </span>
               </div>`).join("") || `<div class="empty-note">No connections${scopeActive() ? " that match your filters" : ""} of the selected types.</div>`}
           </div>
+          ${hiddenFlagged(state.center) ? `<p class="fp-hint flag-note">${plural(hiddenFlagged(state.center), "link")} to other ${esc(typeOf(byId.get(state.center).type).plural.toLowerCase())} not shown. ${esc(FLAGGED_NOTE)}</p>` : ""}
           ${gapsListHtml()}`;
       }
 
@@ -3885,6 +3905,7 @@
               <span class="nb" style="text-decoration-color:${colorOf(neighbor.type)}">${esc(cap(neighbor.label))}</span>
             </div>
             ${badge(neighbor.type)}
+            ${link.flagged ? `<div class="gap-box flag-box"><strong>Flagged link</strong><p>Both concepts are ${esc(typeOf(center.type).plural.toLowerCase())}. ${esc(FLAGGED_NOTE)} It's hidden everywhere else in the Atlas.</p></div>` : ""}
             ${n
               ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>
                  ${strengthHtml(n)}
@@ -4046,7 +4067,7 @@
 
           <div class="detail-card" style="margin-top:18px">
             <p class="eyebrow" style="margin-top:0">Summary</p>
-            ${info?.summary ? `<p class="paper-summary">${esc(info.summary)}</p>` : `<p class="placeholder">No summary yet: this paper's PDF isn't in the corpus.</p>`}
+            ${info?.summary ? `<p class="paper-summary">${esc(info.summary)}</p>` : `<p class="placeholder">No summary yet for this paper.</p>`}
             ${info?.doi
               ? `<a class="btn" href="https://doi.org/${encodeURI(info.doi)}" target="_blank" rel="noopener noreferrer" title="DOI ${esc(info.doi)}">Original paper ↗</a>
                  <p class="doi-note">DOI ${esc(info.doi)}</p>`

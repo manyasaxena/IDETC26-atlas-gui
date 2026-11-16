@@ -23,12 +23,12 @@ The graph was extracted from 36 years of ASME Design Theory and Methodology (DTM
 
 ## Node types
 
-| Color | Type | Count | Definition |
+| Color | Type | Count | Definition (the paper's working definitions) |
 |---|---|---|---|
-| Blue | Subjects | 12 | Agents whose behavior the study was designed to observe |
-| Green | Tasks | 70 | Activities the subject performs that the study observes |
-| Amber | Problems | 80 | Design briefs or prompts given to the subject |
-| Purple | Cognitive Constructs | 66 | Cognitive or psychological phenomena the study illuminates |
+| Blue | Subjects | 12 | Any agent (human, AI, or machine) whose behavior in performing the task the study was designed to observe |
+| Green | Tasks | 70 | An activity with a definable input and output that the study exists, at least in part, to watch happen; what subjects do, not what researchers do with the results |
+| Amber | Problems | 80 | The concrete brief or prompt given to subjects to work on, the thing they are asked to design or solve |
+| Purple | Cognitive Constructs | 66 | A mental process or psychological state occurring within the subject that would exist as a meaningful phenomenon in cognitive psychology independent of any design context |
 
 ---
 
