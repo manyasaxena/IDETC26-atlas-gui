@@ -5184,7 +5184,7 @@
             const target = step.scroll && tourEl(step.scroll);
             if (target) {
               const lv = $("landing-view");
-              const room = step.sides?.[0] === "above" ? 280 : 24;
+              const room = step.sides?.[0] === "above" ? 320 : 24;
               const top = lv.scrollTop + target.getBoundingClientRect().top - lv.getBoundingClientRect().top - room;
               lv.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION ? "auto" : "smooth" });
             }
