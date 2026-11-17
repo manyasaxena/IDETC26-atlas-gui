@@ -2056,6 +2056,24 @@
       }
       function hideTip() { tooltip.hidden = true; }
 
+      // Short notes on hover or keyboard focus for anything marked data-note.
+      function showNote(el) {
+        showTip(`<p class="tt-def" style="margin:0">${esc(el.dataset.note)}</p>`, { clientX: 0, clientY: 0 }, document.body);
+        // Right above the element (below it if there's no room), lined up with its right edge, so it never
+        // covers the element or the buttons beside it.
+        const r = el.getBoundingClientRect(), t = tooltip.getBoundingClientRect(), gap = 8;
+        const y = r.top - t.height - gap >= 10 ? r.top - t.height - gap : r.bottom + gap;
+        tooltip.style.left = `${Math.max(10, Math.min(innerWidth - t.width - 10, r.right - t.width))}px`;
+        tooltip.style.top = `${y}px`;
+      }
+      document.addEventListener("mouseover", (event) => { const el = event.target.closest?.("[data-note]"); if (el) showNote(el); });
+      document.addEventListener("focusin", (event) => { const el = event.target.closest?.("[data-note]"); if (el) showNote(el); });
+      document.addEventListener("mouseout", (event) => {
+        const el = event.target.closest?.("[data-note]");
+        if (el && !el.contains(event.relatedTarget)) hideTip();
+      });
+      document.addEventListener("focusout", (event) => { if (event.target.closest?.("[data-note]")) hideTip(); });
+
       function conceptTip(n, extra) {
         const def = n.description
           ? `<p class="tt-def">${esc(trunc(n.description, 240))}</p>`
@@ -4169,6 +4187,10 @@
         return `Shares ${plural(shared.length, "concept")} with this paper: ${listJoin(listed)}.`;
       }
 
+      // A Google Scholar search for the paper's exact title, to find free copies or later journal versions.
+      const scholarUrl = (title) => `https://scholar.google.com/scholar?q=${encodeURIComponent(`"${title}"`)}`;
+      const VERSIONS_NOTE = "IDETC papers may need a subscription. A free copy or a later journal version (e.g. in the Journal of Mechanical Design) may be available.";
+
       function renderPaperDetail() {
         const paper = currentPaper();
         const info = detailOf(paper);
@@ -4194,10 +4216,14 @@
           <div class="detail-card" style="margin-top:18px">
             <p class="eyebrow" style="margin-top:0">Summary</p>
             ${info?.summary ? `<p class="paper-summary">${esc(info.summary)}</p>` : `<p class="placeholder">No summary yet for this paper.</p>`}
-            ${info?.doi
-              ? `<a class="btn" href="https://doi.org/${encodeURI(info.doi)}" target="_blank" rel="noopener noreferrer" title="DOI ${esc(info.doi)}">Original paper ↗</a>
-                 <p class="doi-note">DOI ${esc(info.doi)}</p>`
-              : `<button type="button" class="btn" disabled title="No DOI for this paper yet">Original paper ↗</button>`}
+            <div class="btn-row">
+              ${info?.doi
+                ? `<a class="btn" href="https://doi.org/${encodeURI(info.doi)}" target="_blank" rel="noopener noreferrer" title="DOI ${esc(info.doi)}">Original paper ↗</a>`
+                : `<button type="button" class="btn" disabled title="No DOI for this paper yet">Original paper ↗</button>`}
+              <a class="btn" href="${scholarUrl(paperTitle(paper))}" target="_blank" rel="noopener noreferrer" data-note="${esc(VERSIONS_NOTE)}" aria-describedby="versions-note">Find other versions ↗</a>
+              <span id="versions-note" hidden>${esc(VERSIONS_NOTE)}</span>
+            </div>
+            ${info?.doi ? `<p class="doi-note">DOI ${esc(info.doi)}</p>` : ""}
           </div>
 
           <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
