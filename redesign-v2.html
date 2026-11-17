@@ -535,6 +535,33 @@
     }
     .see-network:hover { background: var(--nav-bg-hover); border-color: var(--accent); transform: translateY(-1px); }
 
+    /* "What are you trying to do?": three large choices at the top of the overview. */
+    .goals { margin-top: 36px; }
+    .goals-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 12px; }
+    .goals-head h2 { margin: 0; font-size: 20px; }
+    .goals-head .show-all { background: none; border: none; padding: 0; color: var(--accent); font: 14px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(139, 197, 255, 0.4); }
+    .goals-head .show-all:hover { text-decoration-color: currentColor; }
+    .goal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .goal {
+      display: flex; flex-direction: column; gap: 6px; text-align: left;
+      padding: 18px 20px; min-height: 108px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+      color: var(--text); font: inherit; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s var(--ease);
+    }
+    .goal:hover, .goal:focus-visible { border-color: var(--accent); background: var(--surface-2); transform: translateY(-1px); }
+    .goal .g-title { font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+    .goal .g-title .arr { color: var(--accent); }
+    .goal .g-desc { color: var(--muted); font-size: 14.5px; line-height: 1.45; }
+    .goal[aria-pressed="true"] { border-color: var(--accent); background: var(--surface-2); box-shadow: 0 0 0 1px var(--accent) inset; }
+    .goal-grid.chosen .goal[aria-pressed="false"] { opacity: 0.6; }
+    .goal-grid.chosen .goal[aria-pressed="false"]:hover { opacity: 1; }
+    @media (max-width: 720px) { .goal-grid { grid-template-columns: 1fr; } .goal { min-height: 0; } }
+    /* Sections that don't belong to the chosen goal stay on the page, dimmed (not during the walkthrough). */
+    body:not(.touring) .land-section.dim { opacity: 0.28; transition: opacity 0.3s; }
+    body:not(.touring) .land-section.dim:hover { opacity: 0.5; }
+    .land-section.goal-first { margin-top: 40px; }
+
     /* Sections: one question each, revealed as they scroll into view. */
     .land-section { margin-top: 88px; }
     .land-section > h2 { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: -0.01em; }
@@ -2967,6 +2994,36 @@
         refreshPlanner();
       }
 
+      // ---------- "What are you trying to do?" ----------
+      // Each goal shows its own sections first and dims the rest; "Show everything" clears it. Remembered.
+      const GOAL_KEY = "atlas-goal";
+      const GOALS = [
+        { key: "plan", title: "Plan a study", desc: "Find tasks, design problems, and measures other researchers have used.", sections: ["planner"] },
+        { key: "learn", title: "Learn the field", desc: "See what design research studies most, and how it’s changed.", sections: ["landmarks", "trends"] },
+        { key: "explore", title: "Explore connections", desc: "See how concepts relate, in the network.", sections: null }
+      ];
+      let goal = (() => { try { return localStorage.getItem(GOAL_KEY); } catch { return null; } })();
+      if (!GOALS.some((g) => g.key === goal)) goal = null;
+      function setGoal(key) {
+        goal = key;
+        try { if (key) localStorage.setItem(GOAL_KEY, key); else localStorage.removeItem(GOAL_KEY); } catch {}
+      }
+      const goalSections = () => GOALS.find((g) => g.key === goal)?.sections || null;
+      function chooseGoal(key) {
+        setGoal(key);
+        if (key === "explore") { goField(); return; }
+        renderLanding();
+        const lv = $("landing-view");
+        const first = lv.querySelector(".land-section.goal-first");
+        // Show the goal's sections right away (no scroll fade), then bring them up under the choices.
+        lv.querySelectorAll(".land-section:not(.in)").forEach((sec) => { sec.classList.add("in", "seen"); state.landingSeen.add(sec.dataset.section); });
+        if (first) {
+          const top = lv.scrollTop + lv.querySelector(".goals").getBoundingClientRect().top - lv.getBoundingClientRect().top - 16;
+          lv.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION ? "auto" : "smooth" });
+        }
+        if (key === "plan") $("plan-input")?.focus({ preventScroll: true });
+      }
+
       function renderLanding() {
         const inView = scopeCount();
         const view = $("landing-view");
@@ -2995,7 +3052,11 @@
         }).join("");
 
         const [tlo, thi] = trendRange();
-        const section = (key, html) => `<section class="land-section reveal ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
+        const focusOn = goalSections();
+        const section = (key, html) => {
+          const cls = !focusOn ? "" : focusOn.includes(key) ? (key === focusOn[0] ? "goal-first" : "") : "dim";
+          return `<section class="land-section reveal ${cls} ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
+        };
         view.innerHTML = `<div class="landing">
           <div class="hero" data-tour="ov-hero">
             <div>
@@ -3006,15 +3067,29 @@
             <button type="button" class="see-network" data-network="1">Explore the network →</button>
           </div>
 
+          <div class="goals" data-tour="ov-goals">
+            <div class="goals-head">
+              <h2>What are you trying to do?</h2>
+              ${focusOn ? `<button type="button" class="show-all" data-goal="">Show everything</button>` : ""}
+            </div>
+            <div class="goal-grid ${focusOn ? "chosen" : ""}" role="group" aria-label="What are you trying to do?">
+              ${GOALS.map((g) => `<button type="button" class="goal" data-goal="${g.key}" aria-pressed="${g.key === goal && !!focusOn}">
+                <span class="g-title">${esc(g.title)}<span class="arr" aria-hidden="true">→</span></span>
+                <span class="g-desc">${esc(g.desc)}</span>
+              </button>`).join("")}
+            </div>
+          </div>
+
           ${!inView ? `<div class="gap-box land-gap"><strong>0 papers: possible gap</strong><p>No paper covers every concept you pinned${rangeActive() ? ` in ${rangeText()}` : ""}. Open Filters to see the closest combinations that do.</p></div>` : ""}
 
-          ${section("landmarks", `
+          ${orderSections(focusOn, {
+          landmarks: section("landmarks", `
             <h2>What gets studied most?</h2>
             <p class="sub">Bars show how many papers study each concept.${scopeActive() ? ` Counting the ${inView} papers that match your filters.` : ""}</p>
             <div class="type-grid">${typeCards}</div>
-            ${placeholderNote()}`)}
+            ${placeholderNote()}`),
 
-          ${section("trends", `
+          trends: section("trends", `
             <h2>How has the field changed?</h2>
             <p class="sub">Each concept's share of papers in the first half of the years you pick, compared with the second half.</p>
             <div class="trend-controls">
@@ -3031,9 +3106,9 @@
                 <div class="split" id="trend-split"></div>
               </div>
             </div>
-            <div id="trend-body"></div>`)}
+            <div id="trend-body"></div>`),
 
-          ${section("planner", `
+          planner: section("planner", `
             <h2>Planning a study? Start from what you know.</h2>
             <p class="sub">Pick something you already know about your study, and see what other studies paired with it.</p>
             <div class="plan-step">
@@ -3071,12 +3146,20 @@
               </div>
             </div>
             <div id="plan-body"></div>
-            ${placeholderNote()}`)}
+            ${placeholderNote()}`)
+          })}
         </div>
 `;
         refreshTrends();
         refreshPlanner();
         watchReveals();
+      }
+
+      // The goal's sections first (in their usual order), then the rest.
+      function orderSections(focusOn, html) {
+        const keys = ["landmarks", "trends", "planner"];
+        const first = focusOn ? keys.filter((k) => focusOn.includes(k)) : [];
+        return [...first, ...keys.filter((k) => !first.includes(k))].map((k) => html[k]).join("\n");
       }
 
       // Each section fades in the first time it scrolls into view, and stays shown after that.
@@ -3104,6 +3187,8 @@
       $("landing-view").addEventListener("click", (event) => {
         const pick = event.target.closest("[data-plan-id]");
         if (pick) { pickPlanCenter(pick.dataset.planId); return; }
+        const g = event.target.closest("[data-goal]");
+        if (g) { chooseGoal(g.dataset.goal || null); return; }
         const el = event.target.closest("[data-open],[data-level],[data-land-more],[data-pair],[data-network],[data-trend-sort],#trend-reset,[data-plan-type],[data-plan-rare],[data-plan-net]");
         if (!el) return;
         const markOn = () => el.parentElement.querySelectorAll("button").forEach((b) => { const on = b === el; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
@@ -5038,13 +5123,14 @@
               "“Compare two”: any two concepts side by side"
             ] }
         ] : []),
-        { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends"], focus: "ov-landmarks", scroll: "ov-landmarks", sides: ["above", "below"],
+        { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-goals", "ov-landmarks", "ov-trends"], focus: "ov-goals", scroll: "ov-goals", sides: ["below", "above"],
           items: [
+            "Start here: pick what you're trying to do · Plan a study · Learn the field · Explore connections",
             "What gets studied most, by type",
             "How the field has changed: rising · falling · steady",
             "Click any name to open its page"
           ] },
-        { title: "Planning a study", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", sides: ["above", "below"],
+        { title: "Planning a study", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-goals", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", sides: ["above", "below"],
           items: [
             "Start from what you know: a task, problem, measure, or who you'll study",
             "See what other studies paired with it, or rarely did",
