@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atlas Redesign v2</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%238bc5ff'/%3E%3C/svg%3E" />
   <script type="importmap">
     { "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -533,6 +534,33 @@
       transition: filter 0.2s, transform 0.15s var(--ease);
     }
     .see-network:hover { background: var(--nav-bg-hover); border-color: var(--accent); transform: translateY(-1px); }
+
+    /* "What are you trying to do?": three large choices at the top of the overview. */
+    .goals { margin-top: 36px; }
+    .goals-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 12px; }
+    .goals-head h2 { margin: 0; font-size: 20px; }
+    .goals-head .show-all { background: none; border: none; padding: 0; color: var(--accent); font: 14px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(139, 197, 255, 0.4); }
+    .goals-head .show-all:hover { text-decoration-color: currentColor; }
+    .goal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .goal {
+      display: flex; flex-direction: column; gap: 6px; text-align: left;
+      padding: 18px 20px; min-height: 108px;
+      background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+      color: var(--text); font: inherit; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s var(--ease);
+    }
+    .goal:hover, .goal:focus-visible { border-color: var(--accent); background: var(--surface-2); transform: translateY(-1px); }
+    .goal .g-title { font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+    .goal .g-title .arr { color: var(--accent); }
+    .goal .g-desc { color: var(--muted); font-size: 14.5px; line-height: 1.45; }
+    .goal[aria-pressed="true"] { border-color: var(--accent); background: var(--surface-2); box-shadow: 0 0 0 1px var(--accent) inset; }
+    .goal-grid.chosen .goal[aria-pressed="false"] { opacity: 0.6; }
+    .goal-grid.chosen .goal[aria-pressed="false"]:hover { opacity: 1; }
+    @media (max-width: 720px) { .goal-grid { grid-template-columns: 1fr; } .goal { min-height: 0; } }
+    /* Sections that don't belong to the chosen goal stay on the page, dimmed (not during the walkthrough). */
+    body:not(.touring) .land-section.dim { opacity: 0.28; transition: opacity 0.3s; }
+    body:not(.touring) .land-section.dim:hover { opacity: 0.5; }
+    .land-section.goal-first { margin-top: 40px; }
 
     /* Sections: one question each, revealed as they scroll into view. */
     .land-section { margin-top: 88px; }
@@ -1428,6 +1456,13 @@
     .tour-replay:hover { background: var(--nav-bg-hover); border-color: var(--accent); }
     .help-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 16px; }
     .help-row .tour-replay { margin: 0; }
+    .scope-link { background: none; border: none; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(139, 197, 255, 0.4); text-underline-offset: 3px; white-space: nowrap; }
+    .scope-link:hover, .scope-link:focus-visible { text-decoration-color: currentColor; }
+    .scope-modal { width: min(520px, 100%); }
+    .scope-list { margin: 4px 0 0; display: grid; gap: 8px; }
+    .scope-list > div { background: var(--surface-2); border-radius: var(--r-md); padding: 12px 14px; }
+    .scope-list dt { font: 11px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+    .scope-list dd { margin: 0; color: #d3d8e6; font-size: 14px; line-height: 1.5; }
     .gr-toggle { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
     .gr-toggle .switch {
       position: relative;
@@ -1483,10 +1518,9 @@
     @media (prefers-reduced-motion: reduce) { .gr-anim { transition: none; } .gr-pop { animation: none; } }
 
     /* ---------- Walkthrough ---------- */
-    /* While it runs, every area starts hidden and is revealed one at a time; the page itself can't be clicked. */
+    /* While it runs, areas not yet covered are dimmed (never hidden), and everything stays clickable. */
     body.touring [data-tour] { transition: opacity 0.45s ease, box-shadow 0.3s ease; }
-    body.touring [data-tour]:not(.tour-on) { opacity: 0 !important; }
-    body.touring .topbar, body.touring main, body.touring .trail-bar, body.touring .filter-bar { pointer-events: none; }
+    body.touring [data-tour]:not(.tour-on) { opacity: 0.3; }
     body.touring .tour-focus { box-shadow: 0 0 0 2px rgba(139, 197, 255, 0.7), 0 0 34px rgba(139, 197, 255, 0.25) !important; }
     body.touring .where.tour-focus, body.touring .search-wrap.tour-focus { border-radius: 999px; }
     .tour-pop {
@@ -1502,9 +1536,16 @@
       animation: fadeUp 0.3s var(--ease);
       transition: left 0.35s var(--ease), top 0.35s var(--ease);
     }
-    .tour-pop .step { font: 11px var(--mono); color: var(--faint); letter-spacing: 0.06em; text-transform: uppercase; }
-    .tour-pop h3 { margin: 6px 0 6px; font-size: 16px; }
-    .tour-pop p { margin: 0; color: #d3d8e6; font-size: 14px; line-height: 1.5; }
+    .tour-pop .step-row { display: flex; align-items: center; gap: 10px; padding-right: 28px; }
+    .tour-pop .step { font: 600 12.5px var(--sans); color: var(--accent); white-space: nowrap; }
+    .tour-pop .progress { flex: 1; height: 4px; border-radius: 999px; background: var(--surface-3); overflow: hidden; }
+    .tour-pop .progress i { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width 0.3s var(--ease); }
+    .tour-pop .x { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%; border: none; background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
+    .tour-pop .x:hover { color: var(--text); background: var(--surface-3); }
+    .tour-pop h3 { margin: 10px 0 8px; font-size: 16px; }
+    .tour-pop ul { margin: 0; padding: 0 0 0 18px; color: #d3d8e6; font-size: 14px; line-height: 1.45; }
+    .tour-pop li { margin: 0 0 5px; }
+    .tour-pop li::marker { color: var(--accent); }
     .tour-pop .acts { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 14px; }
     .tour-pop .skip { background: none; border: none; color: var(--muted); font: 13px var(--sans); cursor: pointer; padding: 6px 2px; }
     .tour-pop .skip:hover { color: var(--text); }
@@ -1522,9 +1563,6 @@
     .tour-pop .back { border: 1px solid var(--line-strong); border-radius: 999px; background: none; color: var(--muted); padding: 8px 14px; font: 13px var(--sans); cursor: pointer; }
     .tour-pop .back:hover { color: var(--text); border-color: var(--nav-border); }
     .tour-pop button { white-space: nowrap; }
-    .tour-pop .dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-width: 0; flex: 1 1 auto; }
-    .tour-pop .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--surface-3); }
-    .tour-pop .dots i.on { background: var(--accent); }
     @media (prefers-reduced-motion: reduce) { .tour-pop { transition: none; } }
     .modal-head h2 { margin: 0; font-size: 20px; }
     .modal-close {
@@ -1653,13 +1691,30 @@
       </div>
       <div class="help-row">
         <button type="button" class="tour-replay" id="tour-replay">▶ Replay the walkthrough</button>
-        <span class="gr-toggle" title="On: the next concept you open shows a short guide, one part at a time with Next / Back / Skip (once). Concepts after that fade in by themselves.">
+        <button type="button" class="scope-link" data-scope="1">What’s in the Atlas</button>
+        <span class="gr-toggle" title="On: the next concept you open shows a short guide, one part at a time with Next / Back (once). Concepts after that fade in by themselves.">
           Concept page guide
           <button type="button" class="switch" id="gr-toggle" role="switch" aria-checked="true" aria-label="Concept page guide"></button>
           <span class="state" id="gr-toggle-state">On</span>
         </span>
       </div>
       <div id="glossary-body"></div>
+    </div>
+  </div>
+
+  <!-- Scope note. Numbers and wording follow the IDETC 2026 Atlas paper. -->
+  <div class="modal-backdrop" id="scope" hidden>
+    <div class="modal scope-modal" role="dialog" aria-modal="true" aria-labelledby="scope-title">
+      <div class="modal-head">
+        <h2 id="scope-title">What’s in the Atlas</h2>
+        <button type="button" class="modal-close" id="scope-close" aria-label="Close">×</button>
+      </div>
+      <dl class="scope-list">
+        <div><dt>Source</dt><dd>Papers from the ASME IDETC Design Theory and Methodology (DTM) conference, 1989–2025. The 1992 and 2016 proceedings aren’t included.</dd></div>
+        <div><dt>Scope</dt><dd><strong>601 empirical papers</strong> out of 1,548: studies where someone performs a design task that’s observed or measured.</dd></div>
+        <div><dt>Not included (yet)</dt><dd>Journals like the Journal of Mechanical Design or Design Science, and non-empirical papers. This is a first step, described in the IDETC 2026 paper.</dd></div>
+        <div><dt>How it was built</dt><dd>Concepts were extracted by an AI pipeline, and paper summaries are AI-written from abstracts, so check important details in the original paper.</dd></div>
+      </dl>
     </div>
   </div>
 
@@ -2052,6 +2107,24 @@
       }
       function hideTip() { tooltip.hidden = true; }
 
+      // Short notes on hover or keyboard focus for anything marked data-note.
+      function showNote(el) {
+        showTip(`<p class="tt-def" style="margin:0">${esc(el.dataset.note)}</p>`, { clientX: 0, clientY: 0 }, document.body);
+        // Right above the element (below it if there's no room), lined up with its right edge, so it never
+        // covers the element or the buttons beside it.
+        const r = el.getBoundingClientRect(), t = tooltip.getBoundingClientRect(), gap = 8;
+        const y = r.top - t.height - gap >= 10 ? r.top - t.height - gap : r.bottom + gap;
+        tooltip.style.left = `${Math.max(10, Math.min(innerWidth - t.width - 10, r.right - t.width))}px`;
+        tooltip.style.top = `${y}px`;
+      }
+      document.addEventListener("mouseover", (event) => { const el = event.target.closest?.("[data-note]"); if (el) showNote(el); });
+      document.addEventListener("focusin", (event) => { const el = event.target.closest?.("[data-note]"); if (el) showNote(el); });
+      document.addEventListener("mouseout", (event) => {
+        const el = event.target.closest?.("[data-note]");
+        if (el && !el.contains(event.relatedTarget)) hideTip();
+      });
+      document.addEventListener("focusout", (event) => { if (event.target.closest?.("[data-note]")) hideTip(); });
+
       function conceptTip(n, extra) {
         const def = n.description
           ? `<p class="tt-def">${esc(trunc(n.description, 240))}</p>`
@@ -2180,6 +2253,12 @@
           <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
         </div>`;
+      // "What's in the Atlas": opened from the overview or the ? menu.
+      const scopeBox = $("scope");
+      const openScope = () => { glossary.hidden = true; scopeBox.hidden = false; $("scope-close").focus(); };
+      document.addEventListener("click", (event) => { if (event.target.closest("[data-scope]")) openScope(); });
+      $("scope-close").addEventListener("click", () => { scopeBox.hidden = true; });
+      scopeBox.addEventListener("click", (event) => { if (event.target === scopeBox) scopeBox.hidden = true; });
       const glossary = $("glossary");
       $("help-btn").addEventListener("click", () => { glossary.hidden = false; });
       $("tour-replay").addEventListener("click", () => { glossary.hidden = true; startTour(); });
@@ -2188,6 +2267,7 @@
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
         if (tour.on) { endTour(); return; }
+        if (!scopeBox.hidden) { scopeBox.hidden = true; return; }
         if (!glossary.hidden) { glossary.hidden = true; return; }
         if (event.target === searchInput || !searchResults.hidden) return;
         goUp();
@@ -2914,6 +2994,36 @@
         refreshPlanner();
       }
 
+      // ---------- "What are you trying to do?" ----------
+      // Each goal shows its own sections first and dims the rest; "Show everything" clears it. Remembered.
+      const GOAL_KEY = "atlas-goal";
+      const GOALS = [
+        { key: "plan", title: "Plan a study", desc: "Find tasks, design problems, and measures other researchers have used.", sections: ["planner"] },
+        { key: "learn", title: "Learn the field", desc: "See what design research studies most, and how it’s changed.", sections: ["landmarks", "trends"] },
+        { key: "explore", title: "Explore connections", desc: "See how concepts relate, in the network.", sections: null }
+      ];
+      let goal = (() => { try { return localStorage.getItem(GOAL_KEY); } catch { return null; } })();
+      if (!GOALS.some((g) => g.key === goal)) goal = null;
+      function setGoal(key) {
+        goal = key;
+        try { if (key) localStorage.setItem(GOAL_KEY, key); else localStorage.removeItem(GOAL_KEY); } catch {}
+      }
+      const goalSections = () => GOALS.find((g) => g.key === goal)?.sections || null;
+      function chooseGoal(key) {
+        setGoal(key);
+        if (key === "explore") { goField(); return; }
+        renderLanding();
+        const lv = $("landing-view");
+        const first = lv.querySelector(".land-section.goal-first");
+        // Show the goal's sections right away (no scroll fade), then bring them up under the choices.
+        lv.querySelectorAll(".land-section:not(.in)").forEach((sec) => { sec.classList.add("in", "seen"); state.landingSeen.add(sec.dataset.section); });
+        if (first) {
+          const top = lv.scrollTop + lv.querySelector(".goals").getBoundingClientRect().top - lv.getBoundingClientRect().top - 16;
+          lv.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION ? "auto" : "smooth" });
+        }
+        if (key === "plan") $("plan-input")?.focus({ preventScroll: true });
+      }
+
       function renderLanding() {
         const inView = scopeCount();
         const view = $("landing-view");
@@ -2942,26 +3052,44 @@
         }).join("");
 
         const [tlo, thi] = trendRange();
-        const section = (key, html) => `<section class="land-section reveal ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
+        const focusOn = goalSections();
+        const section = (key, html) => {
+          const cls = !focusOn ? "" : focusOn.includes(key) ? (key === focusOn[0] ? "goal-first" : "") : "dim";
+          return `<section class="land-section reveal ${cls} ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
+        };
         view.innerHTML = `<div class="landing">
           <div class="hero" data-tour="ov-hero">
             <div>
               <p class="kicker">Design Engineering Atlas</p>
               <h1>What has design research studied, and what goes together?</h1>
-              <p>${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, <span style="white-space:nowrap">${Y0}–${Y1}</span>.</p>
+              <p>${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, <span style="white-space:nowrap">${Y0}–${Y1}</span>. <button type="button" class="scope-link" data-scope="1">What’s in the Atlas</button></p>
             </div>
             <button type="button" class="see-network" data-network="1">Explore the network →</button>
           </div>
 
+          <div class="goals" data-tour="ov-goals">
+            <div class="goals-head">
+              <h2>What are you trying to do?</h2>
+              ${focusOn ? `<button type="button" class="show-all" data-goal="">Show everything</button>` : ""}
+            </div>
+            <div class="goal-grid ${focusOn ? "chosen" : ""}" role="group" aria-label="What are you trying to do?">
+              ${GOALS.map((g) => `<button type="button" class="goal" data-goal="${g.key}" aria-pressed="${g.key === goal && !!focusOn}">
+                <span class="g-title">${esc(g.title)}<span class="arr" aria-hidden="true">→</span></span>
+                <span class="g-desc">${esc(g.desc)}</span>
+              </button>`).join("")}
+            </div>
+          </div>
+
           ${!inView ? `<div class="gap-box land-gap"><strong>0 papers: possible gap</strong><p>No paper covers every concept you pinned${rangeActive() ? ` in ${rangeText()}` : ""}. Open Filters to see the closest combinations that do.</p></div>` : ""}
 
-          ${section("landmarks", `
+          ${orderSections(focusOn, {
+          landmarks: section("landmarks", `
             <h2>What gets studied most?</h2>
             <p class="sub">Bars show how many papers study each concept.${scopeActive() ? ` Counting the ${inView} papers that match your filters.` : ""}</p>
             <div class="type-grid">${typeCards}</div>
-            ${placeholderNote()}`)}
+            ${placeholderNote()}`),
 
-          ${section("trends", `
+          trends: section("trends", `
             <h2>How has the field changed?</h2>
             <p class="sub">Each concept's share of papers in the first half of the years you pick, compared with the second half.</p>
             <div class="trend-controls">
@@ -2978,9 +3106,9 @@
                 <div class="split" id="trend-split"></div>
               </div>
             </div>
-            <div id="trend-body"></div>`)}
+            <div id="trend-body"></div>`),
 
-          ${section("planner", `
+          planner: section("planner", `
             <h2>Planning a study? Start from what you know.</h2>
             <p class="sub">Pick something you already know about your study, and see what other studies paired with it.</p>
             <div class="plan-step">
@@ -3018,12 +3146,20 @@
               </div>
             </div>
             <div id="plan-body"></div>
-            ${placeholderNote()}`)}
+            ${placeholderNote()}`)
+          })}
         </div>
 `;
         refreshTrends();
         refreshPlanner();
         watchReveals();
+      }
+
+      // The goal's sections first (in their usual order), then the rest.
+      function orderSections(focusOn, html) {
+        const keys = ["landmarks", "trends", "planner"];
+        const first = focusOn ? keys.filter((k) => focusOn.includes(k)) : [];
+        return [...first, ...keys.filter((k) => !first.includes(k))].map((k) => html[k]).join("\n");
       }
 
       // Each section fades in the first time it scrolls into view, and stays shown after that.
@@ -3051,6 +3187,8 @@
       $("landing-view").addEventListener("click", (event) => {
         const pick = event.target.closest("[data-plan-id]");
         if (pick) { pickPlanCenter(pick.dataset.planId); return; }
+        const g = event.target.closest("[data-goal]");
+        if (g) { chooseGoal(g.dataset.goal || null); return; }
         const el = event.target.closest("[data-open],[data-level],[data-land-more],[data-pair],[data-network],[data-trend-sort],#trend-reset,[data-plan-type],[data-plan-rare],[data-plan-net]");
         if (!el) return;
         const markOn = () => el.parentElement.querySelectorAll("button").forEach((b) => { const on = b === el; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
@@ -4165,6 +4303,10 @@
         return `Shares ${plural(shared.length, "concept")} with this paper: ${listJoin(listed)}.`;
       }
 
+      // A Google Scholar search for the paper's exact title, to find free copies or later journal versions.
+      const scholarUrl = (title) => `https://scholar.google.com/scholar?q=${encodeURIComponent(`"${title}"`)}`;
+      const VERSIONS_NOTE = "IDETC papers may need a subscription. A free copy or a later journal version (e.g. in the Journal of Mechanical Design) may be available.";
+
       function renderPaperDetail() {
         const paper = currentPaper();
         const info = detailOf(paper);
@@ -4190,10 +4332,14 @@
           <div class="detail-card" style="margin-top:18px">
             <p class="eyebrow" style="margin-top:0">Summary</p>
             ${info?.summary ? `<p class="paper-summary">${esc(info.summary)}</p>` : `<p class="placeholder">No summary yet for this paper.</p>`}
-            ${info?.doi
-              ? `<a class="btn" href="https://doi.org/${encodeURI(info.doi)}" target="_blank" rel="noopener noreferrer" title="DOI ${esc(info.doi)}">Original paper ↗</a>
-                 <p class="doi-note">DOI ${esc(info.doi)}</p>`
-              : `<button type="button" class="btn" disabled title="No DOI for this paper yet">Original paper ↗</button>`}
+            <div class="btn-row">
+              ${info?.doi
+                ? `<a class="btn" href="https://doi.org/${encodeURI(info.doi)}" target="_blank" rel="noopener noreferrer" title="DOI ${esc(info.doi)}">Original paper ↗</a>`
+                : `<button type="button" class="btn" disabled title="No DOI for this paper yet">Original paper ↗</button>`}
+              <a class="btn" href="${scholarUrl(paperTitle(paper))}" target="_blank" rel="noopener noreferrer" data-note="${esc(VERSIONS_NOTE)}" aria-describedby="versions-note">Find other versions ↗</a>
+              <span id="versions-note" hidden>${esc(VERSIONS_NOTE)}</span>
+            </div>
+            ${info?.doi ? `<p class="doi-note">DOI ${esc(info.doi)}</p>` : ""}
           </div>
 
           <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
@@ -4626,6 +4772,54 @@
         });
       }
 
+      // ---------- Placing help notes ----------
+      // Puts a note next to an area without covering it: tries each side in order (then the others) and keeps
+      // the first spot that stays on screen and clear of the area. If the area fills the screen, the note goes in
+      // the spot that covers the least of it. Returns the side used.
+      function unionRect(rects) {
+        const live = rects.filter((r) => r && r.width && r.height);
+        if (!live.length) return null;
+        const left = Math.min(...live.map((r) => r.left)), top = Math.min(...live.map((r) => r.top));
+        const right = Math.max(...live.map((r) => r.right)), bottom = Math.max(...live.map((r) => r.bottom));
+        return { left, top, right, bottom, width: right - left, height: bottom - top };
+      }
+      function placeBeside(pop, rect, sides = [], along = 20) {
+        const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14, pad = 12;
+        const clampX = (x) => Math.max(pad, Math.min(innerWidth - pw - pad, x));
+        const clampY = (y) => Math.max(pad, Math.min(innerHeight - ph - pad, y));
+        if (!rect) {
+          pop.style.left = `${clampX((innerWidth - pw) / 2)}px`;
+          pop.style.top = `${clampY((innerHeight - ph) / 2)}px`;
+          return "center";
+        }
+        const spots = {
+          right: [rect.right + gap, rect.top + along],
+          left: [rect.left - gap - pw, rect.top + along],
+          below: [rect.left, rect.bottom + gap],
+          above: [rect.left, rect.top - ph - gap],
+          corner: [innerWidth - pw - pad, innerHeight - ph - pad],
+          // For an area that fills the screen (the network): its empty top-left sky, under the back button.
+          inside: [rect.left + 20, rect.top + 64]
+        };
+        if (sides[0] === "inside") {
+          pop.style.left = `${clampX(spots.inside[0])}px`;
+          pop.style.top = `${clampY(spots.inside[1])}px`;
+          return "inside";
+        }
+        const covered = (x, y) => Math.max(0, Math.min(x + pw, rect.right) - Math.max(x, rect.left))
+          * Math.max(0, Math.min(y + ph, rect.bottom) - Math.max(y, rect.top));
+        let best = null;
+        for (const side of [...new Set([...sides, "right", "left", "below", "above", "corner"])]) {
+          const x = clampX(spots[side][0]), y = clampY(spots[side][1]);
+          const c = covered(x, y);
+          if (!best || c < best.c) best = { x, y, c, side };
+          if (!c) break;
+        }
+        pop.style.left = `${best.x}px`;
+        pop.style.top = `${best.y}px`;
+        return best.side;
+      }
+
       // ---------- Revealing a concept page ----------
       // The first concept someone opens: a guided reveal. Each part (left sidebar, orbit, right sidebar, top bar)
       // appears with a one-line note and waits for Next; Back steps back, Skip shows everything. Only once.
@@ -4636,12 +4830,13 @@
       let guidedOn = (() => { try { return localStorage.getItem(GR_KEY) !== "off"; } catch { return true; } })();
       let guidedSeen = (() => { try { return localStorage.getItem(GR_DONE_KEY) === "1"; } catch { return false; } })();
       // paced: the guide (waits for Next). slow: the plain reveal (runs by itself, never blocks).
-      const gr = { mode: null, timers: [], pops: [], swallowClick: false, i: -1 };
+      const gr = { mode: null, timers: [], pops: [], i: -1 };
+      // sides: where the note may go, in order of preference; it never sits on top of the part it describes.
       const GR_STEPS = [
-        { el: () => $("left"), side: "right", text: "What this concept is, and how often it’s been studied over time." },
-        { el: () => $("orbit-wrap"), side: "inside-bottom-right", text: "Concepts studied alongside this one. Closer means more often." },
-        { el: () => document.querySelector("#concept-view > .right"), side: "left", text: "The papers behind it, and its strongest connections." },
-        { el: () => $("where"), also: () => $("trail-bar"), side: "below", text: "Where you are now. Click a lit level to step back." }
+        { el: () => $("left"), sides: ["right"], text: "What this concept is, and how often it’s been studied over time." },
+        { el: () => $("orbit-wrap"), sides: ["right", "left"], text: "Concepts studied alongside this one. Closer means more often. Click any circle." },
+        { el: () => document.querySelector("#concept-view > .right"), sides: ["left"], text: "The papers behind it, and its strongest connections." },
+        { el: () => $("where"), also: () => $("trail-bar"), sides: ["below"], text: "Where you are now. Click a lit level to step back." }
       ];
       const guidedTargets = () => [$("left"), $("orbit-wrap"), document.querySelector("#concept-view > .right"), $("where"), $("trail-bar")];
       const canAnimate = () => !REDUCED_MOTION && !document.body.classList.contains("touring");
@@ -4652,6 +4847,13 @@
         $("gr-toggle-state").textContent = guidedOn && !guidedSeen ? "On" : "Off";
       }
       renderGuidedToggle();
+      // Off for good (until turned back on from the ? menu).
+      function turnGuideOff() {
+        guidedOn = false;
+        guidedSeen = true;
+        try { localStorage.setItem(GR_KEY, "off"); localStorage.setItem(GR_DONE_KEY, "1"); } catch {}
+        renderGuidedToggle();
+      }
       // On: show the guide again on the next concept opened (once). Off: don't show it.
       $("gr-toggle").addEventListener("click", () => {
         const turnOn = !(guidedOn && !guidedSeen);
@@ -4769,29 +4971,20 @@
         const pop = document.createElement("div");
         pop.className = "gr-pop";
         pop.setAttribute("role", "dialog");
-        pop.innerHTML = `<span class="gr-step">${i + 1} of ${GR_STEPS.length}</span>${esc(step.text)}
+        pop.innerHTML = `<span class="gr-step">Step ${i + 1} of ${GR_STEPS.length}</span>${esc(step.text)}
           <span class="gr-acts">
-            ${last ? "<span></span>" : `<button type="button" class="skip" data-gr="skip">Skip</button>`}
+            <button type="button" class="skip" data-gr="never" title="Turn this guide off. You can turn it back on from the ? button.">Don’t show again</button>
             <span class="nav">
               ${i ? `<button type="button" class="back" data-gr="back">← Back</button>` : ""}
               <button type="button" class="next" data-gr="next">${last ? "Done" : "Next →"}</button>
             </span>
           </span>`;
         document.body.appendChild(pop);
-        const r = el.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight, gap = 14, pad = 10;
-        let x, y, arrow;
-        if (step.side === "right") { x = r.right + gap; y = r.top + 70; arrow = "arrow-left"; }
-        else if (step.side === "left") { x = r.left - gap - w; y = r.top + 70; arrow = "arrow-right"; }
-        else if (step.side === "below") {
-          // Under the trail row when it's showing, so the note doesn't cover the recent chips.
-          const trail = $("trail-bar");
-          const under = trail.hidden ? r.bottom : Math.max(r.bottom, trail.getBoundingClientRect().bottom);
-          x = r.left + 8; y = under + gap; arrow = "arrow-up";
-        }
-        else { x = r.right - w - 20; y = r.bottom - h - 20; arrow = ""; }
+        // The "where" note also keeps clear of the trail row under it.
+        const rects = [el, step.also?.()].filter((e) => e && !e.hidden).map((e) => e.getBoundingClientRect());
+        const side = placeBeside(pop, unionRect(rects), step.sides, 60);
+        const arrow = { right: "arrow-left", left: "arrow-right", below: "arrow-up", above: "arrow-down" }[side];
         if (arrow) pop.classList.add(arrow);
-        pop.style.left = `${Math.max(pad, Math.min(innerWidth - w - pad, x))}px`;
-        pop.style.top = `${Math.max(pad, Math.min(innerHeight - h - pad, y))}px`;
         gr.pops.push(pop);
         pop.querySelector(".next").focus({ preventScroll: true });
       }
@@ -4800,20 +4993,14 @@
         if (!b) return;
         if (b.dataset.gr === "next") nextGuided();
         else if (b.dataset.gr === "back") backGuided();
-        else cancelGuided();
+        else { turnGuideOff(); cancelGuided(); }
       });
-      // Guide: only its buttons (or Enter / → / ← / Escape) move it; other clicks do nothing, so
-      // nothing hidden gets clicked by accident. Slow reveal: a click goes through and shows everything.
+      // The page always stays usable: a click anywhere outside the note shows every part at once,
+      // removes the note, and then goes through to whatever was clicked (an orbit circle, a tab…).
       document.addEventListener("pointerdown", (event) => {
         if (event.target.closest && event.target.closest(".gr-pop")) return;
-        if (gr.mode === "paced") { event.preventDefault(); event.stopPropagation(); gr.swallowClick = true; }
+        if (gr.mode === "paced") cancelGuided();
         else if (gr.mode === "slow") finishGuided();
-      }, true);
-      document.addEventListener("click", (event) => {
-        if (!gr.swallowClick) return;
-        gr.swallowClick = false;
-        event.preventDefault();
-        event.stopPropagation();
       }, true);
       document.addEventListener("keydown", (event) => {
         if (gr.mode === "paced") {
@@ -4905,33 +5092,50 @@
       })();
       // "concept generation task" reads as "concept generation" in a sentence.
       const tourName = TOUR_TASK.label.replace(/ task$/i, "");
+      // Each step is a short list, not paragraphs. "sides": where the popup may sit, so it never covers what it points to.
       const TOUR_STEPS = [
         { title: "Welcome to the Design Engineering Atlas", hash: "#/", show: [], focus: null,
-          text: `The Atlas maps ${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, ${Y0}–${Y1}. For each paper it records who was studied, what they did, what they were designing, and what thinking the study looked at.` },
-        { title: "Where am I", hash: "#/", show: ["where"], focus: "where",
-          text: "This bar shows where you are, from the overview down to a single paper. Lit levels take you back; dim ones are deeper levels still ahead." },
-        { title: "Recent trail", hash: "#/", show: ["where", "trail"], focus: "trail",
-          text: "Concepts and connections you open collect here as chips, so you can jump back to them." },
-        { title: "Filters", hash: "#/", show: ["where", "trail", "filters"], focus: "filters",
-          text: "Filters narrow what you see by concept type, years and how many papers a concept appears in. Each page keeps its own." },
-        { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network",
-          text: "Each star is a concept drawn from the papers: a subject, task, problem or construct. Color shows its type and size how many papers include it. Concepts studied together sit closer, and lines connect concepts the papers relate to each other." },
-        { title: TOUR_TASK.label.replace(/^./, (c) => c.toUpperCase()), hash: conceptHash(TOUR_TASK.id), show: ["where", "trail", "left", "orbit"], focus: "orbit",
-          text: `Every concept has its own page; this one is ${tourName}. On the left: what it is and how often it's been studied over time. Around it: the concepts studied with it most, closest ring first.` },
+          items: [
+            `${totalPapers} empirical papers · ASME Design Theory and Methodology conference · ${Y0}–${Y1}`,
+            "For each paper: Who was studied · What they did · What they designed · What was measured",
+            "6 short steps. Close anytime; reopen from the ? button."
+          ] },
+        { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network", sides: ["inside"],
+          items: [
+            "Each star is a concept. Color = type, size = number of papers.",
+            "Closer stars are studied together more often.",
+            "Click a star to open its page.",
+            "Left: filters by type, years, and paper count.",
+            "Top: where you are, and concepts you've opened recently."
+          ] },
+        { title: `A concept: ${tourName}`, hash: conceptHash(TOUR_TASK.id), show: ["where", "trail", "left", "orbit"], focus: "orbit", sides: ["right", "left"],
+          items: [
+            "Left: what it is · papers per year",
+            "Center: concepts studied with it. Inner ring = most often.",
+            "Click any circle to see that connection."
+          ] },
         ...(TOUR_PAIR ? [
-          { title: "A connection", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "trail", "left", "orbit", "right"], focus: "right", tab: "connections",
-            text: `Click a concept in the orbit to see how it relates to the center. Here, ${TOUR_PAIR.n.label} and ${tourName} come up together in ${plural(TOUR_PAIR.k, "paper")}. "Compare two" lets you set any two concepts side by side.` },
-          { title: "The papers", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "left", "orbit", "right", "trail", "search", "help", "filterbar"], focus: "right", tab: "papers",
-            text: "These are the papers behind the connection. Open one to see a short summary and a link to the original paper." }
+          { title: "A connection and its papers", hash: conceptHash(TOUR_TASK.id, TOUR_PAIR.n.id), show: ["where", "trail", "left", "orbit", "right", "search", "help", "filterbar"], focus: "right", tab: "connections", sides: ["left"],
+            items: [
+              `${cap(TOUR_PAIR.n.label)} + ${tourName}: ${plural(TOUR_PAIR.k, "paper")} together`,
+              "Papers tab: the papers behind it",
+              "Open a paper: summary · link to the original",
+              "“Compare two”: any two concepts side by side"
+            ] }
         ] : []),
-        { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero"], focus: "ov-hero", scroll: "ov-hero", place: "below",
-          text: "The overview sums up the whole Atlas on one page. \"Explore the network\" takes you back to the stars." },
-        { title: "What gets studied most?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks"], focus: "ov-landmarks", scroll: "ov-landmarks", place: "above",
-          text: "The most studied concepts of each type, by number of papers. Click any name to open its page." },
-        { title: "How has the field changed?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends"], focus: "ov-trends", scroll: "ov-trends", place: "above",
-          text: "Which concepts are rising, falling or holding steady: each one's share of papers in the earlier half of the years you pick, compared with the later half." },
-        { title: "What goes together?", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", place: "above",
-          text: "Pick any concept to see what's most often studied alongside it, or what rarely is. Replay this tour anytime from the ? button." }
+        { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-goals", "ov-landmarks", "ov-trends"], focus: "ov-goals", scroll: "ov-goals", sides: ["below", "above"],
+          items: [
+            "Start here: pick what you're trying to do",
+            "What gets studied most, by type",
+            "How the field has changed: rising · falling · steady",
+            "Click any name to open its page"
+          ] },
+        { title: "Planning a study", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-goals", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", sides: ["above", "below"],
+          items: [
+            "Start from what you know: a task, problem, measure, or who you'll study",
+            "See what other studies paired with it, or rarely did",
+            "Reopen this tour anytime from the ? button"
+          ] }
       ];
       const tour = { on: false, i: 0 };
       const tourEl = (key) => document.querySelector(`[data-tour="${key}"]`);
@@ -4955,8 +5159,11 @@
         if (revealObserver) revealObserver.disconnect();
         requestAnimationFrame(() => requestAnimationFrame(watchReveals));
       }
+      // Closing, "Don't show again" and Done all end it for good: no walkthrough or concept-page notes appear
+      // again by themselves. The ? menu can still replay it (and turn the concept-page guide back on).
       function endTour() {
         tour.on = false;
+        turnGuideOff();
         document.body.classList.remove("touring");
         document.querySelectorAll(".tour-on, .tour-focus").forEach((el) => el.classList.remove("tour-on", "tour-focus"));
         renderTrail();
@@ -4973,11 +5180,11 @@
             document.querySelectorAll("#landing-view .reveal").forEach((sec) => {
               if (step.show.includes(sec.dataset.tour)) { sec.classList.add("in", "seen"); state.landingSeen.add(sec.dataset.section); }
             });
-            // Scroll the section into view; for "above", leave room over its heading for the popup.
+            // Scroll the section into view, leaving room over its heading for the popup.
             const target = step.scroll && tourEl(step.scroll);
             if (target) {
               const lv = $("landing-view");
-              const room = step.place === "above" ? 240 : 24;
+              const room = step.sides?.[0] === "above" ? 320 : 24;
               const top = lv.scrollTop + target.getBoundingClientRect().top - lv.getBoundingClientRect().top - room;
               lv.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION ? "auto" : "smooth" });
             }
@@ -5000,12 +5207,15 @@
         const pop = $("tour-pop");
         const last = tour.i === TOUR_STEPS.length - 1;
         pop.innerHTML = `
-          <div class="step">Step ${tour.i + 1} of ${TOUR_STEPS.length}</div>
+          <button type="button" class="x" data-tour-act="skip" aria-label="Close the walkthrough" title="Close (reopen anytime from ?)">×</button>
+          <div class="step-row">
+            <span class="step">Step ${tour.i + 1} of ${TOUR_STEPS.length}</span>
+            <span class="progress" aria-hidden="true"><i style="width:${((tour.i + 1) / TOUR_STEPS.length) * 100}%"></i></span>
+          </div>
           <h3>${esc(step.title)}</h3>
-          <p>${esc(step.text)}</p>
+          <ul>${step.items.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
           <div class="acts">
-            ${last ? "<span></span>" : `<button type="button" class="skip" data-tour-act="skip">Skip</button>`}
-            <span class="dots">${TOUR_STEPS.map((_, i) => `<i class="${i === tour.i ? "on" : ""}"></i>`).join("")}</span>
+            <button type="button" class="skip" data-tour-act="skip" title="Close the walkthrough for good. Reopen it anytime from the ? button.">Don’t show again</button>
             <span class="nav">
               ${tour.i ? `<button type="button" class="back" data-tour-act="back">← Back</button>` : ""}
               <button type="button" class="next" data-tour-act="next">${last ? "Done" : "Next →"}</button>
@@ -5015,23 +5225,10 @@
         placeTourPop(step);
         pop.querySelector(".next").focus({ preventScroll: true });
       }
-      // Beside the highlighted area if there's room, otherwise inside its top edge; centred when nothing is shown.
+      // Beside the highlighted area, never on top of it; centred when nothing is highlighted.
       function placeTourPop(step) {
-        const pop = $("tour-pop");
-        const pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14, pad = 12;
         const el = step.focus && tourEl(step.focus);
-        let x = (innerWidth - pw) / 2, y = (innerHeight - ph) / 2;
-        if (el) {
-          const r = el.getBoundingClientRect();
-          if (step.place === "above") { x = r.left; y = r.top - ph - gap; }
-          else if (step.place === "below") { x = r.right - pw; y = r.bottom + gap; }
-          else if (r.height < 80) { x = r.left; y = r.bottom + gap; }
-          else if (r.right + gap + pw < innerWidth - pad) { x = r.right + gap; y = r.top + 20; }
-          else if (r.left - gap - pw > pad) { x = r.left - gap - pw; y = r.top + 20; }
-          else { x = r.left + (r.width - pw) / 2; y = r.top + 70; }
-        }
-        pop.style.left = `${Math.max(pad, Math.min(innerWidth - pw - pad, x))}px`;
-        pop.style.top = `${Math.max(pad, Math.min(innerHeight - ph - pad, y))}px`;
+        placeBeside($("tour-pop"), el ? unionRect([el.getBoundingClientRect()]) : null, step.sides);
       }
       $("tour-pop").addEventListener("click", (event) => {
         const act = event.target.closest("[data-tour-act]")?.dataset.tourAct;
@@ -5043,6 +5240,8 @@
         }
       });
       window.addEventListener("resize", () => { if (tour.on) placeTourPop(TOUR_STEPS[tour.i]); });
+      // The page stays usable during the tour; if a click moves somewhere else, the popup re-finds its spot.
+      window.addEventListener("hashchange", () => { if (tour.on) setTimeout(() => tour.on && placeTourPop(TOUR_STEPS[tour.i]), 450); });
       // First visit only, and only when arriving at the start (not from a shared link to a concept).
       // ?tour=1 in the address always starts it (handy for showing it to someone, or after it's been seen).
       function maybeStartTour() {
