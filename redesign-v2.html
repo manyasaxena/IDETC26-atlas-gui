@@ -1429,6 +1429,13 @@
     .tour-replay:hover { background: var(--nav-bg-hover); border-color: var(--accent); }
     .help-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 0 0 16px; }
     .help-row .tour-replay { margin: 0; }
+    .scope-link { background: none; border: none; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(139, 197, 255, 0.4); text-underline-offset: 3px; white-space: nowrap; }
+    .scope-link:hover, .scope-link:focus-visible { text-decoration-color: currentColor; }
+    .scope-modal { width: min(520px, 100%); }
+    .scope-list { margin: 4px 0 0; display: grid; gap: 8px; }
+    .scope-list > div { background: var(--surface-2); border-radius: var(--r-md); padding: 12px 14px; }
+    .scope-list dt { font: 11px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+    .scope-list dd { margin: 0; color: #d3d8e6; font-size: 14px; line-height: 1.5; }
     .gr-toggle { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
     .gr-toggle .switch {
       position: relative;
@@ -1657,6 +1664,7 @@
       </div>
       <div class="help-row">
         <button type="button" class="tour-replay" id="tour-replay">▶ Replay the walkthrough</button>
+        <button type="button" class="scope-link" data-scope="1">What’s in the Atlas</button>
         <span class="gr-toggle" title="On: the next concept you open shows a short guide, one part at a time with Next / Back (once). Concepts after that fade in by themselves.">
           Concept page guide
           <button type="button" class="switch" id="gr-toggle" role="switch" aria-checked="true" aria-label="Concept page guide"></button>
@@ -1664,6 +1672,22 @@
         </span>
       </div>
       <div id="glossary-body"></div>
+    </div>
+  </div>
+
+  <!-- Scope note. Numbers and wording follow the IDETC 2026 Atlas paper. -->
+  <div class="modal-backdrop" id="scope" hidden>
+    <div class="modal scope-modal" role="dialog" aria-modal="true" aria-labelledby="scope-title">
+      <div class="modal-head">
+        <h2 id="scope-title">What’s in the Atlas</h2>
+        <button type="button" class="modal-close" id="scope-close" aria-label="Close">×</button>
+      </div>
+      <dl class="scope-list">
+        <div><dt>Source</dt><dd>Papers from the ASME IDETC Design Theory and Methodology (DTM) conference, 1989–2025. The 1992 and 2016 proceedings aren’t included.</dd></div>
+        <div><dt>Scope</dt><dd><strong>601 empirical papers</strong> out of 1,548: studies where someone performs a design task that’s observed or measured.</dd></div>
+        <div><dt>Not included (yet)</dt><dd>Journals like the Journal of Mechanical Design or Design Science, and non-empirical papers. This is a first step, described in the IDETC 2026 paper.</dd></div>
+        <div><dt>How it was built</dt><dd>Concepts were extracted by an AI pipeline, and paper summaries are AI-written from abstracts, so check important details in the original paper.</dd></div>
+      </dl>
     </div>
   </div>
 
@@ -2202,6 +2226,12 @@
           <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
         </div>`;
+      // "What's in the Atlas": opened from the overview or the ? menu.
+      const scopeBox = $("scope");
+      const openScope = () => { glossary.hidden = true; scopeBox.hidden = false; $("scope-close").focus(); };
+      document.addEventListener("click", (event) => { if (event.target.closest("[data-scope]")) openScope(); });
+      $("scope-close").addEventListener("click", () => { scopeBox.hidden = true; });
+      scopeBox.addEventListener("click", (event) => { if (event.target === scopeBox) scopeBox.hidden = true; });
       const glossary = $("glossary");
       $("help-btn").addEventListener("click", () => { glossary.hidden = false; });
       $("tour-replay").addEventListener("click", () => { glossary.hidden = true; startTour(); });
@@ -2210,6 +2240,7 @@
       document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
         if (tour.on) { endTour(); return; }
+        if (!scopeBox.hidden) { scopeBox.hidden = true; return; }
         if (!glossary.hidden) { glossary.hidden = true; return; }
         if (event.target === searchInput || !searchResults.hidden) return;
         goUp();
@@ -2970,7 +3001,7 @@
             <div>
               <p class="kicker">Design Engineering Atlas</p>
               <h1>What has design research studied, and what goes together?</h1>
-              <p>${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, <span style="white-space:nowrap">${Y0}–${Y1}</span>.</p>
+              <p>${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, <span style="white-space:nowrap">${Y0}–${Y1}</span>. <button type="button" class="scope-link" data-scope="1">What’s in the Atlas</button></p>
             </div>
             <button type="button" class="see-network" data-network="1">Explore the network →</button>
           </div>
