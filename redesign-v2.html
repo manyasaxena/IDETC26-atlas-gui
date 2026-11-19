@@ -578,7 +578,7 @@
     .ex-funnel .arr { color: var(--faint); text-align: center; }
     .ex-funnel .b { justify-self: start; font-weight: 600; color: var(--text); border-bottom: 3px solid var(--c); }
     .ex-step .ex-limit { font-size: 15px; color: var(--muted); background: var(--surface); border-radius: var(--r-md); padding: 12px 16px; max-width: none; }
-    .mini-map line { stroke: var(--muted); stroke-opacity: 0.55; stroke-linecap: round; }
+    .mini-map line { stroke: var(--muted); stroke-linecap: round; }
     .mini-map .mm-dot text { fill: var(--text); font: 600 13px var(--sans); paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
     .mini-map .mm-note path { stroke: var(--faint); fill: none; }
     .mini-map .mm-note text { fill: var(--muted); font: italic 13px var(--sans); }
@@ -1768,7 +1768,7 @@
       const OR_R = 440;
       const RINGS = [112, 198, 284];
       const RING_BAND = 34;
-      const RING_NAMES = ["Most often together", "Often together", "Sometimes together"];
+      const RING_NAMES = ["Most overlap", "More overlap", "Less overlap"];
       const RING_OFFSET = [0, -0.25, 0.25];
       const WEDGE_IN = 62;
       const WEDGE_OUT = 330;
@@ -2036,10 +2036,10 @@
         dot: ["Dot", "a concept"],
         size: ["Size", "number of papers"],
         color: ["Color", "concept type"],
-        line: ["Line", "studied in the same papers; thicker = more papers"],
-        line3d: ["Line", "studied in the same papers; brighter = more papers"],
-        close: ["Closer", "studied together more often"],
-        rings: ["Rings", "how often studied together with the center; inner = most often"],
+        line: ["Line", "studied in the same papers; thicker and brighter = more papers"],
+        close: ["Closer", "roughly, studied together more often"],
+        // Matches updateOrbit(): neighbors ranked by overlap (shared ÷ papers with either), split into thirds.
+        rings: ["Rings", "how much a concept’s papers overlap with the center’s (shared papers ÷ papers with either one). The top third sits on the inner ring"],
         caveat: "A line means “studied together,” not “proven related.”"
       };
       const mapWord = ([k, v]) => `<b>${esc(k)}</b> = ${esc(v)}`;
@@ -2311,7 +2311,8 @@
           </div>`).join("")}
         <div class="more">
           <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
-          <p><strong>Orbit.</strong> When you open a concept, its most related connections orbit around it, grouped by type. Size shows a concept's papers. The three rings rank relevance (shared papers ÷ papers in either concept): the inner ring holds the top third.</p>
+          <p><strong>Lines.</strong> ${mapWord(MAP_WORDS.line)}. ${mapWord(MAP_WORDS.close)}. ${esc(MAP_WORDS.caveat)}</p>
+          <p><strong>Concept page.</strong> The concepts studied with it orbit around it, grouped by type. ${mapWord(MAP_WORDS.size)}. ${mapWord(MAP_WORDS.rings)}.</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
         </div>`;
       // "What's in the Atlas": opened from the overview or the ? menu.
@@ -2409,6 +2410,7 @@
         ${shownTypeTree.filter((t) => !t.parentId).map((t) => `<div class="row">${dot(t.id)}${esc(t.plural)} (${t.total})</div>`).join("")}
         <div class="hint">${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.size)} · ${mapWord(MAP_WORDS.color)}</div>
         <div class="hint">${mapWord(MAP_WORDS.line)}</div>
+        <div class="hint">${mapWord(MAP_WORDS.close)}</div>
         <div class="hint">${esc(MAP_WORDS.caveat)}</div>
         <div class="hint">Hover for a definition · click to explore</div>
 `;
@@ -2545,6 +2547,12 @@
       async function buildNet3D() {
         const THREE = await import("three");
         const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+        // Plain WebGL lines are always 1px, so links use the wide-line add-on to get thicker with more papers.
+        const [{ LineSegments2 }, { LineSegmentsGeometry }, { LineMaterial }] = await Promise.all([
+          import("three/addons/lines/LineSegments2.js"),
+          import("three/addons/lines/LineSegmentsGeometry.js"),
+          import("three/addons/lines/LineMaterial.js")
+        ]);
         const host = $("net3d");
         let renderer;
         try {
@@ -2599,11 +2607,18 @@
           stars.set(n.id, { n, glow, core, p, r: 3, visible: true });
         });
 
-        // Lines: every connection, very faint; brighter with more shared papers. Additive, so they glow where they bunch.
-        const linkGeo = new THREE.BufferGeometry();
-        const linkMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
-        const linkLines = new THREE.LineSegments(linkGeo, linkMat);
-        scene.add(linkLines);
+        // Lines: every connection; thicker AND brighter with more shared papers. Additive, so they glow where they bunch.
+        // Four width steps (each its own wide-line object), with brightness varying smoothly within them.
+        const LINK_WIDTHS = [1, 1.8, 2.8, 4.2];
+        const linkBuckets = LINK_WIDTHS.map((w) => {
+          const mat = new LineMaterial({ vertexColors: true, linewidth: w, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+          const obj = new LineSegments2(new LineSegmentsGeometry(), mat);
+          obj.frustumCulled = false;
+          scene.add(obj);
+          return { mat, obj };
+        });
+        // One handle so dimming during hover/focus reaches every width step.
+        const linkLines = { material: { set opacity(v) { linkBuckets.forEach((b) => { b.mat.opacity = v; }); } } };
         // The hovered or focused star's own lines, drawn on top in its color.
         const hiGeo = new THREE.BufferGeometry();
         const hiMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending });
@@ -2621,7 +2636,7 @@
           st.labelW = Math.min(260, cap(st.n.label).length * 7 + 16);
         });
 
-        Object.assign(net, { THREE, renderer, scene, camera, controls, stars, linkGeo, linkLines, hiGeo, hiLines, hiMat, L, HOME, hover: null, focus: null, fly: null, running: false, big: new Set() });
+        Object.assign(net, { THREE, renderer, scene, camera, controls, stars, linkLines, hiGeo, hiLines, hiMat, L, HOME, hover: null, focus: null, fly: null, running: false, big: new Set() });
 
         net.relabel = function () {
           net.big = new Set([...stars.values()].filter((st) => st.visible && papersIn(st.n.papers).length >= state.labelMinNet).map((st) => st.n.id));
@@ -2641,17 +2656,24 @@
           net.relabel();
           const shown = links.filter((l) => stars.get(l.a).visible && stars.get(l.b).visible && fieldLinkCount(l) > 0);
           const max = d3.max(shown, fieldLinkCount) || 1;
-          const posArr = new Float32Array(shown.length * 6), colArr = new Float32Array(shown.length * 6);
-          shown.forEach((l, i) => {
+          const pos = LINK_WIDTHS.map(() => []), col = LINK_WIDTHS.map(() => []);
+          shown.forEach((l) => {
             const a = stars.get(l.a).p, b = stars.get(l.b).p;
-            posArr.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6);
+            const t = Math.log1p(fieldLinkCount(l) - 1) / Math.log1p(max - 1 || 1);
+            const bi = Math.min(LINK_WIDTHS.length - 1, Math.floor(t * LINK_WIDTHS.length));
             // Faint by default (one-paper links nearly vanish), so ~1,900 lines don't saturate the core.
-            const k = 0.006 + 0.16 * Math.pow(Math.log1p(fieldLinkCount(l) - 1) / Math.log1p(max - 1 || 1), 1.6);
-            colArr.set([0.62 * k, 0.72 * k, 0.95 * k, 0.62 * k, 0.72 * k, 0.95 * k], i * 6);
+            // Wide lines carry more light per pixel, so their brightness is eased back (still brighter overall).
+            const k = (0.006 + 0.15 * Math.pow(t, 1.6)) / Math.sqrt(LINK_WIDTHS[bi]);
+            pos[bi].push(a.x, a.y, a.z, b.x, b.y, b.z);
+            col[bi].push(0.62 * k, 0.72 * k, 0.95 * k, 0.62 * k, 0.72 * k, 0.95 * k);
           });
-          linkGeo.setAttribute("position", new THREE.BufferAttribute(posArr, 3));
-          linkGeo.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
-          linkGeo.computeBoundingSphere();
+          linkBuckets.forEach((bk, i) => {
+            bk.obj.geometry.dispose();
+            const g = new LineSegmentsGeometry();
+            if (pos[i].length) { g.setPositions(pos[i]); g.setColors(col[i]); }
+            bk.obj.geometry = g;
+            bk.obj.visible = pos[i].length > 0;
+          });
           net.visibleLinks = shown;
           renderNetLegend();
           setHighlight();
@@ -2741,6 +2763,7 @@
           const w = host.clientWidth, h = host.clientHeight;
           if (!w || !h) return;
           renderer.setSize(w, h, false);
+          linkBuckets.forEach((b) => b.mat.resolution.set(w, h));
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
         }).observe(host);
@@ -2819,8 +2842,8 @@
         $("net3d-legend").innerHTML = `
           <div class="types">${nodeTypes.filter((t) => state.types.has(t)).map((t) => `<span>${dot(t)}${esc(typeOf(t).plural)}</span>`).join("")}</div>
           <div>${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.color)} · ${mapWord(MAP_WORDS.size)}${scopeActive() ? " in view" : ""}</div>
-          <div>${mapWord(MAP_WORDS.line3d)}. Hover a dot to light up its own.</div>
-          <div>${mapWord(MAP_WORDS.close)} (approximate)</div>
+          <div>${mapWord(MAP_WORDS.line)}. Hover a dot to light up its own.</div>
+          <div>${mapWord(MAP_WORDS.close)}</div>
           <div>${esc(MAP_WORDS.caveat)}</div>
           ${looseShown ? `<div><b>Outer shell</b> = ${looseShown} concepts with no lines</div>` : ""}
           <div class="how">Drag to rotate · scroll to zoom toward the pointer · right-drag to pan · click a dot to fly in</div>`;
@@ -3104,7 +3127,7 @@
         const lines = pairs.map(([a, b]) => {
           const k = linkByPair.get(pairKey(n[a].id, n[b].id))?.shared || 0;
           if (!k) return "";
-          return `<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}" stroke-width="${1 + (k / wmax) * 9}"><title>${k} papers studied both</title></line>`;
+          return `<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}" stroke-width="${1 + (k / wmax) * 9}" stroke-opacity="${(0.3 + 0.6 * (k / wmax)).toFixed(2)}"><title>${k} papers studied both</title></line>`;
         }).join("");
         const dots = homeTypes.map((t) => `<g class="mm-dot"><circle cx="${pts[t][0]}" cy="${pts[t][1]}" r="${r(n[t].paperCount)}" fill="${colorOf(t)}"><title>${esc(cap(n[t].label))}: ${n[t].paperCount} papers</title></circle>
             <text x="${pts[t][0]}" y="${pts[t][1] + r(n[t].paperCount) + 17}" text-anchor="middle">${esc(cap(n[t].label))}</text></g>`).join("");
@@ -3113,7 +3136,7 @@
         const mx = (pts.subject[0] + pts.task[0]) / 2, my = (pts.subject[1] + pts.task[1]) / 2;
         const notes = `
           <g class="mm-note"><path d="M${pts.subject[0] - rs * 0.7},${pts.subject[1] - rs * 0.7} L${pts.subject[0] - rs - 20},${pts.subject[1] - rs - 34}"/><text x="${pts.subject[0] - rs - 22}" y="${pts.subject[1] - rs - 40}" text-anchor="middle">big dot = many papers (${n.subject.paperCount})</text></g>
-          <g class="mm-note"><path d="M${mx},${my - 7} L${mx + 6},${my - 42}"/><text x="${mx + 8}" y="${my - 48}" text-anchor="middle">thick line = ${sp} papers studied both</text></g>
+          <g class="mm-note"><path d="M${mx},${my - 7} L${mx + 6},${my - 42}"/><text x="${mx + 8}" y="${my - 48}" text-anchor="middle">thick, bright line = ${sp} papers studied both</text></g>
           <g class="mm-note"><text x="${pts.problem[0]}" y="${pts.problem[1] + rp + 36}" text-anchor="middle">smaller dot = fewer papers (${n.problem.paperCount})</text></g>`;
         return `<svg class="mini-map" viewBox="0 0 680 320" role="img" aria-label="Example: four concepts as dots joined by lines">${lines}${dots}${notes}</svg>`;
       }
@@ -5005,7 +5028,7 @@
       // sides: where the note may go, in order of preference; it never sits on top of the part it describes.
       const GR_STEPS = [
         { el: () => $("left"), sides: ["right"], text: "What this concept is, and how often it’s been studied over time." },
-        { el: () => $("orbit-wrap"), sides: ["right", "left"], text: "Concepts studied alongside this one. Closer means more often. Click any circle." },
+        { el: () => $("orbit-wrap"), sides: ["right", "left"], text: "Concepts studied alongside this one. Inner rings mean more overlap in papers. Click any circle." },
         { el: () => document.querySelector("#concept-view > .right"), sides: ["left"], text: "The papers behind it, and its strongest connections." },
         { el: () => $("where"), also: () => $("trail-bar"), sides: ["below"], text: "Where you are now. Click a lit level to step back." }
       ];
@@ -5273,16 +5296,17 @@
           ] },
         { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network", sides: ["inside"],
           items: [
-            "Each star is a concept. Color = type, size = number of papers.",
-            "Closer stars are studied together more often.",
-            "Click a star to open its page.",
+            "Each dot is a concept. Color = type, size = number of papers.",
+            "Lines: studied in the same papers. Thicker and brighter = more papers.",
+            "Closer dots are, roughly, studied together more often.",
+            "Click a dot to open its page.",
             "Left: filters by type, years, and paper count.",
             "Top: where you are, and concepts you've opened recently."
           ] },
         { title: `A concept: ${tourName}`, hash: conceptHash(TOUR_TASK.id), show: ["where", "trail", "left", "orbit"], focus: "orbit", sides: ["right", "left"],
           items: [
             "Left: what it is · papers per year",
-            "Center: concepts studied with it. Inner ring = most often.",
+            "Center: concepts studied with it. Inner ring = most overlap in papers.",
             "Click any circle to see that connection."
           ] },
         ...(TOUR_PAIR ? [
