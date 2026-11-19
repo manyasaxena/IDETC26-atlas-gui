@@ -3293,7 +3293,7 @@
           ${k ? `<p class="ex-small">${plural(k, "study")} in the Atlas match this exact setup.</p>`.replace("studys", "studies") : ""}`;
       }
 
-      // A small labeled map: four real concepts, sized by papers, joined by lines as thick as their shared papers.
+      // A small labeled map: four real concepts, sized by papers, joined by same-width lines labeled with their shared papers.
       function miniMap() {
         const pts = { subject: [170, 130], task: [430, 110], construct: [330, 250], problem: [540, 220] };
         const n = Object.fromEntries(homeTypes.map((t) => [t, exampleNode(t)]));
@@ -5814,7 +5814,7 @@
         { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network", sides: ["inside"],
           items: [
             "Each dot is a concept. Color = type, size = number of papers.",
-            "Lines: studied in the same papers. Hover a dot to see how strong its links are.",
+            "Lines: studied in the same papers. Hover a dot to light up its lines: thicker = more shared papers.",
             "Closer dots are, roughly, studied together more often.",
             "Click a dot to open its page.",
             "Left: filters by type, years, and paper count.",

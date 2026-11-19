@@ -12,10 +12,10 @@
     dot: ["Dot", "a concept"],
     size: ["Size", "number of papers"],
     color: ["Color", "concept type"],
-    // Lines all look the same; strength shows only when you hover (or select) a dot.
-    line: ["Line", "studied in the same papers. Hover a dot to see how strong its links are."],
-    // The home page's version: same claim, pointing to where you can hover.
-    lineHome: ["Line", "studied in the same papers. Hover a dot in the network to see how many."],
+    // Lines all look the same; when you hover (or select) a dot, its own lines get thicker with more shared papers.
+    line: ["Line", "studied in the same papers. Hover a dot to light up its lines: thicker = more shared papers."],
+    // The home page's version: its small map isn't interactive, so it says where to hover.
+    lineHome: ["Line", "studied in the same papers. In the network, hover a dot to light up its lines: thicker = more shared papers."],
     close: ["Closer", "roughly, studied together more often"],
     // Matches updateOrbit(): neighbors ranked by overlap (shared ÷ papers with either), split into thirds.
     rings: ["Rings", "how much a concept’s papers overlap with the center’s (shared papers ÷ papers with either one). The top third sits on the inner ring"],
