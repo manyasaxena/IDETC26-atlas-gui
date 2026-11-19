@@ -535,32 +535,70 @@
     }
     .see-network:hover { background: var(--nav-bg-hover); border-color: var(--accent); transform: translateY(-1px); }
 
-    /* "What are you trying to do?": three large choices at the top of the overview. */
-    .goals { margin-top: 36px; }
-    .goals-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 12px; }
-    .goals-head h2 { margin: 0; font-size: 20px; }
-    .goals-head .show-all { background: none; border: none; padding: 0; color: var(--accent); font: 14px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(139, 197, 255, 0.4); }
-    .goals-head .show-all:hover { text-decoration-color: currentColor; }
-    .goal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .goal {
-      display: flex; flex-direction: column; gap: 6px; text-align: left;
-      padding: 18px 20px; min-height: 108px;
-      background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
-      color: var(--text); font: inherit; cursor: pointer;
-      transition: border-color 0.2s, background 0.2s, transform 0.15s var(--ease);
-    }
-    .goal:hover, .goal:focus-visible { border-color: var(--accent); background: var(--surface-2); transform: translateY(-1px); }
-    .goal .g-title { font-size: 18px; font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
-    .goal .g-title .arr { color: var(--accent); }
-    .goal .g-desc { color: var(--muted); font-size: 14.5px; line-height: 1.45; }
-    .goal[aria-pressed="true"] { border-color: var(--accent); background: var(--surface-2); box-shadow: 0 0 0 1px var(--accent) inset; }
-    .goal-grid.chosen .goal[aria-pressed="false"] { opacity: 0.6; }
-    .goal-grid.chosen .goal[aria-pressed="false"]:hover { opacity: 1; }
-    @media (max-width: 720px) { .goal-grid { grid-template-columns: 1fr; } .goal { min-height: 0; } }
-    /* Sections that don't belong to the chosen goal stay on the page, dimmed (not during the walkthrough). */
-    body:not(.touring) .land-section.dim { opacity: 0.28; transition: opacity 0.3s; }
-    body:not(.touring) .land-section.dim:hover { opacity: 0.5; }
-    .land-section.goal-first { margin-top: 40px; }
+    /* Home: the explainer. One narrow column, one step per screen, revealed as you scroll. */
+    .explainer { max-width: 760px; margin: 0 auto; padding: 56px 28px 160px; }
+    .ex-step { min-height: 72vh; padding: 40px 0 24px; display: flex; flex-direction: column; justify-content: center; }
+    .ex-step:first-child { min-height: 78vh; padding-top: 8px; }
+    .ex-step + .ex-step { border-top: 1px solid var(--line); }
+    .ex-num { margin: 0 0 10px; font: 500 12px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+    .ex-step h2 { margin: 0 0 18px; font-size: 34px; line-height: 1.15; letter-spacing: -0.01em; }
+    .ex-step p { margin: 0 0 14px; font-size: 18px; line-height: 1.65; color: var(--soft); max-width: 640px; }
+    .ex-step p strong, .ex-step p b { color: var(--text); }
+    .ex-step .ex-lead { font-size: 23px; line-height: 1.5; color: var(--text); }
+    .ex-fig { margin: 22px 0 0; }
+    .ex-fig svg { display: block; width: 100%; height: auto; }
+    .ex-fig figcaption { margin-top: 6px; font-size: 13px; color: var(--faint); }
+    .year-strip .yb { fill: var(--accent); opacity: 0.75; }
+    .year-strip .miss rect { fill: none; stroke: var(--down); stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .year-strip .miss text { fill: var(--down); font: 600 11px var(--sans); }
+    .year-strip .ticks text { fill: var(--faint); font: 11px var(--mono); }
+    .ex-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 10px 0 26px; }
+    @media (max-width: 640px) { .ex-types { grid-template-columns: 1fr; } }
+    .ex-type { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: var(--r-md); padding: 16px 18px; }
+    .ex-type p { margin: 0; max-width: none; }
+    .ex-type .tname { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 700; color: var(--text); }
+    .ex-type .thint { margin-top: 4px; font-size: 16px; line-height: 1.45; color: var(--text); }
+    .ex-type .tdef { margin-top: 10px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+    .ex-type .tdef span { display: block; font: 500 10.5px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin-bottom: 2px; }
+    .ex-type .tex { margin-top: 10px; font-size: 14px; color: var(--muted); }
+    .ex-k { font-size: 15px !important; color: var(--faint) !important; margin-bottom: 6px !important; }
+    .ex-step .ex-sentence { font-size: 21px; line-height: 2.05; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 22px; max-width: none; }
+    .ex-chip { white-space: nowrap; border-bottom: 3px solid var(--c); padding: 0 1px; font-weight: 600; }
+    .ex-chip i { font-style: normal; font-weight: 400; font-size: 14px; color: var(--c); }
+    .ex-step .ex-small { margin-top: 8px; font-size: 14px; color: var(--faint); }
+    .ex-pipe { list-style: none; margin: 8px 0 18px; padding: 0; display: grid; gap: 0; }
+    .ex-pipe li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 14px; position: relative; padding-bottom: 22px; }
+    .ex-pipe li:not(:last-child)::before { content: ""; position: absolute; left: 21px; top: 44px; bottom: 0; width: 2px; background: var(--line-strong); }
+    .ex-pipe .pn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--line-strong); font: 700 18px var(--sans); color: var(--text); }
+    .ex-pipe h3 { margin: 8px 0 4px; font-size: 19px; }
+    .ex-pipe p { font-size: 16.5px; margin: 0; }
+    .ex-funnel { display: grid; gap: 6px; margin-top: 12px; }
+    .ex-funnel .fr { display: grid; grid-template-columns: minmax(0, 220px) 24px auto; align-items: center; gap: 8px; font-size: 14.5px; }
+    .ex-funnel .a { color: var(--muted); text-align: right; }
+    .ex-funnel .arr { color: var(--faint); text-align: center; }
+    .ex-funnel .b { justify-self: start; font-weight: 600; color: var(--text); border-bottom: 3px solid var(--c); }
+    .ex-step .ex-limit { font-size: 15px; color: var(--muted); background: var(--surface); border-radius: var(--r-md); padding: 12px 16px; max-width: none; }
+    .mini-map line { stroke: var(--muted); stroke-opacity: 0.55; stroke-linecap: round; }
+    .mini-map .mm-dot text { fill: var(--text); font: 600 13px var(--sans); paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
+    .mini-map .mm-note path { stroke: var(--faint); fill: none; }
+    .mini-map .mm-note text { fill: var(--muted); font: italic 13px var(--sans); }
+    .ex-keys, .ex-list { margin: 18px 0 0; padding: 0 0 0 20px; display: grid; gap: 8px; font-size: 17px; line-height: 1.55; color: var(--soft); }
+    .ex-keys b { color: var(--text); }
+    .ex-step .ex-caveat { margin-top: 20px; font-size: 18px; font-weight: 600; color: var(--text); border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; }
+    .ex-step .ex-scroll { margin: 36px 0 0; font-size: 14px; color: var(--faint); }
+    .ex-start { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; margin-top: 8px; }
+    .see-network.big { font-size: 19px; padding: 16px 30px; }
+    .ex-secondary { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+    .ex-secondary button { background: none; border: none; padding: 4px 0; color: var(--accent); font: 16px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(139, 197, 255, 0.4); }
+    .ex-secondary button:hover { text-decoration-color: currentColor; }
+    @media (max-width: 720px) { .explainer { padding: 28px 16px 120px; } .ex-step h2 { font-size: 28px; } .ex-step .ex-lead { font-size: 20px; } .ex-funnel .fr { grid-template-columns: minmax(0, 1fr) 20px auto; } }
+    /* The explainer's sections fade in as a whole, one at a time. */
+    .ex-step.reveal { --fade: 1s; --step: 0.25s; }
+    .ex-step.reveal.in > :nth-child(n + 4) { transition-delay: calc(var(--d) + 3 * var(--step)); }
+    /* Top bar link to Explore insights. */
+    .top-link { border: 1px solid var(--line-strong); background: transparent; color: var(--text); border-radius: 999px; padding: 6px 14px; font: 500 13px var(--sans); cursor: pointer; white-space: nowrap; transition: border-color 0.2s, background 0.2s; }
+    .top-link:hover { border-color: var(--accent); }
+    .top-link[aria-current="page"] { background: var(--surface-3); border-color: var(--accent); }
 
     /* Sections: one question each, revealed as they scroll into view. */
     .land-section { margin-top: 88px; }
@@ -1631,6 +1669,7 @@
         <div id="search-results" hidden></div>
       </div>
       <div class="spacer"></div>
+      <button type="button" class="top-link" id="insights-link" data-tour="insights-link">Explore insights</button>
       <button id="help-btn" type="button" title="Help, glossary and walkthrough" aria-label="Open help" data-tour="help">?</button>
     </header>
     <div class="trail-bar" id="trail-bar" hidden aria-label="Recently visited" data-tour="trail"></div>
@@ -1648,7 +1687,7 @@
           <div class="net-legend" id="net3d-legend"></div>
         </div>
         <div class="net-note" id="net-note" hidden></div>
-        <button type="button" class="nav-back" id="net-overview">← Back to overview</button>
+        <button type="button" class="nav-back" id="net-overview">← How to read the map</button>
         <div class="net-tools" id="net-tools" role="group" aria-label="View controls">
           <span class="vc-label">View</span>
           <button type="button" class="vc-btn" id="net-spin" hidden>Pause rotation</button>
@@ -1729,7 +1768,7 @@
       const OR_R = 440;
       const RINGS = [112, 198, 284];
       const RING_BAND = 34;
-      const RING_NAMES = ["Very related", "Related", "Loosely related"];
+      const RING_NAMES = ["Most often together", "Often together", "Sometimes together"];
       const RING_OFFSET = [0, -0.25, 0.25];
       const WEDGE_IN = 62;
       const WEDGE_OUT = 330;
@@ -1908,6 +1947,8 @@
       // ---------- State ----------
       const state = {
         view: "field",
+        // The overview area's page: "home" (the explainer) or "insights".
+        page: "home",
         // Overview: how far each type card is opened (0 = top 3, 1 = top 5, 2 = all),
         // which sections show more than their top 3, and which sections have already faded in.
         landingLevel: new Map(),
@@ -1984,6 +2025,24 @@
         }
         return best ? best.lines : [s];
       }
+      // Shared with the home explainer (step 4) and every legend, so they use the same words.
+      const PIPELINE = {
+        corpus: 1548, empirical: 601, years: 36,
+        records: { subject: 838, task: 1094, problem: 842, construct: 1638 },
+        nodes: { subject: 12, task: 70, problem: 80, construct: 66 },
+        missingYears: [1992, 2016]
+      };
+      const MAP_WORDS = {
+        dot: ["Dot", "a concept"],
+        size: ["Size", "number of papers"],
+        color: ["Color", "concept type"],
+        line: ["Line", "studied in the same papers; thicker = more papers"],
+        line3d: ["Line", "studied in the same papers; brighter = more papers"],
+        close: ["Closer", "studied together more often"],
+        rings: ["Rings", "how often studied together with the center; inner = most often"],
+        caveat: "A line means “studied together,” not “proven related.”"
+      };
+      const mapWord = ([k, v]) => `<b>${esc(k)}</b> = ${esc(v)}`;
       const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
       const pct = d3.format(".1~%");
       const withArticle = (s) => `${/^[aeiou]/i.test(s) ? "an" : "a"} ${s}`;
@@ -2164,7 +2223,9 @@
       function route() {
         const m = location.hash.match(/^#\/concept\/([^/]+)(?:\/with\/([^/]+))?(?:\/paper\/(\d+))?\/?$/);
         const id = m && decodeURIComponent(m[1]);
-        if (/^#\/overview\/?$/.test(location.hash)) { showLanding(); return; }
+        // The bare address and #/overview open the explainer home; #/insights opens Explore insights; #/ is the network.
+        if (!location.hash || /^#\/overview\/?$/.test(location.hash)) { showLanding("home"); return; }
+        if (/^#\/insights\/?$/.test(location.hash)) { showLanding("insights"); return; }
         if (!id || !byId.has(id)) { showField(); return; }
         const conn = m[2] ? decodeURIComponent(m[2]) : null;
         const paper = m[3] ? Number(m[3]) : null;
@@ -2346,7 +2407,9 @@
 
       $("field-legend").innerHTML = `
         ${shownTypeTree.filter((t) => !t.parentId).map((t) => `<div class="row">${dot(t.id)}${esc(t.plural)} (${t.total})</div>`).join("")}
-        <div class="hint">Size = papers · line = shared papers</div>
+        <div class="hint">${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.size)} · ${mapWord(MAP_WORDS.color)}</div>
+        <div class="hint">${mapWord(MAP_WORDS.line)}</div>
+        <div class="hint">${esc(MAP_WORDS.caveat)}</div>
         <div class="hint">Hover for a definition · click to explore</div>
 `;
 
@@ -2755,11 +2818,12 @@
         const looseShown = [...net.stars.values()].filter((st) => st.visible && !(adjacency.get(st.n.id) || []).length).length;
         $("net3d-legend").innerHTML = `
           <div class="types">${nodeTypes.filter((t) => state.types.has(t)).map((t) => `<span>${dot(t)}${esc(typeOf(t).plural)}</span>`).join("")}</div>
-          <div><b>Color</b> = type · <b>Size</b> = papers${scopeActive() ? " in view" : ""}</div>
-          <div><b>Distance</b> = closer stars share a bigger share of their papers (approximate)</div>
-          <div><b>Lines</b> = shared papers, brighter = more. Hover a star to light up its own.</div>
-          ${looseShown ? `<div><b>Outer shell</b> = ${looseShown} concepts with no shared-paper links</div>` : ""}
-          <div class="how">Drag to rotate · scroll to zoom toward the pointer · right-drag to pan · click a star to fly in</div>`;
+          <div>${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.color)} · ${mapWord(MAP_WORDS.size)}${scopeActive() ? " in view" : ""}</div>
+          <div>${mapWord(MAP_WORDS.line3d)}. Hover a dot to light up its own.</div>
+          <div>${mapWord(MAP_WORDS.close)} (approximate)</div>
+          <div>${esc(MAP_WORDS.caveat)}</div>
+          ${looseShown ? `<div><b>Outer shell</b> = ${looseShown} concepts with no lines</div>` : ""}
+          <div class="how">Drag to rotate · scroll to zoom toward the pointer · right-drag to pan · click a dot to fly in</div>`;
       }
 
       // Shows the full network in 3D (or the flat 2D graph, only if 3D can't start).
@@ -2994,37 +3058,146 @@
         refreshPlanner();
       }
 
-      // ---------- "What are you trying to do?" ----------
-      // Each goal shows its own sections first and dims the rest; "Show everything" clears it. Remembered.
-      const GOAL_KEY = "atlas-goal";
-      const GOALS = [
-        { key: "plan", title: "Plan a study", desc: "Find tasks, design problems, and measures other researchers have used.", sections: ["planner"] },
-        { key: "learn", title: "Learn the field", desc: "See what design research studies most, and how it’s changed.", sections: ["landmarks", "trends"] },
-        { key: "explore", title: "Explore connections", desc: "See how concepts relate, in the network.", sections: null }
-      ];
-      let goal = (() => { try { return localStorage.getItem(GOAL_KEY); } catch { return null; } })();
-      if (!GOALS.some((g) => g.key === goal)) goal = null;
-      function setGoal(key) {
-        goal = key;
-        try { if (key) localStorage.setItem(GOAL_KEY, key); else localStorage.removeItem(GOAL_KEY); } catch {}
-      }
-      const goalSections = () => GOALS.find((g) => g.key === goal)?.sections || null;
-      function chooseGoal(key) {
-        setGoal(key);
-        if (key === "explore") { goField(); return; }
-        renderLanding();
-        const lv = $("landing-view");
-        const first = lv.querySelector(".land-section.goal-first");
-        // Show the goal's sections right away (no scroll fade), then bring them up under the choices.
-        lv.querySelectorAll(".land-section:not(.in)").forEach((sec) => { sec.classList.add("in", "seen"); state.landingSeen.add(sec.dataset.section); });
-        if (first) {
-          const top = lv.scrollTop + lv.querySelector(".goals").getBoundingClientRect().top - lv.getBoundingClientRect().top - 16;
-          lv.scrollTo({ top: Math.max(0, top), behavior: REDUCED_MOTION ? "auto" : "smooth" });
-        }
-        if (key === "plan") $("plan-input")?.focus({ preventScroll: true });
+      // ---------- Home: a short explainer, one step at a time ----------
+      // Numbers and definitions follow the IDETC 2026 Atlas paper (Sections 2–3). The words for reading the map
+      // (MAP_WORDS) are shared with the network and concept-page legends so both say the same thing.
+      const EXAMPLE = { subject: "Engineering Students", task: "concept generation task", problem: "consumer product", construct: "cognitive fixation" };
+      const exampleNode = (t) => nodes.find((n) => n.type === t && n.label === EXAMPLE[t]) || nodes.filter((n) => n.type === t && !isPlaceholder(n)).sort((a, b) => b.paperCount - a.paperCount)[0];
+      const homeTypes = ["subject", "task", "problem", "construct"].filter((t) => typeById.has(t));
+
+      // Papers per year as small bars; missing proceedings are marked.
+      function yearStrip(markMissing) {
+        const counts = d3.rollup([...paperById.values()], (v) => v.length, (p) => p.year);
+        const years = d3.range(Y0, Y1 + 1);
+        const max = d3.max(years, (y) => counts.get(y) || 0) || 1;
+        const W = 640, H = 96, bw = W / years.length;
+        const bars = years.map((y, i) => {
+          const c = counts.get(y) || 0;
+          const h = (c / max) * (H - 30);
+          const x = i * bw;
+          if (!c && markMissing && PIPELINE.missingYears.includes(y)) {
+            return `<g class="miss"><rect x="${x + 1}" y="18" width="${bw - 2}" height="${H - 40}" rx="2"/><text x="${x + bw / 2}" y="13" text-anchor="middle">${y}</text></g>`;
+          }
+          return `<rect class="yb" x="${x + 1}" y="${H - 22 - h}" width="${bw - 2}" height="${h}" rx="2"><title>${y}: ${plural(c, "paper")}</title></rect>`;
+        }).join("");
+        const ticks = [1990, 2000, 2010, 2020].map((y) => `<text x="${(y - Y0) * bw + bw / 2}" y="${H - 6}" text-anchor="middle">${y}</text>`).join("");
+        return `<svg class="year-strip" viewBox="0 0 ${W} ${H}" role="img" aria-label="Studies per year, ${Y0} to ${Y1}">${bars}<g class="ticks">${ticks}</g></svg>`;
       }
 
+      // The four concept types as a single example study.
+      function exampleSentence() {
+        const n = Object.fromEntries(homeTypes.map((t) => [t, exampleNode(t)]));
+        const chip = (t, text) => `<span class="ex-chip" style="--c:${colorOf(t)}">${esc(text)} <i>(${esc(typeOf(t).label.toLowerCase())})</i></span>`;
+        const ids = homeTypes.map((t) => new Set(papersOf(n[t]).map((p) => p.paper_id)));
+        const k = [...ids[0]].filter((id) => ids.every((s) => s.has(id))).length;
+        return `<p class="ex-sentence">${chip("subject", "Engineering students")} did a ${chip("task", "concept generation task")} to design a ${chip("problem", "consumer product")}, and researchers measured ${chip("construct", "cognitive fixation")}.</p>
+          ${k ? `<p class="ex-small">${plural(k, "study")} in the Atlas match this exact setup.</p>`.replace("studys", "studies") : ""}`;
+      }
+
+      // A small labeled map: four real concepts, sized by papers, joined by lines as thick as their shared papers.
+      function miniMap() {
+        const pts = { subject: [170, 130], task: [430, 110], construct: [330, 250], problem: [540, 220] };
+        const n = Object.fromEntries(homeTypes.map((t) => [t, exampleNode(t)]));
+        const r = d3.scaleSqrt().domain([0, d3.max(homeTypes, (t) => n[t].paperCount)]).range([6, 34]);
+        const pairs = [["subject", "task"], ["task", "construct"], ["subject", "construct"], ["task", "problem"], ["problem", "construct"]];
+        const wmax = d3.max(pairs, ([a, b]) => linkByPair.get(pairKey(n[a].id, n[b].id))?.shared || 0) || 1;
+        const lines = pairs.map(([a, b]) => {
+          const k = linkByPair.get(pairKey(n[a].id, n[b].id))?.shared || 0;
+          if (!k) return "";
+          return `<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}" stroke-width="${1 + (k / wmax) * 9}"><title>${k} papers studied both</title></line>`;
+        }).join("");
+        const dots = homeTypes.map((t) => `<g class="mm-dot"><circle cx="${pts[t][0]}" cy="${pts[t][1]}" r="${r(n[t].paperCount)}" fill="${colorOf(t)}"><title>${esc(cap(n[t].label))}: ${n[t].paperCount} papers</title></circle>
+            <text x="${pts[t][0]}" y="${pts[t][1] + r(n[t].paperCount) + 17}" text-anchor="middle">${esc(cap(n[t].label))}</text></g>`).join("");
+        const sp = linkByPair.get(pairKey(n.subject.id, n.task.id))?.shared || 0;
+        const rs = r(n.subject.paperCount), rp = r(n.problem.paperCount);
+        const mx = (pts.subject[0] + pts.task[0]) / 2, my = (pts.subject[1] + pts.task[1]) / 2;
+        const notes = `
+          <g class="mm-note"><path d="M${pts.subject[0] - rs * 0.7},${pts.subject[1] - rs * 0.7} L${pts.subject[0] - rs - 20},${pts.subject[1] - rs - 34}"/><text x="${pts.subject[0] - rs - 22}" y="${pts.subject[1] - rs - 40}" text-anchor="middle">big dot = many papers (${n.subject.paperCount})</text></g>
+          <g class="mm-note"><path d="M${mx},${my - 7} L${mx + 6},${my - 42}"/><text x="${mx + 8}" y="${my - 48}" text-anchor="middle">thick line = ${sp} papers studied both</text></g>
+          <g class="mm-note"><text x="${pts.problem[0]}" y="${pts.problem[1] + rp + 36}" text-anchor="middle">smaller dot = fewer papers (${n.problem.paperCount})</text></g>`;
+        return `<svg class="mini-map" viewBox="0 0 680 320" role="img" aria-label="Example: four concepts as dots joined by lines">${lines}${dots}${notes}</svg>`;
+      }
+
+      function renderHome() {
+        const view = $("landing-view");
+        const typeCount = (t) => nodes.filter((n) => n.type === t).length;
+        const step = (key, num, title, body) => `<section class="ex-step reveal ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="home-${key}">
+            <p class="ex-num">${num} of 6</p>
+            <h2>${title}</h2>
+            ${body}
+          </section>`;
+        view.innerHTML = `<div class="explainer">
+          ${step("what", 1, "What is this?", `
+            <p class="ex-lead">A map of ${PIPELINE.years} years of design research: <strong>${PIPELINE.empirical} studies</strong> from the ASME IDETC Design Theory and Methodology (DTM) conference, ${Y0}–${Y1}.</p>
+            <p>DTM is an engineering design research conference. It is part of ASME, the American Society of Mechanical Engineers.</p>
+            <figure class="ex-fig">${yearStrip(false)}<figcaption>Studies in the Atlas, per year</figcaption></figure>
+            <p class="ex-scroll" aria-hidden="true">Scroll to continue ↓</p>`)}
+
+          ${step("parts", 2, "What’s a study made of?", `
+            <p>Every study in the Atlas is described with four kinds of <em>concepts</em>. Each kind has its own color everywhere on this site.</p>
+            <div class="ex-types">${homeTypes.map((t) => `<div class="ex-type" style="--c:${colorOf(t)}">
+                <p class="tname"><span class="dot" style="background:${colorOf(t)}"></span>${esc(typeOf(t).label)}</p>
+                <p class="thint">${esc(hintOf(t))}</p>
+                <p class="tdef"><span>Working definition</span>${esc(definitionOf(t))}</p>
+                <p class="tex">Example: <b>${esc(cap(exampleNode(t).label))}</b></p>
+              </div>`).join("")}</div>
+            <p class="ex-k">One study, built from all four:</p>
+            ${exampleSentence()}`)}
+
+          ${step("built", 3, "How was the map built?", `
+            <p>In three steps, from papers to a map.</p>
+            <ol class="ex-pipe">
+              <li><span class="pn">1</span><div><h3>Collect</h3><p><strong>${PIPELINE.corpus.toLocaleString()}</strong> DTM papers. <strong>${PIPELINE.empirical}</strong> are <em>empirical</em>: someone performed a design task that was observed or measured.</p></div></li>
+              <li><span class="pn">2</span><div><h3>Read each paper</h3><p>An AI model read every paper and pulled out the subjects, tasks, problems and constructs that were actually studied, not just cited. Each one is backed by a quote from the paper.</p></div></li>
+              <li><span class="pn">3</span><div><h3>Group across papers</h3><p>Different papers use different words for the same thing. Matching items were grouped into shared concepts using clear rules. Researchers reviewed and refined this over many rounds.</p>
+                <div class="ex-funnel">${homeTypes.map((t) => `<div class="fr"><span class="a">${PIPELINE.records[t].toLocaleString()} ${esc(typeOf(t).label.toLowerCase())} mentions</span><span class="arr">→</span><span class="b" style="--c:${colorOf(t)}">${PIPELINE.nodes[t]} ${esc(typeOf(t).plural.toLowerCase())}</span></div>`).join("")}</div>
+              </div></li>
+            </ol>
+            <p class="ex-limit"><b>Limits:</b> AI did the reading and grouping. A few placeholder concepts (${listJoin(placeholders.map((n) => `“${esc(n.label)}”`))}) are left out. There’s no formal check between multiple human reviewers yet.</p>`)}
+
+          ${step("read", 4, "How to read the map", `
+            <p>The network shows every concept at once. Here are four of them.</p>
+            <figure class="ex-fig">${miniMap()}</figure>
+            <ul class="ex-keys">
+              <li>${mapWord(MAP_WORDS.dot)}</li>
+              <li>${mapWord(MAP_WORDS.size)}</li>
+              <li>${mapWord(MAP_WORDS.color)}</li>
+              <li>${mapWord(MAP_WORDS.line)}</li>
+              <li>${mapWord(MAP_WORDS.close)}</li>
+              <li>On a concept’s own page: ${mapWord(MAP_WORDS.rings)}</li>
+            </ul>
+            <p class="ex-caveat">${esc(MAP_WORDS.caveat)}</p>`)}
+
+          ${step("scope", 5, "What’s included, and what isn’t", `
+            <ul class="ex-list">
+              <li>Only DTM conference papers. Not the Journal of Mechanical Design, Design Science, or other venues.</li>
+              <li>The ${listJoin(PIPELINE.missingYears.map(String))} proceedings are missing.</li>
+              <li>Choosing this data shapes what the map shows. A gap here may not be a gap in the field.</li>
+            </ul>
+            <figure class="ex-fig">${yearStrip(true)}<figcaption>Missing years are outlined</figcaption></figure>`)}
+
+          ${step("start", 6, "Start exploring", `
+            <p>You know how to read it now.</p>
+            <div class="ex-start">
+              <button type="button" class="see-network big" data-network="1">Explore the network →</button>
+              <div class="ex-secondary">
+                <button type="button" data-home="insights">Explore insights</button>
+                <button type="button" data-home="plan">Plan a study</button>
+                <button type="button" data-home="search">Search a concept</button>
+              </div>
+            </div>`)}
+        </div>`;
+        watchReveals();
+      }
+
+      // The overview area has two pages: the explainer home (#/overview, and the bare address) and Explore insights.
       function renderLanding() {
+        if (state.page === "insights") renderInsights();
+        else renderHome();
+      }
+
+      // ---------- Explore insights: what gets studied most, how the field changed, and the study planner ----------
+      function renderInsights() {
         const inView = scopeCount();
         const view = $("landing-view");
         const typeCards = nodeTypes.filter((t) => state.types.has(t)).map((t) => {
@@ -3052,37 +3225,20 @@
         }).join("");
 
         const [tlo, thi] = trendRange();
-        const focusOn = goalSections();
-        const section = (key, html) => {
-          const cls = !focusOn ? "" : focusOn.includes(key) ? (key === focusOn[0] ? "goal-first" : "") : "dim";
-          return `<section class="land-section reveal ${cls} ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
-        };
+        const section = (key, html) => `<section class="land-section reveal ${state.landingSeen.has(key) ? "in seen" : ""}" data-section="${key}" data-tour="ov-${key}">${html}</section>`;
         view.innerHTML = `<div class="landing">
           <div class="hero" data-tour="ov-hero">
             <div>
-              <p class="kicker">Design Engineering Atlas</p>
-              <h1>What has design research studied, and what goes together?</h1>
-              <p>${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, <span style="white-space:nowrap">${Y0}–${Y1}</span>. <button type="button" class="scope-link" data-scope="1">What’s in the Atlas</button></p>
+              <p class="kicker">Explore insights</p>
+              <h1>What has design research studied?</h1>
+              <p>Patterns across ${totalPapers} empirical papers from the ASME Design Theory and Methodology conference, <span style="white-space:nowrap">${Y0}–${Y1}</span>. New here? <button type="button" class="scope-link" data-home="home">See how the map works</button></p>
             </div>
             <button type="button" class="see-network" data-network="1">Explore the network →</button>
           </div>
 
-          <div class="goals" data-tour="ov-goals">
-            <div class="goals-head">
-              <h2>What are you trying to do?</h2>
-              ${focusOn ? `<button type="button" class="show-all" data-goal="">Show everything</button>` : ""}
-            </div>
-            <div class="goal-grid ${focusOn ? "chosen" : ""}" role="group" aria-label="What are you trying to do?">
-              ${GOALS.map((g) => `<button type="button" class="goal" data-goal="${g.key}" aria-pressed="${g.key === goal && !!focusOn}">
-                <span class="g-title">${esc(g.title)}<span class="arr" aria-hidden="true">→</span></span>
-                <span class="g-desc">${esc(g.desc)}</span>
-              </button>`).join("")}
-            </div>
-          </div>
-
           ${!inView ? `<div class="gap-box land-gap"><strong>0 papers: possible gap</strong><p>No paper covers every concept you pinned${rangeActive() ? ` in ${rangeText()}` : ""}. Open Filters to see the closest combinations that do.</p></div>` : ""}
 
-          ${orderSections(focusOn, {
+          ${[{
           landmarks: section("landmarks", `
             <h2>What gets studied most?</h2>
             <p class="sub">Bars show how many papers study each concept.${scopeActive() ? ` Counting the ${inView} papers that match your filters.` : ""}</p>
@@ -3147,19 +3303,12 @@
             </div>
             <div id="plan-body"></div>
             ${placeholderNote()}`)
-          })}
+          }].map((o) => o.landmarks + o.trends + o.planner).join("\n")}
         </div>
 `;
         refreshTrends();
         refreshPlanner();
         watchReveals();
-      }
-
-      // The goal's sections first (in their usual order), then the rest.
-      function orderSections(focusOn, html) {
-        const keys = ["landmarks", "trends", "planner"];
-        const first = focusOn ? keys.filter((k) => focusOn.includes(k)) : [];
-        return [...first, ...keys.filter((k) => !first.includes(k))].map((k) => html[k]).join("\n");
       }
 
       // Each section fades in the first time it scrolls into view, and stays shown after that.
@@ -3187,8 +3336,8 @@
       $("landing-view").addEventListener("click", (event) => {
         const pick = event.target.closest("[data-plan-id]");
         if (pick) { pickPlanCenter(pick.dataset.planId); return; }
-        const g = event.target.closest("[data-goal]");
-        if (g) { chooseGoal(g.dataset.goal || null); return; }
+        const h = event.target.closest("[data-home]");
+        if (h) { homeAction(h.dataset.home); return; }
         const el = event.target.closest("[data-open],[data-level],[data-land-more],[data-pair],[data-network],[data-trend-sort],#trend-reset,[data-plan-type],[data-plan-rare],[data-plan-net]");
         if (!el) return;
         const markOn = () => el.parentElement.querySelectorAll("button").forEach((b) => { const on = b === el; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
@@ -3269,8 +3418,11 @@
         if (el && !el.contains(event.relatedTarget)) hideTip();
       });
 
-      function showLanding() {
+      function showLanding(page = "home") {
+        const pageChanged = state.page !== page || state.view !== "landing";
         state.view = "landing";
+        state.page = page;
+        if (pageChanged) { state.landingSeen.clear(); $("landing-view").scrollTop = 0; }
         state.center = null;
         hideTip();
         cancelGuided();
@@ -3280,6 +3432,20 @@
         renderFilterBar();
         renderCrumbs();
         renderLanding();
+        document.body.dataset.page = page;
+        if (page === "insights" && pendingPlan) {
+          pendingPlan = false;
+          const sec = document.querySelector('#landing-view [data-section="planner"]');
+          if (sec) { sec.classList.add("in", "seen"); sec.scrollIntoView({ block: "start" }); $("plan-input")?.focus({ preventScroll: true }); }
+        }
+      }
+      let pendingPlan = false;
+      // The explainer's "Start exploring" links (and "See how the map works" on Explore insights).
+      function homeAction(what) {
+        if (what === "insights") navigate("#/insights");
+        else if (what === "home") navigate("#/overview");
+        else if (what === "plan") { pendingPlan = true; if (state.page === "insights" && state.view === "landing") showLanding("insights"); else navigate("#/insights"); }
+        else if (what === "search") { searchInput.focus(); searchInput.select(); }
       }
 
       // ---------- Concept view: shared data ----------
@@ -3314,7 +3480,9 @@
         const nb = center && state.connection ? byId.get(state.connection) : null;
         const paper = center && state.paper != null ? getPaper(state.paper) : null;
         const levels = [
-          { key: "overview", html: "Overview", hash: "#/overview", title: "Overview of the Atlas" },
+          state.view === "landing" && state.page === "insights"
+            ? { key: "overview", html: "Explore insights", hash: "#/insights", title: "Explore insights" }
+            : { key: "overview", html: "Home", hash: "#/overview", title: "Home: how the Atlas works" },
           { key: "network", html: "Network", hash: "#/", title: "The full network" },
           center
             ? { key: "concept", html: `<span class="k">Concept:</span> ${dot(center.type)}${esc(cap(center.label))}`, hash: conceptHash(center.id), title: `Concept: ${cap(center.label)}` }
@@ -3335,8 +3503,11 @@
           if (!l.hash) return `${sep}<span class="lvl skipped${extra}" title="${esc(l.title)}">${l.html}</span>`;
           return `${sep}<button type="button" class="lvl${extra}" data-hash="${esc(l.hash)}" title="${esc(l.title)}">${l.html}</button>`;
         }).join("");
+        const onInsights = state.view === "landing" && state.page === "insights";
+        if (onInsights) $("insights-link").setAttribute("aria-current", "page"); else $("insights-link").removeAttribute("aria-current");
         renderTrail();
       }
+      $("insights-link").addEventListener("click", () => navigate("#/insights"));
       $("where").addEventListener("click", (event) => {
         const el = event.target.closest("[data-hash]");
         if (el) navigate(el.dataset.hash);
@@ -3864,11 +4035,11 @@
         $("orbit-legend").innerHTML = `
           <div class="row">
             <svg width="30" height="16" aria-hidden="true"><circle cx="6" cy="9" r="4" fill="#8a93a6"/><circle cx="21" cy="8" r="7" fill="#8a93a6"/></svg>
-            <span>Size = the concept's papers${rangeActive() ? ` in ${rangeText()}` : ""}</span>
+            <span>${mapWord(MAP_WORDS.size)}${rangeActive() ? ` in ${rangeText()}` : ""}</span>
           </div>
           <div class="row">
             <svg width="30" height="18" aria-hidden="true"><circle cx="15" cy="9" r="2.5" fill="#8a93a6"/><circle cx="15" cy="9" r="5.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/><circle cx="15" cy="9" r="8.5" fill="none" stroke="#6b7282" stroke-dasharray="2 2"/></svg>
-            <span>Rings rank relevance: shared papers ÷ papers in either concept</span>
+            <span>${mapWord(MAP_WORDS.rings)}</span>
           </div>
           <div class="row">
             ${sliceIcon()}
@@ -5123,14 +5294,14 @@
               "“Compare two”: any two concepts side by side"
             ] }
         ] : []),
-        { title: "The overview", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-goals", "ov-landmarks", "ov-trends"], focus: "ov-goals", scroll: "ov-goals", sides: ["below", "above"],
+        { title: "Explore insights", hash: "#/insights", show: ["where", "trail", "search", "help", "insights-link", "ov-hero", "ov-landmarks", "ov-trends"], focus: "ov-landmarks", scroll: "ov-landmarks", sides: ["above", "below"],
           items: [
-            "Start here: pick what you're trying to do",
+            "Open it anytime from “Explore insights” at the top",
             "What gets studied most, by type",
             "How the field has changed: rising · falling · steady",
             "Click any name to open its page"
           ] },
-        { title: "Planning a study", hash: "#/overview", show: ["where", "trail", "search", "help", "ov-hero", "ov-goals", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", sides: ["above", "below"],
+        { title: "Planning a study", hash: "#/insights", show: ["where", "trail", "search", "help", "insights-link", "ov-hero", "ov-landmarks", "ov-trends", "ov-planner"], focus: "ov-planner", scroll: "ov-planner", sides: ["above", "below"],
           items: [
             "Start from what you know: a task, problem, measure, or who you'll study",
             "See what other studies paired with it, or rarely did",
@@ -5151,7 +5322,7 @@
       }
       // After the last step: the top of the overview, with its sections fading in again as you scroll down.
       function landOnOverview() {
-        if (state.view !== "landing") { navigate("#/overview"); return; }
+        if (state.view !== "landing" || state.page !== "insights") { navigate("#/insights"); return; }
         state.landingSeen.clear();
         $("landing-view").scrollTop = 0;
         renderLanding();
@@ -5175,7 +5346,7 @@
         const go = () => {
           if (step.tab && state.tab !== step.tab) document.querySelector(`#tabs [data-tab="${step.tab}"]`)?.click();
           renderTrail();
-          if (step.hash === "#/overview") {
+          if (step.hash === "#/overview" || step.hash === "#/insights") {
             // Overview sections normally fade in as you scroll; during the tour, show them right away.
             document.querySelectorAll("#landing-view .reveal").forEach((sec) => {
               if (step.show.includes(sec.dataset.tour)) { sec.classList.add("in", "seen"); state.landingSeen.add(sec.dataset.section); }
@@ -5197,7 +5368,7 @@
           if (step.scroll && !REDUCED_MOTION) setTimeout(() => renderTourPop(step), 450);
           else renderTourPop(step);
         };
-        if (location.hash !== step.hash && !(step.hash === "#/" && !location.hash)) {
+        if (location.hash !== step.hash) {
           navigate(step.hash);
           // Let the new page render (and its panels fade in) before pointing at it.
           setTimeout(go, 520);
@@ -5242,13 +5413,14 @@
       window.addEventListener("resize", () => { if (tour.on) placeTourPop(TOUR_STEPS[tour.i]); });
       // The page stays usable during the tour; if a click moves somewhere else, the popup re-finds its spot.
       window.addEventListener("hashchange", () => { if (tour.on) setTimeout(() => tour.on && placeTourPop(TOUR_STEPS[tour.i]), 450); });
-      // First visit only, and only when arriving at the start (not from a shared link to a concept).
+      // First visit only, and only when arriving at the network (the home page explains things first;
+      // a shared link to a concept doesn't start it either).
       // ?tour=1 in the address always starts it (handy for showing it to someone, or after it's been seen).
       function maybeStartTour() {
         let done = false;
         try { done = localStorage.getItem(TOUR_KEY) === "1"; } catch {}
         const forced = new URLSearchParams(location.search).get("tour") === "1";
-        if (forced || (!done && /^(#\/?(overview)?)?$/.test(location.hash))) setTimeout(startTour, 300);
+        if (forced || (!done && location.hash === "#/")) setTimeout(startTour, 300);
       }
 
       recomputeScope();
@@ -5256,6 +5428,8 @@
       renderNetSide();
       route();
       maybeStartTour();
+      // Coming from the home page, the first visit to the network starts the walkthrough there.
+      window.addEventListener("hashchange", () => { if (!tour.on && location.hash === "#/") maybeStartTour(); });
     })();
   </script>
 </body>
