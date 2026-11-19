@@ -141,7 +141,7 @@
     });
     const links = [...pairs.values()].map((p) => ({ a: p.a, b: p.b, shared: p.ids.size }));
     const [Y0, Y1] = raw.meta?.year_range || d3.extent(nodes.flatMap((n) => n.papers.map((p) => p.year)));
-    const modeOk = (k) => (k === "type" ? true : k === "families" ? !!suggested : !!groupsFile);
+    const modeOk = (k) => AtlasMap.MODES.some((m) => m.key === k) && (k === "type" ? true : k === "families" ? !!suggested : !!groupsFile);
     const atlas = AtlasMap.build({ nodes, links, files: { groups: groupsFile, suggested: suggested || { types: {} } }, typeOrder: TYPES, typeLabel: plural });
     const WORDS = AtlasMap.WORDS;
     const word = ([k, v]) => `<b>${esc(k)}</b> = ${esc(v)}`;
