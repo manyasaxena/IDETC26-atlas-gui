@@ -598,6 +598,38 @@
     /* The explainer's sections fade in as a whole, one at a time. */
     .ex-step.reveal { --fade: 1s; --step: 0.25s; }
     .ex-step.reveal.in > :nth-child(n + 4) { transition-delay: calc(var(--d) + 3 * var(--step)); }
+    /* Connection page: at-a-glance bars, how they're connected, study cards. */
+    .glance { display: grid; gap: 10px; }
+    .g-row .k { margin: 0 0 3px; font: 500 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .g-row .k span { text-transform: none; letter-spacing: 0; color: var(--faint); }
+    .g-bar { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 36px; gap: 8px; align-items: center; font-size: 13px; padding: 2px 0; }
+    .g-bar .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .g-bar .track { height: 7px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+    .g-bar .track i { display: block; height: 100%; border-radius: 4px; }
+    .g-bar .num { font: 12px var(--mono); color: var(--muted); text-align: right; }
+    .detail-card.connected { margin-top: 16px; }
+    .conn-text { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--text); }
+    .study-cards { display: grid; gap: 8px; }
+    .study-mini { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface-2); cursor: pointer; transition: border-color 0.2s; }
+    .study-mini:hover { border-color: var(--accent); }
+    .study-mini .t { margin: 0; font-weight: 600; font-size: 13.5px; line-height: 1.35; }
+    .study-mini .m { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+    .study-mini dl { margin: 8px 0 0; display: grid; gap: 4px; }
+    .study-mini dl > div { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 8px; font-size: 12.5px; line-height: 1.45; }
+    .study-mini dt { font: 500 10.5px var(--mono); color: var(--faint); text-transform: uppercase; padding-top: 2px; }
+    .study-mini dd { margin: 0; color: var(--text); }
+    /* Paper page: "Study at a glance" and the citation. */
+    .study-rows { margin: 0; display: grid; gap: 0; }
+    .study-rows > div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+    .study-rows > div:first-child { border-top: none; padding-top: 2px; }
+    .study-rows dt { font: 500 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding-top: 2px; }
+    .study-rows dd { margin: 0; font-size: 14px; line-height: 1.5; color: var(--text); }
+    .study-rows .prompt { display: block; margin-top: 3px; font-size: 13px; color: var(--muted); }
+    .study-rows .nr { color: var(--faint); font-style: italic; }
+    .study-note { margin: 10px 0 0; font-size: 12px; color: var(--faint); font-style: italic; }
+    .cite-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }
+    .cite { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text); user-select: all; }
+    .cite-copy { padding: 5px 12px; }
     /* Map view: concepts grouped into soft regions with large names, on the same dark stage as the network. */
     #map-view { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding: 2px 14px 14px; animation: fadeIn 0.35s var(--ease); }
     #map-view[hidden] { display: none; }
@@ -1860,15 +1892,17 @@
       const tooltip = $("tooltip");
 
       // ---------- Load data ----------
-      let raw, schemaFile = null, detailsFile = null, mapGroupsFile = null, suggestedFile = null;
+      let raw, schemaFile = null, detailsFile = null, mapGroupsFile = null, suggestedFile = null, studyFile = null, connSumFile = null;
       try {
         if (location.protocol === "file:") throw new Error("This page has to be served over http to load graph_data.json.");
-        const [response, schemaResponse, detailsResponse, mapGroupsResponse, suggestedResponse] = await Promise.all([
+        const [response, schemaResponse, detailsResponse, mapGroupsResponse, suggestedResponse, studyResponse, connSumResponse] = await Promise.all([
           fetch("./graph_data.json"),
           fetch("./atlas_schema.json").catch(() => null),
           fetch("./paper_details.json").catch(() => null),
           fetch("./map_groups.json").catch(() => null),
-          fetch("./suggested_groups.json").catch(() => null)
+          fetch("./suggested_groups.json").catch(() => null),
+          fetch("./study_details.json").catch(() => null),
+          fetch("./connection_summaries.json").catch(() => null)
         ]);
         if (!response.ok) throw new Error(`Could not load graph_data.json (HTTP ${response.status}).`);
         raw = await response.json();
@@ -1879,6 +1913,8 @@
         // Map view groupings; without them the Map still works by type.
         if (mapGroupsResponse && mapGroupsResponse.ok) mapGroupsFile = await mapGroupsResponse.json();
         if (suggestedResponse && suggestedResponse.ok) suggestedFile = await suggestedResponse.json();
+        if (studyResponse && studyResponse.ok) studyFile = await studyResponse.json();
+        if (connSumResponse && connSumResponse.ok) connSumFile = await connSumResponse.json();
       } catch (error) {
         $("app").innerHTML = `<div class="error">${esc(error.message)}<br/>From the project folder run <code>python3 -m http.server 8000</code> and open http://localhost:8000/redesign.html</div>`;
         console.error(error);
@@ -2069,7 +2105,8 @@
       // Each level keeps its own filters: the network's change only the network, the concept page's only concept
       // pages (including their connections and papers), and the overview is never filtered. state.types, .range,
       // .minPapers and .pins read and write the current level's set; withFilters() reads another level's on purpose.
-      const newFilters = () => ({ types: new Set(nodeTypes), minPapers: 1, pins: [], range: [Y0, Y1], pinned: null });
+      // methods / sizes: the study methods and study sizes to keep (null = all).
+      const newFilters = () => ({ types: new Set(nodeTypes), minPapers: 1, pins: [], range: [Y0, Y1], pinned: null, methods: null, sizes: null });
       const FILTERS = { network: newFilters(), concept: newFilters(), overview: newFilters() };
       let filterOverride = null;
       const levelOfView = () => (state.view === "concept" ? "concept" : state.view === "field" ? "network" : "overview");
@@ -2079,7 +2116,7 @@
         filterOverride = level;
         try { return fn(); } finally { filterOverride = prev; }
       }
-      ["types", "minPapers", "pins", "range"].forEach((key) => Object.defineProperty(state, key, {
+      ["types", "minPapers", "pins", "range", "methods", "sizes"].forEach((key) => Object.defineProperty(state, key, {
         get: () => F()[key],
         set: (value) => { F()[key] = value; },
         enumerable: true
@@ -2154,6 +2191,24 @@
       }
       // Real titles, authors, summaries and DOIs from the PDFs (paper_details.json), where available.
       const paperDetails = detailsFile || {};
+      // How each study was done (study_details.json): who, task, design problem and prompt, measured, method, finding.
+      // Extracted by AI from each paper's methods section; "Not reported" when the paper doesn't say.
+      const studies = (studyFile && studyFile.papers) || {};
+      const studyOf = (p) => studies[String(p.paper_id)] || null;
+      const NR = "Not reported";
+      const known = (v) => v && v !== NR;
+      // Study size buckets for the filter, by number of human participants.
+      const SIZES = [
+        { key: "small", label: "Small (under 20)", test: (n) => n != null && n < 20 },
+        { key: "medium", label: "Medium (20–100)", test: (n) => n != null && n >= 20 && n <= 100 },
+        { key: "large", label: "Large (over 100)", test: (n) => n != null && n > 100 },
+        { key: "unknown", label: "Not reported", test: (n) => n == null }
+      ];
+      const sizeOf = (p) => { const n = studyOf(p)?.n; return SIZES.find((s) => s.test(n ?? null))?.key || "unknown"; };
+      const methodOf = (p) => studyOf(p)?.method || NR;
+      // "How they're connected": AI-written from the shared papers' study details, keyed by pairKey.
+      const connSummaries = (connSumFile && connSumFile.connections) || {};
+      const METHODS = [...new Set(Object.values(studies).map((d) => d.method).filter(known))].sort();
       const detailOf = (p) => paperDetails[String(p.paper_id)] || null;
       const paperTitle = (p) => detailOf(p)?.title || titleCase(p.title) || "[title unavailable]";
       const surname = (name) => name.replace(/,.*$/, "").trim().split(/\s+/).pop();
@@ -2205,8 +2260,10 @@
           f.pinned = new Set([...sets[0]].filter((id) => sets.every((set) => set.has(id))));
         });
       }
-      const scopeActive = () => rangeActive() || !!F().pinned;
-      const inScope = (p) => inRange(p) && (!F().pinned || F().pinned.has(p.paper_id));
+      const studyFilterActive = () => !!(F().methods || F().sizes);
+      const scopeActive = () => rangeActive() || !!F().pinned || studyFilterActive();
+      const inStudyFilter = (p) => (!F().methods || F().methods.has(methodOf(p))) && (!F().sizes || F().sizes.has(sizeOf(p)));
+      const inScope = (p) => inRange(p) && (!F().pinned || F().pinned.has(p.paper_id)) && inStudyFilter(p);
       const papersIn = (list) => (scopeActive() ? list.filter(inScope) : list);
       const papersInRange = (list) => (rangeActive() ? list.filter(inRange) : list);
       // A concept is shown when its type is on and it has enough papers in the year range.
@@ -4499,31 +4556,68 @@
             ${badge(neighbor.type)}
             ${link.flagged ? `<div class="gap-box flag-box"><strong>Flagged link</strong><p>Both concepts are ${esc(typeOf(center.type).plural.toLowerCase())}. ${esc(FLAGGED_NOTE)} It's hidden everywhere else in the Atlas.</p></div>` : ""}
             ${n
-              ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>
-                 ${strengthHtml(n)}
-                 <p class="eyebrow">What these papers have in common</p>
-                 <p class="common">${commonGround(center, neighbor, papers)}</p>
-                 <p class="common-note">Based on concepts extracted from the papers, not the full text.</p>`
-              : `<p class="sentence">No shared papers ${F().pinned ? "that match your filters" : `in ${rangeText()}`}.</p>`}
+              ? `<p class="sentence">${esc(cap(connectionSentence(center, neighbor, n)))}${range}.</p>`
+              : `<p class="sentence">No shared papers ${scopeActive() && !rangeActive() ? "that match your filters" : `in ${rangeText()}`}.</p>`}
             <div class="btn-row">
               <button type="button" class="btn" data-action="open-concept" data-id="${esc(neighbor.id)}">Open ${esc(cap(neighbor.label))} →</button>
             </div>
             ${pinButton([center.id, neighbor.id], "both")}
           </div>
+          ${n >= 3 && link.shared >= 3 ? glanceHtml(center, neighbor, papers) + connectedHtml(center, neighbor) : ""}
           ${n ? `
           <p class="eyebrow" style="margin-top:20px">When they met <span style="text-transform:none;letter-spacing:0">· each dot is a shared paper</span></p>
           <div class="met">${metTimeline(papers, colorOf(neighbor.type))}</div>
           <p class="met-note">${esc(trendText(papers))}</p>` : ""}
-          <p class="eyebrow" style="margin-top:20px">Papers (${n})</p>
-          <div class="rows">${shown.map((p) => paperRow(p, false, false)).join("")}</div>
+          <p class="eyebrow" style="margin-top:20px">Studies (${n})</p>
+          <div class="study-cards">${shown.map(studyMiniCard).join("")}</div>
           ${remaining > 0 ? `<button type="button" class="load-more" data-action="more-conn-papers">Load more · ${remaining} remaining</button>` : ""}`;
       }
 
-      function strengthHtml(n) {
-        return `<div class="stat-tiles">
-            <div class="stat-tile"><b>${n}</b><span>shared ${n === 1 ? "paper" : "papers"}</span></div>
-          </div>`;
+      // "At a glance": who, task, problem, measured (concepts, placeholders and this pair left out) and method
+      // (from the study details), top 3 each as a share of the shared papers.
+      function glanceHtml(center, neighbor, papers) {
+        const n = papers.length;
+        const pair = new Set([center.id, neighbor.id]);
+        const stage = (type) => ancestry(type).map((t) => t.id).find((id) => ["subject", "task", "problem", "construct"].includes(id)) || type;
+        const NAMES = { subject: "Who", task: "Task", problem: "Problem", construct: "Measured" };
+        const rows = ["subject", "task", "problem", "construct"].map((st) => {
+          const counts = new Map();
+          papers.forEach((p) => (conceptsByPaper.get(p.paper_id) || []).forEach((id) => {
+            const c = byId.get(id);
+            if (pair.has(id) || isPlaceholder(c) || stage(c.type) !== st) return;
+            counts.set(id, (counts.get(id) || 0) + 1);
+          }));
+          const own = [center, neighbor].find((c) => stage(c.type) === st);
+          return { name: NAMES[st], note: own ? `besides ${cap(own.label)}` : "", items: [...counts].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([id, k]) => ({ label: cap(byId.get(id).label), k, color: colorOf(byId.get(id).type) })) };
+        });
+        const mc = d3.rollups(papers.filter((p) => known(studyOf(p)?.method)), (v) => v.length, methodOf).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        if (mc.length) rows.push({ name: "Method", note: "", items: mc.map(([m, k]) => ({ label: m, k, color: "var(--accent)" })) });
+        const body = rows.filter((r) => r.items.length).map((r) => `<div class="g-row">
+            <p class="k">${esc(r.name)}${r.note ? ` <span>${esc(r.note)}</span>` : ""}</p>
+            ${r.items.map((d) => `<div class="g-bar"><span class="lab">${esc(d.label)}</span><span class="track"><i style="width:${((d.k / n) * 100).toFixed(1)}%;background:${d.color}"></i></span><span class="num">${Math.round((d.k / n) * 100)}%</span></div>`).join("")}
+          </div>`).join("");
+        return body ? `<p class="eyebrow" style="margin-top:20px">At a glance <span style="text-transform:none;letter-spacing:0">· share of ${plural(n, "shared paper")}</span></p><div class="glance">${body}</div>` : "";
       }
+      // "How they're connected": 2–3 sentences written by AI from the shared papers' study details, with cited papers as links.
+      function connectedHtml(center, neighbor) {
+        const c = connSummaries[pairKey(center.id, neighbor.id)];
+        if (!c) return "";
+        const html = esc(c.text).replace(/\[([^\]]+)\]\((\d+)\)/g, (m, label, id) => (paperById.has(Number(id))
+          ? `<span role="button" tabindex="0" class="ref plain" data-action="paper" data-id="${id}">${label}</span>` : label));
+        return `<div class="detail-card connected"><p class="eyebrow" style="margin-top:0">How they're connected</p><p class="conn-text">${html}</p><p class="study-note">Summarized by AI from the papers${rangeActive() || F().pinned || studyFilterActive() ? ", using all shared papers" : ""}.</p></div>`;
+      }
+      // One shared paper as a small study card: who, task, measured, finding.
+      function studyMiniCard(p) {
+        const d = studyOf(p);
+        const row = (k, label) => (d && known(d[k]) ? `<div><dt>${label}</dt><dd>${esc(d[k])}</dd></div>` : "");
+        const rows = d ? [row("who", "Who"), row("task", "Task"), row("measured", "Measured"), row("finding", "Finding")].join("") : "";
+        return `<div class="study-mini" role="button" tabindex="0" data-action="paper" data-id="${p.paper_id}">
+          <p class="t">${esc(paperTitle(p))}</p>
+          <p class="m">${esc(paperAuthorsShort(p))} · ${esc(p.year)}</p>
+          ${rows ? `<dl>${rows}</dl>` : `<p class="m">${detailOf(p)?.summary ? esc(detailOf(p).summary) : "No study details yet."}</p>`}
+        </div>`;
+      }
+
 
       // The shared papers as dots on a year axis, stacked when a year has several.
       function metTimeline(papers, color) {
@@ -4556,62 +4650,6 @@
         return `${shape}: ${early} from ${minY}–${mid}, ${late} from ${mid + 1}–${maxY}.`;
       }
 
-      // A 2–3 sentence summary of the shared papers, built only from extracted concepts and years:
-      // which other concepts recur, how the count changed over time, and the earliest and latest paper.
-      function commonGround(center, neighbor, papers) {
-        const n = papers.length;
-        const conceptRef = (id, count) => {
-          const c = byId.get(id);
-          return `<span role="button" tabindex="0" class="ref" data-action="open-concept" data-id="${esc(id)}" style="--c:${colorOf(c.type)}">${esc(c.label)}</span>${count ? ` (${count})` : ""}`;
-        };
-        // Spans rather than buttons, so long titles wrap with the sentence instead of breaking out of it.
-        const paperRef = (p) => `“<span role="button" tabindex="0" class="ref plain" data-action="paper" data-id="${p.paper_id}">${esc(paperTitle(p))}</span>” (${esc(paperAuthorsShort(p))}, ${p.year})`;
-
-        const counts = new Map();
-        papers.forEach((p) => (conceptsByPaper.get(p.paper_id) || []).forEach((id) => {
-          if (id !== center.id && id !== neighbor.id) counts.set(id, (counts.get(id) || 0) + 1);
-        }));
-
-        if (n === 1) {
-          const others = [...counts.keys()];
-          return `The one shared paper, ${paperRef(papers[0])}, ${others.length ? `also covers ${listJoin(others.map((id) => conceptRef(id)))}` : "covers no other concepts"}.`;
-        }
-
-        const minCount = n >= 5 ? 2 : 1;
-        // Concepts are grouped under the type that owns the phrasing, so sub-types share their parent's phrase.
-        const phraseOwner = (type) => ancestry(type).find((t) => t.summary)?.id || type;
-        const owners = [...new Set(nodeTypes.map(phraseOwner))];
-        const phrases = owners.map((owner) => {
-          const top = [...counts.entries()]
-            .filter(([id, c]) => phraseOwner(byId.get(id).type) === owner && c >= minCount)
-            .sort((a, b) => b[1] - a[1] || byId.get(a[0]).label.localeCompare(byId.get(b[0]).label))
-            .slice(0, 2);
-          if (!top.length) return null;
-          const template = typeOf(owner).summary || "also involve {list}";
-          return fillTemplate(template, { list: listJoin(top.map(([id, c]) => conceptRef(id, c))), s: top.length > 1 ? "s" : "" });
-        }).filter(Boolean);
-        const recurring = phrases.length
-          ? `Alongside both concepts, these ${n} papers most often ${listJoin(phrases)}.`
-          : `No other concept comes up in more than one of these papers.`;
-
-        const years = papers.map((p) => p.year);
-        const [minY, maxY] = d3.extent(years);
-        let trend;
-        if (minY === maxY) {
-          trend = `All ${n} were published in ${minY}.`;
-        } else {
-          const mid = Math.floor((minY + maxY) / 2);
-          const early = years.filter((y) => y <= mid).length, late = n - early;
-          const [peakYear, peakCount] = d3.greatest(d3.rollups(years, (v) => v.length, (y) => y), ([y, c]) => c * 10000 + y);
-          const shape = late >= early * 1.5 ? "The count has grown over time" : early >= late * 1.5 ? "Most of them are older" : "They are spread fairly evenly over time";
-          trend = `${shape}: ${early} from ${minY}–${mid} and ${late} from ${mid + 1}–${maxY}${peakCount > 1 ? `, peaking in ${peakYear} with ${peakCount}` : ""}.`;
-        }
-
-        const byYear = papers.slice().sort((a, b) => a.year - b.year || paperTitle(a).localeCompare(paperTitle(b)));
-        const ends = `The earliest is ${paperRef(byYear[0])} and the most recent is ${paperRef(byYear[byYear.length - 1])}.`;
-        return `${recurring} ${trend} ${ends}`;
-      }
-
       function relatedPapers(paperId) {
         const mine = conceptsByPaper.get(paperId) || [];
         const counts = new Map();
@@ -4639,6 +4677,38 @@
       const scholarUrl = (title) => `https://scholar.google.com/scholar?q=${encodeURIComponent(`"${title}"`)}`;
       const VERSIONS_NOTE = "IDETC papers may need a subscription. A free copy or a later journal version (e.g. in the Journal of Mechanical Design) may be available.";
 
+      // "Study at a glance": how the study was done, as labeled rows.
+      const STUDY_ROWS = [["who", "Who"], ["task", "Task"], ["problem", "Design problem"], ["measured", "Measured"], ["method", "Method"], ["finding", "Main finding"]];
+      function studyCardHtml(paper) {
+        const d = studyOf(paper);
+        const head = `<p class="eyebrow" style="margin-top:0">Study at a glance</p>`;
+        if (!d) return `<div class="detail-card study-card">${head}<p class="placeholder">No study details: this paper's PDF isn't in the corpus folder yet.</p></div>`;
+        const val = (k) => {
+          const v = d[k];
+          if (!known(v)) return `<span class="nr">Not reported</span>`;
+          if (k === "problem" && known(d.prompt)) return `${esc(v)}<span class="prompt">Prompt (paraphrased): ${esc(d.prompt)}</span>`;
+          if (k === "method" && d.method_detail) return `${esc(v)}<span class="prompt">${esc(d.method_detail)}</span>`;
+          return esc(v);
+        };
+        return `<div class="detail-card study-card">${head}
+          <dl class="study-rows">${STUDY_ROWS.map(([k, label]) => `<div><dt>${label}</dt><dd>${val(k)}</dd></div>`).join("")}</dl>
+          <p class="study-note">Extracted by AI from the paper's methods section. Check the original before citing details.</p>
+        </div>`;
+      }
+      // A ready-to-copy citation: authors, year, title, ASME IDETC, DOI.
+      function citationOf(paper) {
+        const info = detailOf(paper);
+        const names = (info?.authors || []).map((a) => {
+          const parts = a.replace(/,/g, "").trim().split(/\s+/);
+          const last = parts.pop();
+          return `${last}, ${parts.map((x) => `${x[0]}.`).join(" ")}`.trim().replace(/,\s*$/, "");
+        });
+        const authors = names.length > 1 ? `${names.slice(0, -1).join(", ")}, & ${names[names.length - 1]}` : names[0] || paperAuthorsShort(paper);
+        const number = info?.paper_number ? ` (${info.paper_number})` : "";
+        const doi = info?.doi ? ` https://doi.org/${info.doi}` : "";
+        return `${authors} (${paper.year}). ${paperTitle(paper)}. In Proceedings of the ASME International Design Engineering Technical Conferences (IDETC), Design Theory and Methodology${number}.${doi}`;
+      }
+
       function renderPaperDetail() {
         const paper = currentPaper();
         const info = detailOf(paper);
@@ -4661,9 +4731,11 @@
               : `<button type="button" class="chip" data-action="open-concept" data-id="${esc(n.id)}" title="Open ${esc(cap(n.label))}">${dot(n.type)}${esc(cap(n.label))}</button>`).join("")}
           </div>
 
-          <div class="detail-card" style="margin-top:18px">
-            <p class="eyebrow" style="margin-top:0">Summary</p>
-            ${info?.summary ? `<p class="paper-summary">${esc(info.summary)}</p>` : `<p class="placeholder">No summary yet for this paper.</p>`}
+          ${studyCardHtml(paper)}
+
+          <div class="detail-card" style="margin-top:14px">
+            <p class="eyebrow" style="margin-top:0">Cite</p>
+            <div class="cite-box"><p class="cite" id="cite-text">${esc(citationOf(paper))}</p><button type="button" class="btn cite-copy" data-action="copy-cite">Copy</button></div>
             <div class="btn-row">
               ${info?.doi
                 ? `<a class="btn" href="https://doi.org/${encodeURI(info.doi)}" target="_blank" rel="noopener noreferrer" title="DOI ${esc(info.doi)}">Original paper ↗</a>`
@@ -4671,7 +4743,11 @@
               <a class="btn" href="${scholarUrl(paperTitle(paper))}" target="_blank" rel="noopener noreferrer" data-note="${esc(VERSIONS_NOTE)}" aria-describedby="versions-note">Find other versions ↗</a>
               <span id="versions-note" hidden>${esc(VERSIONS_NOTE)}</span>
             </div>
-            ${info?.doi ? `<p class="doi-note">DOI ${esc(info.doi)}</p>` : ""}
+          </div>
+
+          <div class="detail-card" style="margin-top:14px">
+            <p class="eyebrow" style="margin-top:0">Summary</p>
+            ${info?.summary ? `<p class="paper-summary">${esc(info.summary)}</p>` : `<p class="placeholder">No summary yet for this paper.</p>`}
           </div>
 
           <p class="eyebrow" style="margin-top:22px">Related papers${rangeActive() ? ` · ${rangeText()}` : ""}</p>
@@ -4773,6 +4849,13 @@
             state.papersShown += PAGE;
             renderRight({ keepScroll: true });
             break;
+          case "copy-cite": {
+            const text = $("cite-text").textContent;
+            const done = () => { el.textContent = "Copied"; setTimeout(() => { el.textContent = "Copy"; }, 1500); };
+            if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
+            else { const r = document.createRange(); r.selectNodeContents($("cite-text")); getSelection().removeAllRanges(); getSelection().addRange(r); }
+            break;
+          }
           case "more-conn-papers":
             state.connPapersShown += PAGE;
             renderRight({ keepScroll: true });
@@ -4806,7 +4889,7 @@
       });
 
       // ---------- Filters: one shared panel, and the active filters under the top bar ----------
-      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0);
+      const filterCount = () => state.pins.length + (rangeActive() ? 1 : 0) + (state.minPapers > 1 ? 1 : 0) + (state.types.size < nodeTypes.length ? 1 : 0) + (state.methods ? 1 : 0) + (state.sizes ? 1 : 0);
 
       function pinButton(ids, what) {
         const on = ids.every((id) => state.pins.includes(id));
@@ -4853,7 +4936,7 @@
         }).filter((d) => d.n > 0).sort((a, b) => b.n - a.n);
       }
 
-      function scopeCount() { return F().pinned ? [...F().pinned].filter((id) => inRange(paperById.get(id))).length : papersIn([...paperById.values()]).length; }
+      function scopeCount() { return F().pinned ? [...F().pinned].filter((id) => inScope(paperById.get(id))).length : papersIn([...paperById.values()]).length; }
       const totalPapers = paperById.size;
 
       function renderFilterBar() {
@@ -4869,6 +4952,8 @@
           ${rangeActive() ? chip(`Years ${rangeText()}`, "range") : ""}
           ${state.minPapers > 1 ? chip(`Concepts with ≥ ${state.minPapers} papers`, "min") : ""}
           ${hidden.length ? chip(`Hiding ${listJoin(hidden.map((t) => typeOf(t).plural.toLowerCase()))}`, "types") : ""}
+          ${state.methods ? chip(`Method: ${esc(listJoin([...state.methods].map((m) => m.toLowerCase())))}`, "methods") : ""}
+          ${state.sizes ? chip(`Study size: ${esc(listJoin(SIZES.filter((z) => state.sizes.has(z.key)).map((z) => z.label.toLowerCase())))}`, "sizes") : ""}
           <button type="button" class="link-btn clear-all" data-fb="all">Clear all</button>`;
         bar.hidden = false;
       }
@@ -4878,6 +4963,8 @@
         const what = el.dataset.fb;
         if (what === "pin") state.pins = state.pins.filter((id) => id !== el.dataset.v);
         if (what === "range" || what === "all") state.range = [Y0, Y1];
+        if (what === "methods" || what === "all") state.methods = null;
+        if (what === "sizes" || what === "all") state.sizes = null;
         if (what === "min" || what === "all") state.minPapers = 1;
         if (what === "types" || what === "all") state.types = new Set(nodeTypes);
         if (what === "all") state.pins = [];
@@ -4905,6 +4992,24 @@
           </div>`;
         };
         return shownTypeTree.filter((t) => !t.parentId).map(row).join("");
+      }
+
+      // Method and Study size: keep only papers whose study used these methods / had this many participants.
+      // Counts are papers in the year range (and pinned concepts) with each option.
+      function studyFilterHtml() {
+        if (!METHODS.length) return "";
+        const base = [...paperById.values()].filter((p) => inRange(p) && (!F().pinned || F().pinned.has(p.paper_id)));
+        const box = (kind, key, label, on, n) => `<label><input type="checkbox" data-study="${kind}" value="${esc(key)}" ${on ? "checked" : ""} />${esc(label)} <span class="n">(${n})</span></label>`;
+        const methods = [...METHODS, NR];
+        return `
+          <section class="fp-section">
+            <p class="label"><span>Method</span>${state.methods ? `<button type="button" class="link-btn" data-fp="methods-all">All</button>` : ""}</p>
+            <div class="filters">${methods.map((m) => box("method", m, m, !state.methods || state.methods.has(m), base.filter((p) => methodOf(p) === m).length)).join("")}</div>
+          </section>
+          <section class="fp-section">
+            <p class="label"><span>Study size <span class="lc">· participants</span></span>${state.sizes ? `<button type="button" class="link-btn" data-fp="sizes-all">All</button>` : ""}</p>
+            <div class="filters">${SIZES.map((z) => box("size", z.key, z.label, !state.sizes || state.sizes.has(z.key), base.filter((p) => sizeOf(p) === z.key).length)).join("")}</div>
+          </section>`;
       }
 
       // The filter controls, as one block. "network" (left of the network) has every filter; "concept" (in the
@@ -4951,6 +5056,8 @@
             <p class="label"><span>Label concepts with at least <strong data-f="label-val">${labelMin}</strong> papers</span></p>
             <input type="range" class="label-range" data-f="label" min="1" max="150" step="1" value="${labelMin}" aria-label="Minimum papers for a name label" />
           </section>
+
+          ${studyFilterHtml()}
 
           <section class="fp-section">
             <p class="label"><span>Narrow to papers that include</span></p>
@@ -5032,7 +5139,9 @@
         const el = event.target.closest("[data-fp]");
         if (!el) return;
         switch (el.dataset.fp) {
-          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); break;
+          case "methods-all": state.methods = null; break;
+          case "sizes-all": state.sizes = null; break;
+          case "reset": state.pins = []; state.range = [Y0, Y1]; state.minPapers = 1; state.types = new Set(nodeTypes); state.methods = null; state.sizes = null; break;
           case "unpin": state.pins = state.pins.filter((id) => id !== el.dataset.v); break;
           case "min-": state.minPapers = Math.max(1, state.minPapers - 1); break;
           case "min+": state.minPapers = Math.min(50, state.minPapers + 1); break;
@@ -5043,6 +5152,16 @@
         if (!fpOf(event.target)) return;
         // Letting go of a year handle refreshes the counts that a live drag skips.
         if (event.target.dataset.f === "lo" || event.target.dataset.f === "hi") { applyFilters(); return; }
+        // Method / Study size: unchecking keeps the others; checking all again clears the filter.
+        const kind = event.target.dataset.study;
+        if (kind) {
+          const all = kind === "method" ? [...METHODS, NR] : SIZES.map((z) => z.key);
+          const key = kind === "method" ? "methods" : "sizes";
+          const on = new Set([...event.target.closest(".filters").querySelectorAll("input:checked")].map((i) => i.value));
+          state[key] = on.size === all.length ? null : on;
+          applyFilters();
+          return;
+        }
         const tid = event.target.dataset.tid;
         if (!tid) return;
         // Checking a group switches every type inside it; at least one type always stays on.

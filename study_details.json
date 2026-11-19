@@ -1,0 +1,61 @@
+{
+ "generated": "2026-11-18",
+ "about": "How each study was done, for the Atlas paper pages: who took part, the task, the design problem and a paraphrase of the prompt, what was measured, the method, and the main finding. Extracted by AI (Claude) from each paper's methods section in the atlas_corpus PDFs, written in its own words; 'Not reported' where the paper does not say. No PDF text is stored here. n = number of human participants (null if not reported or not people).",
+ "papers": {
+  "1": {
+   "who": "GPT-3 (no human participants); two expert raters scored outputs against crowdsourced baseline",
+   "n": null,
+   "task": "Model generated 100 solutions for each of 12 design problems under base, zero-shot and few-shot prompts; compared with crowdsourced solutions",
+   "problem": "12 problems, e.g. travel exercise device, milk frother, time measurement",
+   "prompt": "Produce 100 design solutions for a stated need, such as a lightweight exercise device for travel, a way to measure time, or a powder-spreading device",
+   "measured": "Expert-rated feasibility, novelty, usefulness (0-2); computational similarity to human set (nearest-sample distance) and diversity (convex hull volume of embeddings)",
+   "method": "Computational study",
+   "method_detail": "Expert ratings on 3 of 12 problems; embeddings for all 12",
+   "finding": "GPT-3 solutions were rated more feasible and useful but less novel than crowdsourced ones, and few-shot prompting with human examples made outputs more similar to the crowdsourced set."
+  },
+  "1097": {
+   "who": "72 first-year engineering students (23 sketch, 25 cardboard, 24 CAD condition)",
+   "n": 72,
+   "task": "Completed a lottery risk survey, then viewed 9 milk-frother prototypes at one fidelity and rated likelihood to advance, risk, uniqueness and usefulness",
+   "problem": "Milk frother",
+   "prompt": "As an engineer on a team redesigning a milk frother usable with minimal instruction, decide which of 9 ideas to present to the board",
+   "measured": "Financial risk aversion, likelihood to move forward, perceived risk, perceived uniqueness and usefulness, expert-rated uniqueness and usefulness",
+   "method": "Controlled experiment",
+   "method_detail": "Online between-subjects survey, random assignment to prototype fidelity",
+   "finding": "Students favored concepts with medium uniqueness and high usefulness; prototype fidelity and individual risk aversion did not predict choice, though more useful concepts seemed less risky."
+  },
+  "1178": {
+   "who": "34 senior mechanical engineering students in 8 capstone design teams",
+   "n": 34,
+   "task": "Wrote four design reports and a final report over a semester; researchers coded how teams justified their requirements and specifications",
+   "problem": "Sponsor-defined projects (assistive devices, university spaces, measurement tools, medical device)",
+   "prompt": "Each team received a short sponsor project description and developed a prototype to address a sponsor's problem",
+   "measured": "Types of justification for 84 user requirements and 103 engineering specifications, frequency of each, and change across reports",
+   "method": "Workshop or design course study",
+   "method_detail": "Inductive coding of capstone design reports (inter-rater kappa 0.86)",
+   "finding": "Teams justified requirements mostly through sponsor interactions and their own perceptions of user needs, rarely user data, and over a third of specifications lacked clear justification."
+  },
+  "1190": {
+   "who": "207 first-year engineering students in 53 design teams (3-4 members)",
+   "n": 207,
+   "task": "Sketched ideas individually for 15 minutes, screened team ideas as consider or not, chose four to prototype; five psychological safety surveys over the project",
+   "problem": "Course projects: food insecurity, healthy living, or a STEM water toy for children",
+   "prompt": "Address one of: food insecurity in developing countries, healthy lives for all ages, or a STEM water toy for ages 3 to 5",
+   "measured": "Team psychological safety (7-item survey), idea fluency, idea goodness, ownership bias in concept screening",
+   "method": "Workshop or design course study",
+   "method_detail": "Correlational field study across 8 course sections, 4- and 8-week projects",
+   "finding": "Psychological safety did not affect how many ideas teams produced but predicted higher idea goodness and a higher share of teammates' ideas being selected."
+  },
+  "1337": {
+   "who": "20 people: 6 expert mechanical designers, 7 graduate students, 7 non-design undergraduates",
+   "n": 20,
+   "task": "Described aloud what they saw in 13 mechanical drawings, shown alone, then with a title, then with a short explanation; sessions videotaped",
+   "problem": "Reading 13 mechanical assembly drawings (couplings, valves, clutch, etc.)",
+   "prompt": "Describe aloud what you see in each drawing",
+   "measured": "Forms, design features and subfunctions mentioned, forward vs backward reasoning, whether overall function was identified; discriminant analysis across groups",
+   "method": "Observational study",
+   "method_detail": "Verbal protocol analysis with group comparison by expertise",
+   "finding": "Experts reasoned backward from overall function, while novices focused on geometry and graduate students resembled experts on familiar drawings and novices on others."
+  }
+ }
+}
