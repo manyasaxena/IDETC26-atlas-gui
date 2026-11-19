@@ -420,6 +420,7 @@
       will-change: transform, opacity;
     }
     .nl.big { font-size: 12.5px; font-weight: 600; }
+    .nl-count { position: absolute; left: 0; top: 0; padding: 1px 6px; border-radius: 999px; background: rgba(5, 6, 10, 0.85); border: 1px solid rgba(170, 190, 240, 0.3); color: #e8ecf6; font: 500 11px var(--mono); white-space: nowrap; pointer-events: none; }
     .nl.hot { color: #fff; font-weight: 600; }
     .nl.hot::before { content: ""; position: absolute; inset: -3px -6px; border-radius: 999px; background: rgba(5, 6, 10, 0.8); z-index: -1; }
     /* Navigation (top left) is a solid button; view controls (top right) are smaller and quieter, grouped together. */
@@ -578,7 +579,9 @@
     .ex-funnel .arr { color: var(--faint); text-align: center; }
     .ex-funnel .b { justify-self: start; font-weight: 600; color: var(--text); border-bottom: 3px solid var(--c); }
     .ex-step .ex-limit { font-size: 15px; color: var(--muted); background: var(--surface); border-radius: var(--r-md); padding: 12px 16px; max-width: none; }
-    .mini-map line { stroke: var(--muted); stroke-linecap: round; }
+    .mini-map line { stroke: var(--muted); stroke-width: 1.5; stroke-opacity: 0.55; stroke-linecap: round; }
+    .mini-map .mm-count rect { fill: var(--bg); stroke: var(--line-strong); }
+    .mini-map .mm-count text { fill: var(--text); font: 500 12px var(--mono); }
     .mini-map .mm-dot text { fill: var(--text); font: 600 13px var(--sans); paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
     .mini-map .mm-note path { stroke: var(--faint); fill: none; }
     .mini-map .mm-note text { fill: var(--muted); font: italic 13px var(--sans); }
@@ -612,7 +615,9 @@
     .map-stage .region { fill: #cfd8ec; fill-opacity: 0.06; stroke: #cfd8ec; stroke-opacity: 0.16; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
     .map-stage .region.tinted { fill: var(--c); fill-opacity: 0.08; stroke: var(--c); stroke-opacity: 0.22; }
     .map-stage .m-links line { stroke: #b9c6e6; vector-effect: non-scaling-stroke; transition: opacity 0.3s; }
-    .map-stage[data-level="0"] .m-links, .map-stage[data-level="1"] .m-links { opacity: 0; pointer-events: none; }
+    .map-stage[data-level="0"] .m-links line:not(.hl), .map-stage[data-level="1"] .m-links line:not(.hl) { opacity: 0; }
+    .map-stage.hovering .m-links line:not(.hl) { opacity: 0.15; }
+    .map-stage .m-links { pointer-events: none; }
     .map-stage .mnode { cursor: pointer; transition: opacity 0.3s; }
     .map-stage .mnode circle { stroke: rgba(5, 6, 10, 0.7); stroke-width: 1; vector-effect: non-scaling-stroke; }
     .map-stage .mnode:hover circle { stroke: #fff; stroke-width: 2; }
@@ -2385,7 +2390,7 @@
           </div>`).join("")}
         <div class="more">
           <p><strong>Connections.</strong> Two concepts are connected when the same papers study both. The number on a connection is how many papers they share.</p>
-          <p><strong>Lines.</strong> ${mapWord(MAP_WORDS.line)}. ${mapWord(MAP_WORDS.close)}. ${esc(MAP_WORDS.caveat)}</p>
+          <p><strong>Lines.</strong> ${mapWord(MAP_WORDS.line)} ${mapWord(MAP_WORDS.close)}. ${esc(MAP_WORDS.caveat)}</p>
           <p><strong>Concept page.</strong> The concepts studied with it orbit around it, grouped by type. ${mapWord(MAP_WORDS.size)}. ${mapWord(MAP_WORDS.rings)}.</p>
           <p style="color:var(--muted)">Extracted from ${raw.meta?.paper_count ?? paperById.size} empirical papers in the ASME DTM proceedings, ${Y0}–${Y1}.</p>
         </div>`;
@@ -2421,9 +2426,8 @@
       fieldSvg.call(fieldZoom);
 
       const fieldLinks = links.map((l) => ({ source: l.a, target: l.b, link: l }));
-      const maxShared = d3.max(links, (l) => l.shared) || 1;
-      const widthScale = d3.scaleLinear().domain([0, maxShared]).range([0.6, 5]);
-      const opacityScale = d3.scaleLinear().domain([0, maxShared]).range([0.08, 0.7]);
+      // Every line the same thin, faint style; a hovered dot's own lines show strength.
+      const FIELD_LINE_W = 0.7, FIELD_LINE_O = 0.14;
 
       const fieldSim = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(fieldLinks).id((d) => d.id).distance((d) => 120 - Math.min(90, d.link.shared * 1.8)))
@@ -2447,9 +2451,18 @@
         .attr("stroke", "#11131a")
         .attr("stroke-width", 1.2)
         .style("cursor", "pointer")
-        .on("mouseenter", (event, d) => showTip(conceptTip(d, `${plural(d.paperCount, "paper")} · click to explore`), event, $("field-view")))
+        .on("mouseenter", (event, d) => {
+          // Its own lines show strength (thicker = more papers) and the strongest few are listed; the rest fade.
+          const mine = fieldLinks.filter((l) => (l.source === d || l.target === d) && fieldLinkCount(l.link) > 0).sort((x, y) => fieldLinkCount(y.link) - fieldLinkCount(x.link));
+          const max = mine.length ? fieldLinkCount(mine[0].link) : 1;
+          const set = new Set(mine);
+          fieldLinkSel.attr("stroke-width", (l) => (set.has(l) ? 1 + 5 * (fieldLinkCount(l.link) / max) : FIELD_LINE_W))
+            .attr("stroke-opacity", (l) => (set.has(l) ? 0.85 : 0.03));
+          const top = mine.slice(0, 5).map((l) => { const o = l.source === d ? l.target : l.source; return `${esc(cap(o.label))}: ${plural(fieldLinkCount(l.link), "paper")}`; });
+          showTip(conceptTip(d, `${plural(d.paperCount, "paper")} · click to explore${top.length ? `<br>Strongest links: ${top.join(" · ")}` : ""}`), event, $("field-view"));
+        })
         .on("mousemove", moveTip)
-        .on("mouseleave", hideTip)
+        .on("mouseleave", () => { hideTip(); fieldLinkSel.attr("stroke-width", FIELD_LINE_W).attr("stroke-opacity", FIELD_LINE_O); })
         .on("click", (event, d) => { event.stopPropagation(); hideTip(); openConcept(d.id); })
         .call(d3.drag()
           .on("start", (event, d) => { if (!event.active) fieldSim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
@@ -2475,8 +2488,8 @@
             if (on) visibleLinks += 1;
             return on ? null : "none";
           })
-          .attr("stroke-width", (d) => widthScale(fieldLinkCount(d.link)))
-          .attr("stroke-opacity", (d) => opacityScale(fieldLinkCount(d.link)));
+          .attr("stroke-width", FIELD_LINE_W)
+          .attr("stroke-opacity", FIELD_LINE_O);
         if (net.scene) net.applyFilters();
       }
 
@@ -2683,23 +2696,31 @@
           stars.set(n.id, { n, glow, core, p, r: 3, visible: true });
         });
 
-        // Lines: every connection; thicker AND brighter with more shared papers. Additive, so they glow where they bunch.
-        // Four width steps (each its own wide-line object), with brightness varying smoothly within them.
-        const LINK_WIDTHS = [1, 1.8, 2.8, 4.2];
-        const linkBuckets = LINK_WIDTHS.map((w) => {
-          const mat = new LineMaterial({ vertexColors: true, linewidth: w, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+        // Lines: every connection drawn the same way, thin and faint, so the whole network stays calm.
+        // How strong a link is shows only for the hovered or selected dot (see setHighlight).
+        const LINK_OPACITY = 0.085;
+        const linkGeo = new THREE.BufferGeometry();
+        const linkMat = new THREE.LineBasicMaterial({ color: new THREE.Color(0.62, 0.72, 0.95), transparent: true, opacity: LINK_OPACITY, blending: THREE.AdditiveBlending, depthWrite: false });
+        const linkLines = new THREE.LineSegments(linkGeo, linkMat);
+        scene.add(linkLines);
+        // The hovered or selected dot's own lines: thicker with more shared papers, in four width steps.
+        const HI_WIDTHS = [1.3, 2.4, 3.8, 5.6];
+        const hiBuckets = HI_WIDTHS.map((w) => {
+          const mat = new LineMaterial({ linewidth: w, transparent: true, opacity: 0.9, depthWrite: false });
           const obj = new LineSegments2(new LineSegmentsGeometry(), mat);
           obj.frustumCulled = false;
+          obj.visible = false;
           scene.add(obj);
           return { mat, obj };
         });
-        // One handle so dimming during hover/focus reaches every width step.
-        const linkLines = { material: { set opacity(v) { linkBuckets.forEach((b) => { b.mat.opacity = v; }); } } };
-        // The hovered or focused star's own lines, drawn on top in its color.
-        const hiGeo = new THREE.BufferGeometry();
-        const hiMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending });
-        const hiLines = new THREE.LineSegments(hiGeo, hiMat);
-        scene.add(hiLines);
+        // Small "N papers" labels on the strongest few of those lines.
+        const countEls = d3.range(5).map(() => {
+          const el = document.createElement("div");
+          el.className = "nl-count";
+          el.style.display = "none";
+          $("net3d-labels").appendChild(el);
+          return el;
+        });
 
         // Labels: one HTML element per concept, positioned each frame.
         const labelLayer = $("net3d-labels");
@@ -2712,7 +2733,7 @@
           st.labelW = Math.min(260, cap(st.n.label).length * 7 + 16);
         });
 
-        Object.assign(net, { THREE, renderer, scene, camera, controls, stars, linkLines, hiGeo, hiLines, hiMat, L, HOME, hover: null, focus: null, fly: null, running: false, big: new Set() });
+        Object.assign(net, { THREE, renderer, scene, camera, controls, stars, linkLines, hiBuckets, countEls, L, HOME, hover: null, focus: null, fly: null, running: false, big: new Set() });
 
         net.relabel = function () {
           net.big = new Set([...stars.values()].filter((st) => st.visible && papersIn(st.n.papers).length >= state.labelMinNet).map((st) => st.n.id));
@@ -2731,43 +2752,51 @@
           // Concepts with at least the chosen number of papers always keep a label.
           net.relabel();
           const shown = links.filter((l) => stars.get(l.a).visible && stars.get(l.b).visible && fieldLinkCount(l) > 0);
-          const max = d3.max(shown, fieldLinkCount) || 1;
-          const pos = LINK_WIDTHS.map(() => []), col = LINK_WIDTHS.map(() => []);
-          shown.forEach((l) => {
+          const posArr = new Float32Array(shown.length * 6);
+          shown.forEach((l, i) => {
             const a = stars.get(l.a).p, b = stars.get(l.b).p;
-            const t = Math.log1p(fieldLinkCount(l) - 1) / Math.log1p(max - 1 || 1);
-            const bi = Math.min(LINK_WIDTHS.length - 1, Math.floor(t * LINK_WIDTHS.length));
-            // Faint by default (one-paper links nearly vanish), so ~1,900 lines don't saturate the core.
-            // Wide lines carry more light per pixel, so their brightness is eased back (still brighter overall).
-            const k = (0.006 + 0.15 * Math.pow(t, 1.6)) / Math.sqrt(LINK_WIDTHS[bi]);
-            pos[bi].push(a.x, a.y, a.z, b.x, b.y, b.z);
-            col[bi].push(0.62 * k, 0.72 * k, 0.95 * k, 0.62 * k, 0.72 * k, 0.95 * k);
+            posArr.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6);
           });
-          linkBuckets.forEach((bk, i) => {
-            bk.obj.geometry.dispose();
-            const g = new LineSegmentsGeometry();
-            if (pos[i].length) { g.setPositions(pos[i]); g.setColors(col[i]); }
-            bk.obj.geometry = g;
-            bk.obj.visible = pos[i].length > 0;
-          });
+          linkGeo.setAttribute("position", new THREE.BufferAttribute(posArr, 3));
+          linkGeo.computeBoundingSphere();
           net.visibleLinks = shown;
           renderNetLegend();
           setHighlight();
         };
 
         // Lights up one star's own lines (the hovered star, else the focused one).
+        // Hovering or selecting a dot lights up its own lines, thicker with more shared papers, and labels its
+        // strongest few with the number of papers; every other line fades back.
         function setHighlight() {
           const id = net.hover || net.focus;
-          if (!id || !stars.get(id)?.visible) { hiGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(0), 3)); return; }
-          const mine = net.visibleLinks.filter((l) => l.a === id || l.b === id);
-          const arr = new Float32Array(mine.length * 6);
-          mine.forEach((l, i) => { const a = stars.get(l.a).p, b = stars.get(l.b).p; arr.set([a.x, a.y, a.z, b.x, b.y, b.z], i * 6); });
-          hiGeo.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-          hiGeo.computeBoundingSphere();
-          hiMat.color.set(colorOf(stars.get(id).n.type));
+          if (!id || !stars.get(id)?.visible) {
+            hiBuckets.forEach((b) => { b.obj.visible = false; });
+            net.countLinks = [];
+            linkLines.material.opacity = LINK_OPACITY;
+            return;
+          }
+          const mine = net.visibleLinks.filter((l) => l.a === id || l.b === id).sort((x, y) => fieldLinkCount(y) - fieldLinkCount(x));
+          const max = mine.length ? fieldLinkCount(mine[0]) : 1;
+          const pos = HI_WIDTHS.map(() => []);
+          mine.forEach((l) => {
+            const a = stars.get(l.a).p, b = stars.get(l.b).p;
+            const bi = Math.min(HI_WIDTHS.length - 1, Math.floor((fieldLinkCount(l) / max) * HI_WIDTHS.length * 0.999));
+            pos[bi].push(a.x, a.y, a.z, b.x, b.y, b.z);
+          });
+          const color = new THREE.Color(colorOf(stars.get(id).n.type));
+          hiBuckets.forEach((bk, i) => {
+            bk.obj.geometry.dispose();
+            const g = new LineSegmentsGeometry();
+            if (pos[i].length) g.setPositions(pos[i]);
+            bk.obj.geometry = g;
+            bk.obj.visible = pos[i].length > 0;
+            bk.mat.color.copy(color);
+          });
+          // The strongest 3 to 5 lines get a paper count (all of them if it has fewer).
+          net.countLinks = mine.slice(0, 5).map((l) => ({ k: fieldLinkCount(l), mid: stars.get(l.a).p.clone().add(stars.get(l.b).p).multiplyScalar(0.5) }));
           // Its strongest neighbors get labels too.
-          net.hotNeighbors = new Set(mine.sort((x, y) => fieldLinkCount(y) - fieldLinkCount(x)).slice(0, 6).map((l) => (l.a === id ? l.b : l.a)));
-          linkLines.material.opacity = 0.55;
+          net.hotNeighbors = new Set(mine.slice(0, 6).map((l) => (l.a === id ? l.b : l.a)));
+          linkLines.material.opacity = LINK_OPACITY * 0.35;
         }
         net.setHighlight = setHighlight;
 
@@ -2804,7 +2833,7 @@
           const st = pick(event.clientX - rect.left, event.clientY - rect.top);
           const id = st ? st.n.id : null;
           host.classList.toggle("hovering", !!id);
-          if (id !== net.hover) { net.hover = id; setHighlight(); if (!id) linkLines.material.opacity = net.focus ? 0.55 : 1; }
+          if (id !== net.hover) { net.hover = id; setHighlight(); }
           if (st) showTip(conceptTip(st.n, `${plural(papersIn(st.n.papers).length, "paper")}${scopeActive() ? " in view" : ""} · click to fly in`), event, $("field-view"));
           else hideTip();
         });
@@ -2831,7 +2860,6 @@
         net.reset = function () {
           net.focus = null;
           setHighlight();
-          linkLines.material.opacity = 1;
           net.fly = { t0: performance.now(), dur: REDUCED_MOTION ? 0 : 1100, fromPos: camera.position.clone(), fromTarget: controls.target.clone(), toPos: HOME.pos.clone(), toTarget: HOME.target.clone(), then: () => setSpin(!REDUCED_MOTION) };
         };
 
@@ -2839,7 +2867,7 @@
           const w = host.clientWidth, h = host.clientHeight;
           if (!w || !h) return;
           renderer.setSize(w, h, false);
-          linkBuckets.forEach((b) => b.mat.resolution.set(w, h));
+          hiBuckets.forEach((b) => b.mat.resolution.set(w, h));
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
         }).observe(host);
@@ -2855,6 +2883,21 @@
         const w = host.clientWidth, h = host.clientHeight;
         const boxes = [];
         const cands = [];
+        // Paper counts on the highlighted dot's strongest lines, at each line's middle.
+        (net.countEls || []).forEach((el, i) => {
+          const c = net.countLinks?.[i];
+          if (!c) { el.style.display = "none"; return; }
+          const p = c.mid.clone().project(net.camera);
+          if (p.z > 1 || p.z < -1) { el.style.display = "none"; return; }
+          const x = (p.x * 0.5 + 0.5) * w, y = (-p.y * 0.5 + 0.5) * h;
+          el.textContent = `${c.k} ${c.k === 1 ? "paper" : "papers"}`;
+          const bw = el.textContent.length * 6.6 + 14;
+          const box = { x0: x - bw / 2, y0: y - 9, x1: x + bw / 2, y1: y + 9 };
+          if (boxes.some((b) => b.x0 < box.x1 && b.x1 > box.x0 && b.y0 < box.y1 && b.y1 > box.y0)) { el.style.display = "none"; return; }
+          boxes.push(box);
+          el.style.display = "block";
+          el.style.transform = `translate(${(x - bw / 2).toFixed(1)}px, ${(y - 9).toFixed(1)}px)`;
+        });
         net.stars.forEach((st) => {
           st.show = false;
           if (!st.visible) return;
@@ -2918,7 +2961,7 @@
         $("net3d-legend").innerHTML = `
           <div class="types">${nodeTypes.filter((t) => state.types.has(t)).map((t) => `<span>${dot(t)}${esc(typeOf(t).plural)}</span>`).join("")}</div>
           <div>${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.color)} · ${mapWord(MAP_WORDS.size)}${scopeActive() ? " in view" : ""}</div>
-          <div>${mapWord(MAP_WORDS.line)}. Hover a dot to light up its own.</div>
+          <div>${mapWord(MAP_WORDS.line)}</div>
           <div>${mapWord(MAP_WORDS.close)}</div>
           <div>${esc(MAP_WORDS.caveat)}</div>
           ${looseShown ? `<div><b>Outer shell</b> = ${looseShown} concepts with no lines</div>` : ""}
@@ -3199,22 +3242,26 @@
         const n = Object.fromEntries(homeTypes.map((t) => [t, exampleNode(t)]));
         const r = d3.scaleSqrt().domain([0, d3.max(homeTypes, (t) => n[t].paperCount)]).range([6, 34]);
         const pairs = [["subject", "task"], ["task", "construct"], ["subject", "construct"], ["task", "problem"], ["problem", "construct"]];
-        const wmax = d3.max(pairs, ([a, b]) => linkByPair.get(pairKey(n[a].id, n[b].id))?.shared || 0) || 1;
         const lines = pairs.map(([a, b]) => {
           const k = linkByPair.get(pairKey(n[a].id, n[b].id))?.shared || 0;
           if (!k) return "";
-          return `<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}" stroke-width="${1 + (k / wmax) * 9}" stroke-opacity="${(0.3 + 0.6 * (k / wmax)).toFixed(2)}"><title>${k} papers studied both</title></line>`;
+          // Every line the same thin style, labeled with its number of papers (as hovering does in the network).
+          const mx = (pts[a][0] + pts[b][0]) / 2, my = (pts[a][1] + pts[b][1]) / 2, label = `${k} ${k === 1 ? "paper" : "papers"}`, lw = label.length * 6.8 + 12;
+          return `<line x1="${pts[a][0]}" y1="${pts[a][1]}" x2="${pts[b][0]}" y2="${pts[b][1]}"><title>${k} papers studied both</title></line>
+            ¦<g class="mm-count"><rect x="${mx - lw / 2}" y="${my - 10}" width="${lw}" height="20" rx="10"/><text x="${mx}" y="${my + 4}" text-anchor="middle">${label}</text></g>`;
         }).join("");
+        // All lines first, then every count label on top of them.
+        const parts = lines.split("¦");
+        const lineSvg = parts.map((p, i) => (i ? p.replace(/^[\s\S]*?<\/g>/, "") : p)).join("");
+        const countSvg = (lines.match(/<g class="mm-count">[\s\S]*?<\/g>/g) || []).join("");
         const dots = homeTypes.map((t) => `<g class="mm-dot"><circle cx="${pts[t][0]}" cy="${pts[t][1]}" r="${r(n[t].paperCount)}" fill="${colorOf(t)}"><title>${esc(cap(n[t].label))}: ${n[t].paperCount} papers</title></circle>
             <text x="${pts[t][0]}" y="${pts[t][1] + r(n[t].paperCount) + 17}" text-anchor="middle">${esc(cap(n[t].label))}</text></g>`).join("");
-        const sp = linkByPair.get(pairKey(n.subject.id, n.task.id))?.shared || 0;
         const rs = r(n.subject.paperCount), rp = r(n.problem.paperCount);
-        const mx = (pts.subject[0] + pts.task[0]) / 2, my = (pts.subject[1] + pts.task[1]) / 2;
         const notes = `
           <g class="mm-note"><path d="M${pts.subject[0] - rs * 0.7},${pts.subject[1] - rs * 0.7} L${pts.subject[0] - rs - 20},${pts.subject[1] - rs - 34}"/><text x="${pts.subject[0] - rs - 22}" y="${pts.subject[1] - rs - 40}" text-anchor="middle">big dot = many papers (${n.subject.paperCount})</text></g>
-          <g class="mm-note"><path d="M${mx},${my - 7} L${mx + 6},${my - 42}"/><text x="${mx + 8}" y="${my - 48}" text-anchor="middle">thick, bright line = ${sp} papers studied both</text></g>
+
           <g class="mm-note"><text x="${pts.problem[0]}" y="${pts.problem[1] + rp + 36}" text-anchor="middle">smaller dot = fewer papers (${n.problem.paperCount})</text></g>`;
-        return `<svg class="mini-map" viewBox="0 0 680 320" role="img" aria-label="Example: four concepts as dots joined by lines">${lines}${dots}${notes}</svg>`;
+        return `<svg class="mini-map" viewBox="0 0 680 320" role="img" aria-label="Example: four concepts as dots joined by lines">${lineSvg}${dots}${countSvg}${notes}</svg>`;
       }
 
       function renderHome() {
@@ -3261,7 +3308,7 @@
               <li>${mapWord(MAP_WORDS.dot)}</li>
               <li>${mapWord(MAP_WORDS.size)}</li>
               <li>${mapWord(MAP_WORDS.color)}</li>
-              <li>${mapWord(MAP_WORDS.line)}</li>
+              <li>${mapWord(MAP_WORDS.lineHome)}</li>
               <li>${mapWord(MAP_WORDS.close)}</li>
               <li>On a concept’s own page: ${mapWord(MAP_WORDS.rings)}</li>
             </ul>
@@ -5376,6 +5423,7 @@
       const mapView = { mode: (() => { try { return localStorage.getItem(MAP_MODE_KEY) || "type"; } catch { return "type"; } })(), atlas: null, ready: false, kFit: 1, t: d3.zoomIdentity, level: -1, first: true };
       const MAP_BIG = 24;          // zoomed out, only the this-many biggest concepts are drawn in full
       const MAP_LEVELS = [1.45, 2.4]; // zoom (relative to the fitted view) where names, then lines, appear
+      const MAP_LINE_W = 0.8, MAP_LINE_O = 0.22;
       const modeOk = (key) => (key === "type" ? true : key === "families" ? !!suggestedFile : !!mapGroupsFile);
 
       function mapAtlas() {
@@ -5428,7 +5476,7 @@
           <div>${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.color)} · ${mapWord(MAP_WORDS.size)}</div>
           <div><b>Shaded region</b> = one group${mapView.mode === "families" ? " (suggested)" : ""}; its large name is a landmark</div>
           <div><b>Position</b>: ${esc(AtlasMap.POSITION[mapView.mode])}</div>
-          <div>Zoomed out, only the ${MAP_BIG} biggest concepts are full dots. Zoom in for every name, then lines. ${mapWord(MAP_WORDS.line)}.</div>
+          <div>Zoomed out, only the ${MAP_BIG} biggest concepts are full dots. Zoom in for every name, then lines. ${mapWord(MAP_WORDS.line)}</div>
           <div>${esc(MAP_WORDS.caveat)}</div>
           <div class="how">Scroll or pinch to zoom · drag to move · click a dot to open it</div>
           <button type="button" class="ml-note" data-hash="#/overview/scope">What’s included shapes what you see →</button>`;
@@ -5464,12 +5512,9 @@
           .classed("tinted", typeMode)
           .style("--c", (g) => (g.type ? colorOf(g.type) : null))
           .transition().delay(dur * 0.6).duration(dur ? 500 : 0).style("opacity", 1);
-        // Lines (shown only when zoomed in): thicker and brighter with more shared papers.
-        const maxShared = d3.max(mapView.links, (l) => l.shared) || 1;
-        const lw = d3.scaleSqrt().domain([1, maxShared]).range([0.5, 5]);
-        const lo = d3.scaleLinear().domain([1, maxShared]).range([0.18, 0.75]);
+        // Lines (shown when zoomed in) all look the same; hovering a dot shows its own lines' strength.
         mapLinkG.selectAll("line").data(mapView.links, (l) => `${l.a}|${l.b}`).join("line")
-          .attr("stroke-width", (l) => lw(l.shared)).attr("stroke-opacity", (l) => lo(l.shared))
+          .attr("stroke-width", MAP_LINE_W).attr("stroke-opacity", MAP_LINE_O)
           .transition().duration(dur)
           .attr("x1", (l) => L.pos.get(l.a)[0]).attr("y1", (l) => L.pos.get(l.a)[1])
           .attr("x2", (l) => L.pos.get(l.b)[0]).attr("y2", (l) => L.pos.get(l.b)[1]);
@@ -5609,10 +5654,23 @@
         const g = event.target.closest(".mnode");
         if (!g) return;
         const n = byId.get(g.dataset.id), grp = mapView.L.groupOf.get(n.id);
-        showTip(`<div class="tt-name">${dot(n.type)}${esc(cap(n.label))}</div><p class="tt-def">${esc(typeOf(n.type).label)} · ${plural(n.paperCount, "paper")}${grp ? ` · ${esc(grp.name)}` : ""}</p><p class="tt-def">Click to open its page.</p>`, event, $("map-stage"));
+        // Its own lines light up, thicker with more shared papers (even when lines are hidden); the strongest are listed.
+        const mine = mapView.links.filter((l) => l.a === n.id || l.b === n.id).sort((x, y) => y.shared - x.shared);
+        const max = mine[0]?.shared || 1, set = new Set(mine);
+        $("map-stage").classList.add("hovering");
+        mapLinkG.selectAll("line").classed("hl", (l) => set.has(l))
+          .attr("stroke-width", (l) => (set.has(l) ? 1 + 5 * (l.shared / max) : MAP_LINE_W))
+          .attr("stroke-opacity", (l) => (set.has(l) ? 0.85 : MAP_LINE_O))
+          .attr("stroke", (l) => (set.has(l) ? colorOf(n.type) : null));
+        const top = mine.slice(0, 5).map((l) => `${esc(cap(byId.get(l.a === n.id ? l.b : l.a).label))}: ${plural(l.shared, "paper")}`);
+        showTip(`<div class="tt-name">${dot(n.type)}${esc(cap(n.label))}</div><p class="tt-def">${esc(typeOf(n.type).label)} · ${plural(n.paperCount, "paper")}${grp ? ` · ${esc(grp.name)}` : ""}</p>${top.length ? `<p class="tt-def">Strongest links: ${top.join(" · ")}</p>` : ""}<p class="tt-def">Click to open its page.</p>`, event, $("map-stage"));
       });
       mapNodeG.on("mousemove", (event) => { if (event.target.closest(".mnode")) moveTip(event); });
-      mapNodeG.on("mouseout", () => hideTip());
+      mapNodeG.on("mouseout", () => {
+        hideTip();
+        $("map-stage").classList.remove("hovering");
+        mapLinkG.selectAll("line").classed("hl", false).attr("stroke-width", MAP_LINE_W).attr("stroke-opacity", MAP_LINE_O).attr("stroke", null);
+      });
       new ResizeObserver(() => { if (state.view === "map" && mapView.L) { mapOnZoom(); } }).observe($("map-svg"));
 
 
@@ -5637,7 +5695,7 @@
         { title: "The network", hash: "#/", show: ["where", "trail", "filters", "network"], focus: "network", sides: ["inside"],
           items: [
             "Each dot is a concept. Color = type, size = number of papers.",
-            "Lines: studied in the same papers. Thicker and brighter = more papers.",
+            "Lines: studied in the same papers. Hover a dot to see how strong its links are.",
             "Closer dots are, roughly, studied together more often.",
             "Click a dot to open its page.",
             "Left: filters by type, years, and paper count.",
