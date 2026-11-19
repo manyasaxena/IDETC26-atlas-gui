@@ -1,0 +1,26 @@
+{
+  "_about": "Plain-language names for the computed groups (AI-suggested, edit freely). Keyed by each group's most-studied concept, so a name follows its group if the grouping is rebuilt.",
+  "together": {
+    "Engineering Students": "Student idea generation",
+    "Experienced Practitioners": "Design practice in industry",
+    "structured evaluation task": "How people judge products",
+    "semi-structured interview": "Understanding users and communities",
+    "cognitive style": "How designers think, and AI",
+    "problem-solving": "Optimization and computational design",
+    "heuristic reasoning": "Teamwork and rules of thumb",
+    "evaluative judgment": "Judging similarity and quality",
+    "knowledge representation": "Mental models of everyday products",
+    "trust": "Trust and safety"
+  },
+  "meaning": {
+    "Engineering Students": "Designers and their projects",
+    "concept generation task": "Generating ideas",
+    "structured evaluation task": "Evaluating and improving designs",
+    "consumer product": "Products and how they work",
+    "schema activation": "Mental models and judgment",
+    "survey or questionnaire completion": "Self-report and mental effort",
+    "assistive device": "Devices for people in need",
+    "semi-structured interview": "Talking and reflecting",
+    "problem-solving": "Problem solving and risk"
+  }
+}

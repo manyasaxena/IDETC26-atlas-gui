@@ -595,6 +595,53 @@
     /* The explainer's sections fade in as a whole, one at a time. */
     .ex-step.reveal { --fade: 1s; --step: 0.25s; }
     .ex-step.reveal.in > :nth-child(n + 4) { transition-delay: calc(var(--d) + 3 * var(--step)); }
+    /* Map view: concepts grouped into soft regions with large names, on the same dark stage as the network. */
+    #map-view { position: absolute; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding: 2px 14px 14px; animation: fadeIn 0.35s var(--ease); }
+    #map-view[hidden] { display: none; }
+    .map-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; padding: 2px 4px; }
+    .map-modes { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface); }
+    .map-modes .ml { font: 500 11px var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 0 10px; }
+    .map-modes button { border: 0; border-radius: 999px; padding: 6px 14px; background: transparent; color: var(--muted); font: 500 13.5px var(--sans); cursor: pointer; transition: background 0.2s, color 0.2s; }
+    .map-modes button:hover:not(:disabled) { color: var(--text); background: var(--surface-2); }
+    .map-modes button.on { background: var(--surface-3); color: var(--text); font-weight: 700; }
+    .map-modes button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .map-line { margin: 0; font-size: 15px; color: var(--soft, var(--text)); line-height: 1.45; }
+    .map-line .sugg { display: inline-block; margin-left: 6px; padding: 1px 8px; border: 1px dashed var(--line-strong); border-radius: 999px; font: 11px var(--mono); color: var(--muted); }
+    #map-svg { width: 100%; height: 100%; display: block; cursor: grab; }
+    #map-svg:active { cursor: grabbing; }
+    .map-stage .region { fill: #cfd8ec; fill-opacity: 0.06; stroke: #cfd8ec; stroke-opacity: 0.16; stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+    .map-stage .region.tinted { fill: var(--c); fill-opacity: 0.08; stroke: var(--c); stroke-opacity: 0.22; }
+    .map-stage .m-links line { stroke: #b9c6e6; vector-effect: non-scaling-stroke; transition: opacity 0.3s; }
+    .map-stage[data-level="0"] .m-links, .map-stage[data-level="1"] .m-links { opacity: 0; pointer-events: none; }
+    .map-stage .mnode { cursor: pointer; transition: opacity 0.3s; }
+    .map-stage .mnode circle { stroke: rgba(5, 6, 10, 0.7); stroke-width: 1; vector-effect: non-scaling-stroke; }
+    .map-stage .mnode:hover circle { stroke: #fff; stroke-width: 2; }
+    /* Zoomed out, small concepts are only faint specks (no names, not clickable) so regions still show their shape. */
+    .map-stage[data-level="0"] .mnode:not(.big) { opacity: 0.22; pointer-events: none; }
+    .map-stage .rlabel { fill: #eef2fb; font-family: var(--sans); font-weight: 700; letter-spacing: 0.01em; paint-order: stroke; stroke: #05060a; stroke-width: 5px; stroke-linejoin: round; pointer-events: none; }
+    .map-stage .rlabel.super { font-weight: 800; fill: var(--c); letter-spacing: 0.04em; text-transform: uppercase; }
+    .map-stage .clabel { fill: #dfe5f2; font: 12px var(--sans); paint-order: stroke; stroke: #05060a; stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+    .map-tools { position: absolute; top: 14px; right: 14px; display: flex; gap: 6px; }
+    .map-tools button { min-width: 34px; height: 30px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(12, 15, 24, 0.86); color: #e3e8f5; font: 600 14px var(--sans); cursor: pointer; }
+    .map-tools button:hover { border-color: var(--accent); }
+    .map-stage .nav-back { position: absolute; top: 14px; left: 14px; }
+    .map-legend { position: absolute; left: 14px; bottom: 14px; max-width: 360px; display: grid; gap: 5px; padding: 12px 14px; font: 12px/1.45 var(--mono); color: #c9d0de; background: rgba(12, 15, 24, 0.86); border: 1px solid var(--line); border-radius: var(--r-md); }
+    .map-legend b { color: #eef2fb; font-weight: 500; }
+    .map-legend .ml-toggle { justify-self: end; margin: -4px -4px 0 0; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); font: 11px var(--sans); cursor: pointer; }
+    .map-legend.collapsed { padding: 6px; }
+    .map-legend.collapsed > :not(.ml-toggle) { display: none; }
+    .map-legend.collapsed .ml-toggle { margin: 0; }
+    .map-legend .how { color: var(--faint); border-top: 1px solid var(--line); padding-top: 6px; }
+    .map-legend .ml-note { justify-self: start; background: none; border: 0; padding: 0; color: var(--accent); font: 12px var(--sans); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .map-mini-wrap { position: absolute; right: 14px; bottom: 14px; display: grid; gap: 6px; justify-items: end; }
+    .map-mini { width: 190px; height: auto; display: block; background: rgba(12, 15, 24, 0.86); border: 1px solid var(--line); border-radius: var(--r-sm); cursor: pointer; }
+    .map-mini .mreg { fill: #cfd8ec; fill-opacity: 0.1; stroke: none; }
+    .map-mini .mreg.tinted { fill: var(--c); fill-opacity: 0.18; }
+    .map-mini .view { fill: none; stroke: var(--accent); stroke-width: 1.2; }
+    .map-terrain { font: 12px var(--sans); color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+    .top-links { display: flex; gap: 6px; }
+    .ex-step .ex-sub { margin: 28px 0 6px; font-size: 20px; }
+    @media (max-width: 720px) { .map-legend { display: none; } .map-mini { width: 130px; } .top-links .top-link { padding: 6px 10px; } }
     /* Top bar link to Explore insights. */
     .top-link { border: 1px solid var(--line-strong); background: transparent; color: var(--text); border-radius: 999px; padding: 6px 14px; font: 500 13px var(--sans); cursor: pointer; white-space: nowrap; transition: border-color 0.2s, background 0.2s; }
     .top-link:hover { border-color: var(--accent); }
@@ -1669,7 +1716,11 @@
         <div id="search-results" hidden></div>
       </div>
       <div class="spacer"></div>
-      <button type="button" class="top-link" id="insights-link" data-tour="insights-link">Explore insights</button>
+      <nav class="top-links" aria-label="Views">
+        <button type="button" class="top-link" id="network-link" data-go="#/">Network</button>
+        <button type="button" class="top-link" id="map-link" data-go="#/map">Map</button>
+        <button type="button" class="top-link" id="insights-link" data-go="#/insights" data-tour="insights-link">Explore insights</button>
+      </nav>
       <button id="help-btn" type="button" title="Help, glossary and walkthrough" aria-label="Open help" data-tour="help">?</button>
     </header>
     <div class="trail-bar" id="trail-bar" hidden aria-label="Recently visited" data-tour="trail"></div>
@@ -1693,6 +1744,24 @@
           <button type="button" class="vc-btn" id="net-spin" hidden>Pause rotation</button>
           <button type="button" class="vc-btn" id="net-reset" hidden>Reset view</button>
         </div>
+        </div>
+      </section>
+
+      <section id="map-view" hidden>
+        <div class="map-head">
+          <div class="map-modes" role="group" aria-label="Group by"><span class="ml">Group by</span><span id="map-modes"></span></div>
+          <p class="map-line" id="map-line"></p>
+        </div>
+        <div class="map-stage net-stage" id="map-stage" data-tour="map">
+          <svg id="map-svg" aria-label="Map of concepts grouped into regions"></svg>
+          <button type="button" class="nav-back" data-hash="#/overview/read">← How to read the map</button>
+          <div class="map-tools" role="group" aria-label="Zoom">
+            <button type="button" class="vc-btn" data-map-zoom="in" aria-label="Zoom in">+</button>
+            <button type="button" class="vc-btn" data-map-zoom="out" aria-label="Zoom out">−</button>
+            <button type="button" class="vc-btn" data-map-zoom="fit">Fit</button>
+          </div>
+          <div class="map-legend" id="map-legend"></div>
+          <div class="map-mini-wrap"><svg id="map-mini" class="map-mini" aria-label="Minimap: where you are"></svg><a class="map-terrain" href="terrain-v2.html">Try the terrain view (experimental) →</a></div>
         </div>
       </section>
 
@@ -1758,6 +1827,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="atlas-map.js"></script>
   <script>
     (async function init() {
       // Colors for types the schema doesn't color (used only for types missing from it).
@@ -1785,13 +1855,15 @@
       const tooltip = $("tooltip");
 
       // ---------- Load data ----------
-      let raw, schemaFile = null, detailsFile = null;
+      let raw, schemaFile = null, detailsFile = null, mapGroupsFile = null, suggestedFile = null;
       try {
         if (location.protocol === "file:") throw new Error("This page has to be served over http to load graph_data.json.");
-        const [response, schemaResponse, detailsResponse] = await Promise.all([
+        const [response, schemaResponse, detailsResponse, mapGroupsResponse, suggestedResponse] = await Promise.all([
           fetch("./graph_data.json"),
           fetch("./atlas_schema.json").catch(() => null),
-          fetch("./paper_details.json").catch(() => null)
+          fetch("./paper_details.json").catch(() => null),
+          fetch("./map_groups.json").catch(() => null),
+          fetch("./suggested_groups.json").catch(() => null)
         ]);
         if (!response.ok) throw new Error(`Could not load graph_data.json (HTTP ${response.status}).`);
         raw = await response.json();
@@ -1799,6 +1871,9 @@
         else if (!raw.schema) console.warn("No atlas_schema.json found; type names and colors are generated from the data.");
         if (detailsResponse && detailsResponse.ok) detailsFile = await detailsResponse.json();
         else console.warn("No paper_details.json found; papers show the titles and authors from graph_data.json.");
+        // Map view groupings; without them the Map still works by type.
+        if (mapGroupsResponse && mapGroupsResponse.ok) mapGroupsFile = await mapGroupsResponse.json();
+        if (suggestedResponse && suggestedResponse.ok) suggestedFile = await suggestedResponse.json();
       } catch (error) {
         $("app").innerHTML = `<div class="error">${esc(error.message)}<br/>From the project folder run <code>python3 -m http.server 8000</code> and open http://localhost:8000/redesign.html</div>`;
         console.error(error);
@@ -1949,6 +2024,8 @@
         view: "field",
         // The overview area's page: "home" (the explainer) or "insights".
         page: "home",
+        // Which overview of all concepts was used last ("network" or "map"), so the crumb goes back to it.
+        explore: "network",
         // Overview: how far each type card is opened (0 = top 3, 1 = top 5, 2 = all),
         // which sections show more than their top 3, and which sections have already faded in.
         landingLevel: new Map(),
@@ -2225,6 +2302,11 @@
         const id = m && decodeURIComponent(m[1]);
         // The bare address and #/overview open the explainer home; #/insights opens Explore insights; #/ is the network.
         if (!location.hash || /^#\/overview\/?$/.test(location.hash)) { showLanding("home"); return; }
+        // #/overview/<step> opens the home page at that step (e.g. "read", "scope").
+        const step = location.hash.match(/^#\/overview\/(\w+)\/?$/);
+        if (step) { showLanding("home"); goHomeStep(step[1]); return; }
+        const mapM = location.hash.match(/^#\/map(?:\/(\w+))?\/?$/);
+        if (mapM) { showMap(mapM[1]); return; }
         if (/^#\/insights\/?$/.test(location.hash)) { showLanding("insights"); return; }
         if (!id || !byId.has(id)) { showField(); return; }
         const conn = m[2] ? decodeURIComponent(m[2]) : null;
@@ -2432,11 +2514,13 @@
         // Coming back from a concept, connection or the overview: the 3D view flies back out to the full, zoomed-out network.
         const fromElsewhere = state.view !== "field";
         state.view = "field";
+        state.explore = "network";
         state.center = null;
         hideTip();
         cancelGuided();
         $("concept-view").hidden = true;
         $("landing-view").hidden = true;
+        $("map-view").hidden = true;
         $("field-view").hidden = false;
         renderFilterBar();
         renderCrumbs();
@@ -2883,7 +2967,7 @@
         }
       }
       $("net-reset").addEventListener("click", () => net.reset && net.reset());
-      $("net-overview").addEventListener("click", goOverview);
+      $("net-overview").addEventListener("click", () => navigate("#/overview/read"));
       $("net-spin").addEventListener("click", () => setSpin(!net.controls?.autoRotate));
 
       // ---------- Landing: a few landmarks instead of the whole network ----------
@@ -3189,7 +3273,9 @@
               <li>${mapWord(MAP_WORDS.close)}</li>
               <li>On a concept’s own page: ${mapWord(MAP_WORDS.rings)}</li>
             </ul>
-            <p class="ex-caveat">${esc(MAP_WORDS.caveat)}</p>`)}
+            <p class="ex-caveat">${esc(MAP_WORDS.caveat)}</p>
+            <h3 class="ex-sub">The Map view</h3>
+            <p>The Map uses the same dots, sizes and colors, but groups concepts into shaded regions. Each region’s large name is a landmark you can learn. Choose how to group them: by type, by being studied together, by similar meaning, or by suggested topic families. Zoom in to see names, then lines.</p>`)}
 
           ${step("scope", 5, "What’s included, and what isn’t", `
             <ul class="ex-list">
@@ -3204,6 +3290,7 @@
             <div class="ex-start">
               <button type="button" class="see-network big" data-network="1">Explore the network →</button>
               <div class="ex-secondary">
+                <button type="button" data-home="map">Open the map</button>
                 <button type="button" data-home="insights">Explore insights</button>
                 <button type="button" data-home="plan">Plan a study</button>
                 <button type="button" data-home="search">Search a concept</button>
@@ -3451,6 +3538,7 @@
         cancelGuided();
         $("concept-view").hidden = true;
         $("field-view").hidden = true;
+        $("map-view").hidden = true;
         $("landing-view").hidden = false;
         renderFilterBar();
         renderCrumbs();
@@ -3463,9 +3551,18 @@
         }
       }
       let pendingPlan = false;
+      // Opens the home page at one step, with it and the steps above it already shown.
+      function goHomeStep(key) {
+        const secs = [...document.querySelectorAll("#landing-view .ex-step")];
+        const i = secs.findIndex((s) => s.dataset.section === key);
+        if (i < 0) return;
+        secs.slice(0, i + 1).forEach((s) => { s.classList.add("in", "seen"); state.landingSeen.add(s.dataset.section); });
+        requestAnimationFrame(() => secs[i].scrollIntoView({ block: "start" }));
+      }
       // The explainer's "Start exploring" links (and "See how the map works" on Explore insights).
       function homeAction(what) {
         if (what === "insights") navigate("#/insights");
+        else if (what === "map") navigate("#/map");
         else if (what === "home") navigate("#/overview");
         else if (what === "plan") { pendingPlan = true; if (state.page === "insights" && state.view === "landing") showLanding("insights"); else navigate("#/insights"); }
         else if (what === "search") { searchInput.focus(); searchInput.select(); }
@@ -3506,7 +3603,9 @@
           state.view === "landing" && state.page === "insights"
             ? { key: "overview", html: "Explore insights", hash: "#/insights", title: "Explore insights" }
             : { key: "overview", html: "Home", hash: "#/overview", title: "Home: how the Atlas works" },
-          { key: "network", html: "Network", hash: "#/", title: "The full network" },
+          state.view === "map" || (state.view !== "field" && state.explore === "map")
+            ? { key: "network", html: "Map", hash: "#/map", title: "The map of all concepts" }
+            : { key: "network", html: "Network", hash: "#/", title: "The full network" },
           center
             ? { key: "concept", html: `<span class="k">Concept:</span> ${dot(center.type)}${esc(cap(center.label))}`, hash: conceptHash(center.id), title: `Concept: ${cap(center.label)}` }
             : { key: "concept", html: "Concept", title: "Pick a concept to go deeper" },
@@ -3517,7 +3616,7 @@
             ? { key: "paper", html: `<span class="k">Paper:</span> ${esc(trunc(paperTitle(paper), 40))}`, title: `Paper: ${paperTitle(paper)}` }
             : { key: "paper", html: "Paper", title: "Open a paper to go deeper" }
         ];
-        const here = state.view === "landing" ? 0 : state.view === "field" ? 1 : paper ? 4 : nb ? 3 : 2;
+        const here = state.view === "landing" ? 0 : state.view === "field" || state.view === "map" ? 1 : paper ? 4 : nb ? 3 : 2;
         $("where").innerHTML = levels.map((l, i) => {
           const sep = i ? `<span class="sep" aria-hidden="true">›</span>` : "";
           const extra = l.key === "paper" ? " paper" : "";
@@ -3526,11 +3625,11 @@
           if (!l.hash) return `${sep}<span class="lvl skipped${extra}" title="${esc(l.title)}">${l.html}</span>`;
           return `${sep}<button type="button" class="lvl${extra}" data-hash="${esc(l.hash)}" title="${esc(l.title)}">${l.html}</button>`;
         }).join("");
-        const onInsights = state.view === "landing" && state.page === "insights";
-        if (onInsights) $("insights-link").setAttribute("aria-current", "page"); else $("insights-link").removeAttribute("aria-current");
+        const current = state.view === "landing" && state.page === "insights" ? "insights-link" : state.view === "map" ? "map-link" : state.view === "field" ? "network-link" : null;
+        ["network-link", "map-link", "insights-link"].forEach((id) => { if (id === current) $(id).setAttribute("aria-current", "page"); else $(id).removeAttribute("aria-current"); });
         renderTrail();
       }
-      $("insights-link").addEventListener("click", () => navigate("#/insights"));
+      document.querySelector(".top-links").addEventListener("click", (event) => { const b = event.target.closest("[data-go]"); if (b) navigate(b.dataset.go); });
       $("where").addEventListener("click", (event) => {
         const el = event.target.closest("[data-hash]");
         if (el) navigate(el.dataset.hash);
@@ -5263,6 +5362,7 @@
         state.hover = null;
         $("field-view").hidden = true;
         $("landing-view").hidden = true;
+        $("map-view").hidden = true;
         const view = $("concept-view");
         view.hidden = false;
         if (guidedWanted()) startGuidedReveal();
@@ -5275,6 +5375,254 @@
         renderRight();
         updateOrbit(fromField ? 750 : 650);
       }
+
+      // ---------- Map view (#/map/<mode>) ----------
+      // Concepts grouped into shaded regions with large labels (the landmarks), like a map you can learn.
+      // Layout and groups come from atlas-map.js, shared with terrain-v2.html. Zoomed out: region names and the
+      // biggest concepts; zoom in for every concept's name, then the lines between them.
+      const MAP_MODE_KEY = "atlas-map-mode";
+      const mapView = { mode: (() => { try { return localStorage.getItem(MAP_MODE_KEY) || "type"; } catch { return "type"; } })(), atlas: null, ready: false, kFit: 1, t: d3.zoomIdentity, level: -1, first: true };
+      const MAP_BIG = 24;          // zoomed out, only the this-many biggest concepts are drawn in full
+      const MAP_LEVELS = [1.45, 2.4]; // zoom (relative to the fitted view) where names, then lines, appear
+      const modeOk = (key) => (key === "type" ? true : key === "families" ? !!suggestedFile : !!mapGroupsFile);
+
+      function mapAtlas() {
+        if (mapView.atlas) return mapView.atlas;
+        const mapNodes = nodes.filter((n) => !isPlaceholder(n)).map((n) => ({ id: n.id, label: n.label, type: n.type, paperCount: n.paperCount }));
+        const ok = new Set(mapNodes.map((n) => n.id));
+        const mapLinks = links.filter((l) => ok.has(l.a) && ok.has(l.b)).map((l) => ({ a: l.a, b: l.b, shared: l.shared }));
+        mapView.links = mapLinks;
+        mapView.atlas = AtlasMap.build({ nodes: mapNodes, links: mapLinks, files: { groups: mapGroupsFile, suggested: suggestedFile || { types: {} } }, typeOrder: nodeTypes, typeLabel: (t) => typeOf(t).plural });
+        mapView.big = new Set(mapNodes.slice().sort((a, b) => b.paperCount - a.paperCount).slice(0, MAP_BIG).map((n) => n.id));
+        return mapView.atlas;
+      }
+
+      const mapSvg = d3.select("#map-svg");
+      const mapZoomG = mapSvg.append("g").attr("class", "mz");
+      const mapRegionG = mapZoomG.append("g").attr("class", "m-regions");
+      const mapLinkG = mapZoomG.append("g").attr("class", "m-links");
+      const mapNodeG = mapZoomG.append("g").attr("class", "m-nodes");
+      const mapLabelG = mapSvg.append("g").attr("class", "m-labels");   // concept names, in screen space
+      const mapRegionLabelG = mapSvg.append("g").attr("class", "m-rlabels"); // region names, in screen space
+      const mapZoom = d3.zoom().scaleExtent([0.3, 12]).on("zoom", (event) => { mapView.t = event.transform; mapZoomG.attr("transform", event.transform); mapOnZoom(); });
+      mapSvg.call(mapZoom).on("dblclick.zoom", null);
+
+      function showMap(mode) {
+        if (mode && modeOk(mode)) mapView.mode = mode;
+        if (!modeOk(mapView.mode)) mapView.mode = "type";
+        try { localStorage.setItem(MAP_MODE_KEY, mapView.mode); } catch {}
+        state.view = "map";
+        state.explore = "map";
+        state.center = null;
+        hideTip();
+        cancelGuided();
+        $("concept-view").hidden = true;
+        $("landing-view").hidden = true;
+        $("field-view").hidden = true;
+        $("map-view").hidden = false;
+        renderFilterBar();
+        renderCrumbs();
+        mapAtlas();
+        renderMapHead();
+        requestAnimationFrame(() => renderMap(mapView.ready));
+      }
+
+      function renderMapHead() {
+        const m = AtlasMap.MODES.find((x) => x.key === mapView.mode);
+        $("map-modes").innerHTML = AtlasMap.MODES.map((x) => `<button type="button" data-map-mode="${x.key}" class="${x.key === mapView.mode ? "on" : ""}" aria-pressed="${x.key === mapView.mode}" ${modeOk(x.key) ? "" : "disabled title=\"Grouping file missing\""}>${esc(x.label)}</button>`).join("");
+        $("map-line").innerHTML = `${esc(m.line)}${mapView.mode === "families" ? ` <span class="sugg">Suggested groups</span>` : ""}`;
+        $("map-legend").innerHTML = `
+          <button type="button" class="ml-toggle" data-legend-toggle aria-expanded="true">Hide legend</button>
+          <div>${mapWord(MAP_WORDS.dot)} · ${mapWord(MAP_WORDS.color)} · ${mapWord(MAP_WORDS.size)}</div>
+          <div><b>Shaded region</b> = one group${mapView.mode === "families" ? " (suggested)" : ""}; its large name is a landmark</div>
+          <div><b>Position</b>: ${esc(AtlasMap.POSITION[mapView.mode])}</div>
+          <div>Zoom in for names, then lines. ${mapWord(MAP_WORDS.line)}.</div>
+          <div>${esc(MAP_WORDS.caveat)}</div>
+          <div class="how">Scroll or pinch to zoom · drag to move · click a dot to open it</div>
+          <button type="button" class="ml-note" data-hash="#/overview/scope">What’s included shapes what you see →</button>`;
+      }
+
+      function mapSize() {
+        const el = $("map-svg");
+        return [el.clientWidth || 800, el.clientHeight || 600];
+      }
+      // Fit the regions (not the whole canvas) to the stage, leaving room at the top for region names.
+      function mapFit(animate) {
+        const [w, h] = mapSize();
+        const pts = mapView.L.groups.flatMap((g) => g.hull);
+        const [x0, x1] = d3.extent(pts, (p) => p[0]), [y0, y1] = d3.extent(pts, (p) => p[1]);
+        const padTop = 64, pad = 30;
+        const k = Math.min((w - 2 * pad) / (x1 - x0), (h - padTop - pad) / (y1 - y0));
+        mapView.kFit = k;
+        const t = d3.zoomIdentity.translate((w - (x1 - x0) * k) / 2 - x0 * k, padTop + (h - padTop - pad - (y1 - y0) * k) / 2 - y0 * k).scale(k);
+        (animate ? mapSvg.transition().duration(700) : mapSvg).call(mapZoom.transform, t);
+      }
+
+      function renderMap(animate) {
+        const A = mapAtlas();
+        const L = A.layout(mapView.mode);
+        const dur = animate && !REDUCED_MOTION ? 900 : 0;
+        const typeMode = mapView.mode === "type" || mapView.mode === "families";
+        // Regions: the old ones fade out while concepts move, the new ones fade in where they land.
+        const regions = mapRegionG.selectAll("path.region").data(L.groups, (g) => g.id);
+        regions.exit().transition().duration(dur / 2).style("opacity", 0).remove();
+        regions.enter().append("path").attr("class", "region").style("opacity", 0)
+          .merge(regions)
+          .attr("d", (g) => A.regionPath(g.hull))
+          .classed("tinted", typeMode)
+          .style("--c", (g) => (g.type ? colorOf(g.type) : null))
+          .transition().delay(dur * 0.6).duration(dur ? 500 : 0).style("opacity", 1);
+        // Lines (shown only when zoomed in): thicker and brighter with more shared papers.
+        const maxShared = d3.max(mapView.links, (l) => l.shared) || 1;
+        const lw = d3.scaleSqrt().domain([1, maxShared]).range([0.5, 5]);
+        const lo = d3.scaleLinear().domain([1, maxShared]).range([0.18, 0.75]);
+        mapLinkG.selectAll("line").data(mapView.links, (l) => `${l.a}|${l.b}`).join("line")
+          .attr("stroke-width", (l) => lw(l.shared)).attr("stroke-opacity", (l) => lo(l.shared))
+          .transition().duration(dur)
+          .attr("x1", (l) => L.pos.get(l.a)[0]).attr("y1", (l) => L.pos.get(l.a)[1])
+          .attr("x2", (l) => L.pos.get(l.b)[0]).attr("y2", (l) => L.pos.get(l.b)[1]);
+        const dots = mapNodeG.selectAll("g.mnode").data(nodes.filter((n) => L.pos.has(n.id)), (n) => n.id);
+        const enter = dots.enter().append("g").attr("class", "mnode").attr("data-id", (n) => n.id)
+          .attr("transform", (n) => `translate(${L.pos.get(n.id)})`);
+        enter.append("circle").attr("r", (n) => A.radius(n)).attr("fill", (n) => colorOf(n.type));
+        enter.merge(dots).classed("big", (n) => mapView.big.has(n.id))
+          .transition().duration(dur).attr("transform", (n) => `translate(${L.pos.get(n.id)})`);
+        mapView.L = L;
+        if (mapView.first) { mapView.first = false; mapFit(false); }
+        else if (animate) mapFit(true);
+        mapView.level = -1;
+        // Labels follow once everything has moved.
+        setTimeout(() => { mapOnZoom(); drawMinimap(); }, dur ? dur + 20 : 0);
+        mapView.ready = true;
+      }
+
+      // Show more as you zoom in: region names always; biggest concepts → every concept and its name → lines.
+      function mapOnZoom() {
+        if (!mapView.L) return;
+        const rel = mapView.t.k / mapView.kFit;
+        const level = rel < MAP_LEVELS[0] ? 0 : rel < MAP_LEVELS[1] ? 1 : 2;
+        if (level !== mapView.level) {
+          mapView.level = level;
+          $("map-stage").dataset.level = level;
+        }
+        placeMapLabels();
+        drawMinimapView();
+      }
+
+      // Region names first (never hidden), then concept names biggest-first, skipping any that would overlap.
+      const FONT_SANS = getComputedStyle(document.documentElement).getPropertyValue("--sans") || "sans-serif";
+      const measureCtx = document.createElement("canvas").getContext("2d");
+      const textWidth = (text, font) => { measureCtx.font = font; return measureCtx.measureText(text).width; };
+      function placeMapLabels() {
+        const L = mapView.L, t = mapView.t, A = mapView.atlas;
+        const [w, h] = mapSize();
+        const boxes = [];
+        const hit = (b) => boxes.some((o) => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
+        // Bigger regions first. Each name tries the top of its region, its middle, then its bottom; if all are taken
+        // it shrinks and slides down until it fits, so every region keeps a visible name.
+        // Topic families: the four types are the big landmarks above their families, whose names are smaller.
+        const fam = mapView.mode === "families";
+        const sizes = fam ? [13, 12, 11] : [17, 14, 12];
+        const supers = fam ? nodeTypes.map((type) => {
+          const hull = L.groups.filter((g) => g.type === type).flatMap((g) => g.hull);
+          if (!hull.length) return null;
+          const xs = hull.map((p) => t.applyX(p[0])), top = d3.min(hull, (p) => t.applyY(p[1]));
+          const fs = 19, text = typeOf(type).plural, x = (d3.min(xs) + d3.max(xs)) / 2, y = top - 8;
+          const w2 = textWidth(text, `800 ${fs}px ${FONT_SANS}`) + 8;
+          boxes.push({ x: x - w2 / 2, y: y - fs, w: w2, h: fs + 5 });
+          return { g: { id: `super-${type}` }, x, y, fs, text, cls: "rlabel super", c: colorOf(type) };
+        }).filter(Boolean) : [];
+        const rl = supers.concat(L.groups.slice().sort((a, b) => b.papers - a.papers).map((g) => {
+          const text = g.name;
+          const x = t.applyX(g.centroid[0]);
+          const ys = g.hull.map((p) => t.applyY(p[1]));
+          const top = d3.min(ys), bottom = d3.max(ys), mid = t.applyY(g.centroid[1]);
+          for (const fs of sizes) {
+            const width = textWidth(text, `700 ${fs}px ${FONT_SANS}`) + 8;
+            // Only spots inside the region, so a name never drifts away from it.
+            const cands = [top + fs + 4, mid + fs / 2, bottom - 6];
+            for (let y = top + fs + 4; y <= bottom - 6; y += fs / 2 + 2) cands.push(y);
+            for (const y of cands) {
+              const b = { x: x - width / 2, y: y - fs, w: width, h: fs + 5 };
+              if (!hit(b)) { boxes.push(b); return { g, x, y, fs, text, cls: "rlabel" }; }
+            }
+          }
+          return { g, x, y: mid + 4, fs: sizes[sizes.length - 1], text, cls: "rlabel" };
+        }));
+        mapRegionLabelG.selectAll("text").data(rl, (d) => d.g.id).join("text")
+          .attr("class", (d) => d.cls).attr("x", (d) => d.x).attr("y", (d) => d.y).attr("text-anchor", "middle")
+          .style("font-size", (d) => `${d.fs}px`).style("--c", (d) => d.c || null).text((d) => d.text);
+        let shown = [];
+        if (mapView.level >= 1) {
+          const list = nodes.filter((n) => L.pos.has(n.id)).sort((a, b) => b.paperCount - a.paperCount);
+          list.forEach((n) => {
+            const [px, py] = L.pos.get(n.id);
+            const x = t.applyX(px), y = t.applyY(py), rr = A.radius(n) * t.k;
+            if (x < -40 || x > w + 40 || y < -20 || y > h + 20) return;
+            const text = cap(n.label), fw = textWidth(text, `12px ${FONT_SANS}`) + 6;
+            const b = { x: x + rr + 3, y: y - 8, w: fw, h: 15 };
+            if (hit(b)) { b.x = x - rr - 3 - fw; if (hit(b)) return; }
+            boxes.push(b);
+            shown.push({ n, x: b.x + 2, y: y + 4 });
+          });
+        }
+        mapLabelG.selectAll("text").data(shown, (d) => d.n.id).join("text")
+          .attr("class", "clabel").attr("x", (d) => d.x).attr("y", (d) => d.y).text((d) => cap(d.n.label));
+      }
+
+      // Minimap: every region and a box for what's on screen; click to move there.
+      const miniSvg = d3.select("#map-mini");
+      const MINI_W = 190, MINI_H = Math.round(190 * AtlasMap.H / AtlasMap.W);
+      miniSvg.attr("viewBox", `0 0 ${MINI_W} ${MINI_H}`);
+      const miniS = MINI_W / AtlasMap.W;
+      function drawMinimap() {
+        const L = mapView.L, A = mapView.atlas;
+        miniSvg.selectAll("path.mreg").data(L.groups, (g) => g.id).join("path").attr("class", "mreg")
+          .attr("d", (g) => A.regionPath(g.hull, (p) => [p[0] * miniS, p[1] * miniS]))
+          .style("--c", (g) => (g.type ? colorOf(g.type) : null)).classed("tinted", mapView.mode === "type" || mapView.mode === "families");
+        miniSvg.selectAll("circle").data(nodes.filter((n) => mapView.big.has(n.id) && L.pos.has(n.id)), (n) => n.id).join("circle")
+          .attr("cx", (n) => L.pos.get(n.id)[0] * miniS).attr("cy", (n) => L.pos.get(n.id)[1] * miniS).attr("r", 1.6).attr("fill", (n) => colorOf(n.type));
+        drawMinimapView();
+      }
+      function drawMinimapView() {
+        const [w, h] = mapSize(), t = mapView.t;
+        const x0 = t.invertX(0) * miniS, y0 = t.invertY(0) * miniS, x1 = t.invertX(w) * miniS, y1 = t.invertY(h) * miniS;
+        miniSvg.selectAll("rect.view").data([0]).join("rect").attr("class", "view")
+          .attr("x", Math.max(0, x0)).attr("y", Math.max(0, y0))
+          .attr("width", Math.max(4, Math.min(MINI_W, x1) - Math.max(0, x0))).attr("height", Math.max(4, Math.min(MINI_H, y1) - Math.max(0, y0)));
+      }
+      miniSvg.on("click", (event) => {
+        const [mx, my] = d3.pointer(event);
+        const [w, h] = mapSize(), k = mapView.t.k;
+        mapSvg.transition().duration(500).call(mapZoom.transform, d3.zoomIdentity.translate(w / 2 - (mx / miniS) * k, h / 2 - (my / miniS) * k).scale(k));
+      });
+
+      $("map-modes").addEventListener("click", (event) => {
+        const b = event.target.closest("[data-map-mode]");
+        if (b && !b.disabled && b.dataset.mapMode !== mapView.mode) navigate(`#/map/${b.dataset.mapMode}`);
+      });
+      $("map-view").addEventListener("click", (event) => {
+        const h = event.target.closest("[data-hash]");
+        if (h) navigate(h.dataset.hash);
+        const lt = event.target.closest("[data-legend-toggle]");
+        if (lt) { const c = $("map-legend").classList.toggle("collapsed"); lt.textContent = c ? "Legend" : "Hide legend"; lt.setAttribute("aria-expanded", String(!c)); }
+        const z = event.target.closest("[data-map-zoom]");
+        if (z) {
+          if (z.dataset.mapZoom === "fit") mapFit(true);
+          else mapSvg.transition().duration(350).call(mapZoom.scaleBy, z.dataset.mapZoom === "in" ? 1.6 : 1 / 1.6);
+        }
+      });
+      mapNodeG.on("click", (event) => { const g = event.target.closest(".mnode"); if (g) openConcept(g.dataset.id); });
+      mapNodeG.on("mouseover", (event) => {
+        const g = event.target.closest(".mnode");
+        if (!g) return;
+        const n = byId.get(g.dataset.id), grp = mapView.L.groupOf.get(n.id);
+        showTip(`<div class="tt-name">${dot(n.type)}${esc(cap(n.label))}</div><p class="tt-def">${esc(typeOf(n.type).label)} · ${plural(n.paperCount, "paper")}${grp ? ` · ${esc(grp.name)}` : ""}</p><p class="tt-def">Click to open its page.</p>`, event, $("map-stage"));
+      });
+      mapNodeG.on("mousemove", (event) => { if (event.target.closest(".mnode")) moveTip(event); });
+      mapNodeG.on("mouseout", () => hideTip());
+      new ResizeObserver(() => { if (state.view === "map" && mapView.L) { mapOnZoom(); } }).observe($("map-svg"));
+
 
       // ---------- Walkthrough ----------
       // A tour of what the Atlas is and what each part shows, using one example concept (concept generation).

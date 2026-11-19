@@ -1,0 +1,39 @@
+{
+  "about": "Suggested groups: proposed topic families within each concept type, for the Map view's 'Topic families' mode and terrain-v2.html. Written as AI suggestions for review; not part of the paper's ontology and not in graph_data.json. Edit freely: move a concept by moving its exact label, rename or add groups. Any concept left out shows under 'Other' in its type.",
+  "status": "suggested, not reviewed",
+  "types": {
+    "subject": [
+      { "name": "Students and novices", "members": ["Engineering Students", "Non-Engineering Students", "Multidisciplinary Students", "Novices"] },
+      { "name": "Professionals", "members": ["Experienced Practitioners", "Mixed Students and Professionals"] },
+      { "name": "Public and communities", "members": ["General Public", "Community Stakeholders"] },
+      { "name": "AI and machines", "members": ["Large Language Model", "Computational Design System", "Deep Learning Model", "Physical System"] }
+    ],
+    "task": [
+      { "name": "Generating ideas", "members": ["concept generation task", "alternate uses generation task", "divergent thinking test", "pre-ideation priming activity", "conceptual design sketching task", "incubation break task"] },
+      { "name": "Judging and comparing", "members": ["structured evaluation task", "pairwise comparison task", "triplet similarity judgment task", "pairwise preference elicitation task", "LLM output evaluation task", "crossing decision and rating task", "willingness-to-pay elicitation task", "agency level justification and selection task", "qualitative style description task", "color ordering task", "card sorting task"] },
+      { "name": "Surveys, interviews and reflection", "members": ["survey or questionnaire completion", "semi-structured interview", "user research interview", "structured interview on practice or process", "individual written reflection", "self-reported activity logging", "photo diary documentation task", "retrospective think-aloud verbalization"] },
+      { "name": "Observing practice and teams", "members": ["professional practice observation", "asynchronous team communication", "virtual team communication task", "parliamentary procedure participation", "design presentation and feedback session", "field measurement or sensing deployment", "think-aloud design task"] },
+      { "name": "Modeling and analysis", "members": ["function modeling task", "function structure modeling task", "concept map construction task", "requirements derivation task", "subsystem clustering task", "DSM-based system architecture analysis task", "structured reasoning task", "design optimization task", "computational model ablation study", "multi-agent simulation task", "sketch-based requirements linking task", "document annotation and keyword extraction", "cross-representation translation task", "diagram identification and description task", "design description writing", "reflective design post-analysis and presentation", "prototyping strategy planning task"] },
+      { "name": "Making, CAD and using products", "members": ["physical artifact construction task", "product teardown", "collaborative CAD modeling task", "CAD-based design modification task", "prototype functionality testing", "product or system interaction task", "sketching instruction and practice"] },
+      { "name": "Lab tests of thinking and skill", "members": ["cognitive ability testing", "cognitive vigilance task", "free recall task", "behavioral game task", "motor dexterity performance task", "clinical motor assessment", "sketching ability assessment", "empathic accuracy inference task", "simulated empathic experience task", "cognitive intervention task", "stimulus reading task", "structured training session", "mental model elicitation drawing"] }
+    ],
+    "problem": [
+      { "name": "Consumer products and appliances", "members": ["consumer product", "milk frother", "alarm clock", "washing machine", "toaster", "cordless drill", "clothes iron", "hair dryer", "container opener", "drinking vessel", "flour sifter", "mobile phone", "personal entertainment system", "smart lock", "belongings security device", "houseplant watering system", "cooking device", "cookstove", "electricity meter display", "toy", "sports equipment", "travel exercise device", "interface device"] },
+      { "name": "Vehicles, transport and aerospace", "members": ["vehicle", "car wheel", "transportation system", "pedestrian safety system", "spacecraft", "satellite constellation", "UAV system", "airplane", "naval ship", "lunar dust mitigation device", "shock absorber"] },
+      { "name": "Machines and mechanical parts", "members": ["mechanical part", "robot", "industrial equipment", "industrial system", "bushing-pin alignment", "precision instrument", "material analyzer", "burrito-folding machine", "ping-pong ball transport device", "assembly procedure", "wind turbine blade", "solar panel", "coal storage"] },
+      { "name": "Health and accessibility", "members": ["assistive device", "healthcare product", "medical device", "mobility device"] },
+      { "name": "Farming and food", "members": ["peanut sheller", "corn shucker", "agricultural equipment", "coconut harvester", "peach picker", "food insecurity solution"] },
+      { "name": "Environment and communities", "members": ["recycling sorter", "litter collection system", "sustainable product", "snow insulation", "shelter", "human-powered energy harvester", "water sampling device", "smart city technology", "harassment reduction system"] },
+      { "name": "Design exercises and processes", "members": ["capstone project", "product development process", "common objects (AUT)", "paperclip (AUT)", "technology-push ideation", "truss bridge", "cardboard tower", "biologically inspired design", "subsystem clustering", "furniture layout", "data physicalization", "design process model", "small business plan"] }
+    ],
+    "construct": [
+      { "name": "Creativity and ideation", "members": ["divergent thinking", "cognitive fixation", "analogical reasoning", "insight", "incubation", "priming", "schema activation", "cognitive flexibility", "memory retrieval"] },
+      { "name": "Reasoning and problem solving", "members": ["problem-solving", "reasoning", "heuristic reasoning", "problem representation", "dual-process cognition", "mental simulation", "similarity judgment", "information processing", "spatial cognition"] },
+      { "name": "Attention and mental effort", "members": ["cognitive load", "attention", "working memory", "executive function", "mood and cognition"] },
+      { "name": "Knowledge, learning and expertise", "members": ["mental models", "knowledge acquisition", "domain knowledge", "knowledge transfer", "knowledge representation", "expertise", "experiential learning", "reflection", "metacognition", "self-regulation", "external cognition", "distributed cognition"] },
+      { "name": "Judgment, bias and risk", "members": ["cognitive bias", "evaluative judgment", "heuristic judgment", "judgment under uncertainty", "satisficing", "risk aversion", "risk propensity", "risk perception", "overconfidence", "preference formation", "aesthetic preference", "ambiguity tolerance", "implicit cognition"] },
+      { "name": "Motivation, emotion and self", "members": ["self-efficacy", "motivation", "intrinsic motivation", "goal orientation", "affective response", "affective appraisal", "empathy", "cognitive style", "trust", "technology acceptance", "anthropomorphism"] },
+      { "name": "Teams and social influence", "members": ["collaborative cognition", "shared mental models", "psychological safety", "social influence", "group cohesion", "social conformity", "social loafing"] }
+    ]
+  }
+}
