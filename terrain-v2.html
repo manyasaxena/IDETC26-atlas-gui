@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas Terrain</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%2307080d'/%3E%3Cpath d='M5 22 L12 12 L17 18 L21 13 L27 22 Z' fill='%238bc5ff'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+  <style>
+    :root {
+      --bg: #07080d; --surface: #151c2b; --surface-2: #1d2638; --surface-3: #273147;
+      --line: rgba(170, 190, 240, 0.14); --line-strong: rgba(170, 190, 240, 0.26);
+      --text: #e8ecf6; --muted: #a9b1c7; --faint: #959db4; --accent: #8bc5ff; --down: #f4a3c0;
+      --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+    #stage { position: fixed; inset: 0; }
+    #gl { display: block; width: 100%; height: 100%; cursor: grab; }
+    #gl:active { cursor: grabbing; }
+    #labels { position: fixed; inset: 0; pointer-events: none; }
+    .lab { position: absolute; transform: translate(-50%, -100%); white-space: nowrap; line-height: 1.15; text-shadow: 0 0 4px #05060a, 0 0 8px #05060a, 0 1px 2px #05060a; }
+    .lab.region { font-weight: 800; font-size: 17px; color: #f2f5fb; letter-spacing: 0.01em; }
+    .lab.region.small { font-size: 14px; }
+    .lab.super { font-size: 19px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .lab.concept { font-size: 12px; color: #dfe5f2; transform: translate(8px, -50%); }
+    .lab.concept .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+    .lab.gap { font: italic 12px var(--sans); color: var(--down); transform: translate(-50%, 0); }
+    .lab.picked { font-weight: 700; font-size: 13px; color: #fff; pointer-events: auto; }
+    .lab.picked a { color: var(--accent); margin-left: 6px; font-weight: 500; }
+    header { position: fixed; top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; pointer-events: none; }
+    header > * { pointer-events: auto; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(12, 15, 24, 0.88); color: var(--text); font: 600 13px var(--sans); text-decoration: none; }
+    .pill:hover { border-color: var(--accent); }
+    .title { font: 700 15px var(--sans); color: var(--text); padding: 0 4px; text-shadow: 0 0 6px #05060a; }
+    .title em { font: 500 11px var(--mono); color: var(--faint); font-style: normal; margin-left: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .modes { display: inline-flex; align-items: center; gap: 3px; padding: 4px; border: 1px solid var(--line-strong); border-radius: 999px; background: rgba(12, 15, 24, 0.88); }
+    .modes .ml { font: 500 11px var(--mono); color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 8px 0 10px; }
+    .modes button { border: 0; border-radius: 999px; padding: 6px 12px; background: transparent; color: var(--muted); font: 500 13px var(--sans); cursor: pointer; }
+    .modes button:hover { color: var(--text); background: var(--surface-2); }
+    .modes button.on { background: var(--surface-3); color: var(--text); font-weight: 700; }
+    .spacer { flex: 1; }
+    .search { position: relative; }
+    .search input { width: 240px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(12, 15, 24, 0.88); color: var(--text); font: 13px var(--sans); }
+    .search input:focus { outline: none; border-color: var(--accent); }
+    #results { position: absolute; top: 40px; right: 0; width: 300px; max-height: 320px; overflow-y: auto; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 4px; }
+    #results button { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 7px 10px; border: 0; border-radius: 10px; background: none; color: var(--text); font: 13px var(--sans); cursor: pointer; }
+    #results button:hover, #results button.active { background: var(--surface-2); }
+    #results .n { margin-left: auto; color: var(--faint); font: 11px var(--mono); }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+    #mode-line { position: fixed; top: 60px; left: 16px; margin: 0; font-size: 14.5px; color: #dfe5f2; text-shadow: 0 0 6px #05060a; max-width: 760px; }
+    #mode-line .sugg { margin-left: 6px; padding: 1px 8px; border: 1px dashed var(--line-strong); border-radius: 999px; font: 11px var(--mono); color: var(--muted); }
+    .legend { position: fixed; left: 12px; bottom: 12px; max-width: 380px; display: grid; gap: 5px; padding: 12px 14px; font: 12px/1.45 var(--mono); color: #c9d0de; background: rgba(12, 15, 24, 0.9); border: 1px solid var(--line); border-radius: 14px; }
+    .legend b { color: #eef2fb; font-weight: 500; }
+    .legend .gapkey { color: var(--down); font-style: italic; font-family: var(--sans); }
+    .legend .how { color: var(--faint); border-top: 1px solid var(--line); padding-top: 6px; }
+    .legend a { color: var(--accent); font: 12px var(--sans); }
+    .legend .toggle { justify-self: end; background: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; color: var(--muted); font: 11px var(--sans); cursor: pointer; margin: -4px -4px 0 0; }
+    .legend.collapsed { padding: 6px; }
+    .legend.collapsed > :not(.toggle) { display: none; }
+    .legend.collapsed .toggle { margin: 0; }
+    .years { position: fixed; right: 12px; bottom: 12px; display: grid; gap: 8px; padding: 12px 14px; width: 330px; background: rgba(12, 15, 24, 0.9); border: 1px solid var(--line); border-radius: 14px; font: 12px var(--mono); color: var(--muted); }
+    .years .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .years strong { color: var(--text); font-size: 13px; }
+    .play { border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 6px 14px; font: 600 13px var(--sans); cursor: pointer; }
+    .play:hover { border-color: var(--accent); }
+    .range2 { position: relative; height: 22px; }
+    .range2 input { position: absolute; inset: 0; width: 100%; margin: 0; background: none; pointer-events: none; -webkit-appearance: none; appearance: none; }
+    .range2 input::-webkit-slider-thumb { pointer-events: auto; -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 2px solid #07080d; cursor: pointer; }
+    .range2 input::-moz-range-thumb { pointer-events: auto; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 2px solid #07080d; cursor: pointer; }
+    .range2 .track { position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 2px; background: var(--surface-3); }
+    .range2 .fill { position: absolute; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; }
+    #tip { position: fixed; pointer-events: none; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; font-size: 12.5px; max-width: 260px; }
+    #tip .t { font-weight: 700; }
+    #tip .s { color: var(--muted); margin-top: 2px; }
+    #loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted); font: 14px var(--sans); }
+    #err { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+    @media (max-width: 760px) { .legend { display: none; } .years { left: 12px; width: auto; } .search input { width: 170px; } #mode-line { top: 104px; font-size: 13px; } }
+  </style>
+</head>
+<body>
+  <div id="stage"><canvas id="gl" aria-label="Terrain: regions of concepts, raised where there are more papers"></canvas></div>
+  <div id="labels" aria-hidden="true"></div>
+  <header>
+    <a class="pill" id="back" href="redesign-v2.html#/map">← Atlas map</a>
+    <span class="title">Terrain<em>experimental</em></span>
+    <div class="modes" role="group" aria-label="Group by"><span class="ml">Group by</span><span id="modes"></span></div>
+    <div class="spacer"></div>
+    <div class="search">
+      <input id="search" type="search" placeholder="Search a concept…" autocomplete="off" aria-label="Search concepts" />
+      <div id="results" hidden></div>
+    </div>
+  </header>
+  <p id="mode-line"></p>
+  <div class="legend" id="legend"></div>
+  <div class="years">
+    <div class="row"><button type="button" class="play" id="play">▶ Grow 1989→2025</button><strong id="year-text"></strong></div>
+    <div class="range2"><div class="track"><div class="fill" id="fill"></div></div><input type="range" id="y0" aria-label="First year" /><input type="range" id="y1" aria-label="Last year" /></div>
+  </div>
+  <div id="tip" hidden></div>
+  <div id="loading">Raising the terrain…</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+  <script src="atlas-map.js"></script>
+  <script type="module">
+    import * as THREE from "three";
+    import { MapControls } from "three/addons/controls/MapControls.js";
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+    const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ---------- Data (the same files as the Atlas) ----------
+    let raw, groupsFile = null, suggested = null, schema = null;
+    try {
+      const get = (f) => fetch(f).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      [raw, groupsFile, suggested, schema] = await Promise.all([get("graph_data.json"), get("map_groups.json"), get("suggested_groups.json"), get("atlas_schema.json")]);
+      if (!raw) throw new Error("Could not load graph_data.json. Serve this folder over http (python3 -m http.server).");
+    } catch (e) { $("loading").remove(); document.body.insertAdjacentHTML("beforeend", `<div id="err">${esc(e.message)}</div>`); throw e; }
+    const TYPES = (schema?.types || []).map((t) => t.id).filter((id) => raw.nodes.some((n) => n.type === id));
+    const typeInfo = new Map((schema?.types || []).map((t) => [t.id, t]));
+    const colorOf = (t) => typeInfo.get(t)?.color || "#9aa2b2";
+    const plural = (t) => typeInfo.get(t)?.plural || t;
+    const nodes = raw.nodes.filter((n) => !n.is_placeholder).map((n) => ({ id: String(n.id), label: n.label, type: n.type, papers: n.papers || [], paperCount: (n.papers || []).length }));
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const pairs = new Map();
+    raw.edges.forEach((e) => {
+      const a = String(e.source), b = String(e.target);
+      if (!byId.has(a) || !byId.has(b) || byId.get(a).type === byId.get(b).type) return;
+      const k = a < b ? `${a}|${b}` : `${b}|${a}`;
+      if (!pairs.has(k)) pairs.set(k, { a, b, ids: new Set() });
+      (e.papers || []).forEach((p) => pairs.get(k).ids.add(p.paper_id));
+    });
+    const links = [...pairs.values()].map((p) => ({ a: p.a, b: p.b, shared: p.ids.size }));
+    const [Y0, Y1] = raw.meta?.year_range || d3.extent(nodes.flatMap((n) => n.papers.map((p) => p.year)));
+    const modeOk = (k) => (k === "type" ? true : k === "families" ? !!suggested : !!groupsFile);
+    const atlas = AtlasMap.build({ nodes, links, files: { groups: groupsFile, suggested: suggested || { types: {} } }, typeOrder: TYPES, typeLabel: plural });
+    const WORDS = AtlasMap.WORDS;
+    const word = ([k, v]) => `<b>${esc(k)}</b> = ${esc(v)}`;
+
+    // ---------- State ----------
+    const params = new URLSearchParams(location.search);
+    const state = {
+      mode: modeOk(params.get("group")) ? params.get("group") : (() => { try { return localStorage.getItem("atlas-map-mode") || "type"; } catch { return "type"; } })(),
+      y0: Y0, y1: Y1, playing: false, picked: null
+    };
+    if (!modeOk(state.mode)) state.mode = "type";
+
+    // ---------- Ground: map units (1000 × 700) → world units ----------
+    const S = 0.42, OX = AtlasMap.W / 2, OY = AtlasMap.H / 2;
+    const toWorld = ([x, y]) => [(x - OX) * S, (y - OY) * S];
+    const NX = 230, NZ = 165, X0 = -OX * S - 30, X1 = OX * S + 30, Z0 = -OY * S - 30, Z1 = OY * S + 30;
+    const DX = (X1 - X0) / (NX - 1), DZ = (Z1 - Z0) / (NZ - 1);
+    const SIGMA = 5.5, HMAX = 42, SEA = -3.5;
+
+    // Papers per concept in the chosen years.
+    const countIn = (n) => (state.y0 === Y0 && state.y1 === Y1 ? n.paperCount : n.papers.filter((p) => p.year >= state.y0 && p.year <= state.y1).length);
+
+    // Height field: each concept adds a smooth bump as big as √(its papers); scaled to the all-years maximum,
+    // so growing year by year shows the land rising toward its full height.
+    function splat(posOf, counts) {
+      const h = new Float32Array(NX * NZ);
+      const R = Math.ceil((3 * SIGMA) / DX), RZ = Math.ceil((3 * SIGMA) / DZ);
+      nodes.forEach((n) => {
+        const c = counts.get(n.id);
+        if (!c) return;
+        const w = Math.sqrt(c), [wx, wz] = posOf(n.id);
+        const ci = Math.round((wx - X0) / DX), cj = Math.round((wz - Z0) / DZ);
+        for (let j = Math.max(0, cj - RZ); j <= Math.min(NZ - 1, cj + RZ); j++) {
+          const z = Z0 + j * DZ, dz2 = (z - wz) ** 2;
+          for (let i = Math.max(0, ci - R); i <= Math.min(NX - 1, ci + R); i++) {
+            const x = X0 + i * DX;
+            h[j * NX + i] += w * Math.exp(-((x - wx) ** 2 + dz2) / (2 * SIGMA * SIGMA));
+          }
+        }
+      });
+      return h;
+    }
+    // Land = inside a region (the same regions as the Map), with a softened coast.
+    function landMask(L) {
+      const m = new Float32Array(NX * NZ);
+      const hulls = L.groups.map((g) => g.hull.map(toWorld));
+      for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+        const p = [X0 + i * DX, Z0 + j * DZ];
+        if (hulls.some((h) => d3.polygonContains(h, p))) m[j * NX + i] = 1;
+      }
+      for (let pass = 0; pass < 3; pass++) {
+        const o = m.slice();
+        for (let j = 1; j < NZ - 1; j++) for (let i = 1; i < NX - 1; i++) {
+          const k = j * NX + i;
+          m[k] = (o[k] * 4 + o[k - 1] + o[k + 1] + o[k - NX] + o[k + NX]) / 8;
+        }
+      }
+      return m;
+    }
+    // Which region each ground cell belongs to (nearest concept's group), for a light tint.
+    function regionOfCells(L) {
+      const out = new Int16Array(NX * NZ).fill(-1);
+      const pts = nodes.map((n) => ({ g: L.groups.indexOf(L.groupOf.get(n.id)), p: toWorld(L.pos.get(n.id)) }));
+      const q = d3.quadtree(pts, (d) => d.p[0], (d) => d.p[1]);
+      for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) out[j * NX + i] = q.find(X0 + i * DX, Z0 + j * DZ)?.g ?? -1;
+      return out;
+    }
+
+    // ---------- Three.js scene: tilted 2.5D, pan and zoom only ----------
+    const canvas = $("gl");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color("#05060a");
+    scene.fog = new THREE.Fog("#05060a", 420, 760);
+    const camera = new THREE.PerspectiveCamera(38, 1, 1, 2000);
+    const HOME = { target: new THREE.Vector3(0, 0, 8), pos: new THREE.Vector3(0, 300, 285) };
+    camera.position.copy(HOME.pos);
+    const controls = new MapControls(camera, canvas);
+    controls.target.copy(HOME.target);
+    controls.enableRotate = false;      // 2.5D: the tilt stays fixed
+    controls.screenSpacePanning = false; // pan along the ground
+    controls.minDistance = 90; controls.maxDistance = 620;
+    controls.enableDamping = true; controls.dampingFactor = 0.12;
+    controls.zoomToCursor = true;
+    scene.add(new THREE.HemisphereLight("#cfd8ec", "#0a0c14", 1.1));
+    const sun = new THREE.DirectionalLight("#ffffff", 1.3); sun.position.set(-160, 260, 120); scene.add(sun);
+
+    const geo = new THREE.PlaneGeometry(X1 - X0, Z1 - Z0, NX - 1, NZ - 1);
+    geo.rotateX(-Math.PI / 2);
+    geo.translate((X0 + X1) / 2, 0, (Z0 + Z1) / 2);
+    const colors = new Float32Array(NX * NZ * 3);
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    const ground = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
+    scene.add(ground);
+    const borders = new THREE.Group(); scene.add(borders);
+    // PlaneGeometry rows run from -Z to +Z after the rotation, matching our j index.
+    const vIndex = (i, j) => j * NX + i;
+
+    // Pins: one small sphere per concept, colored by type.
+    const pinGeo = new THREE.SphereGeometry(1, 14, 10);
+    const pins = new THREE.InstancedMesh(pinGeo, new THREE.MeshLambertMaterial(), nodes.length);
+    nodes.forEach((n, i) => pins.setColorAt(i, new THREE.Color(colorOf(n.type))));
+    scene.add(pins);
+
+    // ---------- Building one mode's ground ----------
+    let cur = null; // { L, pos: Map id→[wx,wz], mask, regionCell, heights, counts }
+    let refMax = 1;
+    const posFrom = (L) => new Map(nodes.map((n) => [n.id, toWorld(L.pos.get(n.id))]));
+    function countsNow() { return new Map(nodes.map((n) => [n.id, countIn(n)])); }
+    function fullCounts() { return new Map(nodes.map((n) => [n.id, n.paperCount])); }
+    function heightAtCell(k, h, mask) { return SEA + mask[k] * (4 + HMAX * Math.min(1, h[k] / refMax)); }
+    const NEUTRAL = new THREE.Color("#5b6478"), HIGH = new THREE.Color("#e9eef8"), SEAC = new THREE.Color("#0a0e18");
+    const tmpC = new THREE.Color();
+    function paint(posMap, mask, regionCell, L) {
+      const counts = countsNow();
+      const h = splat((id) => posMap.get(id), counts);
+      const P = geo.attributes.position.array;
+      const tinted = state.mode === "type" || state.mode === "families";
+      for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) {
+        const k = vIndex(i, j), y = heightAtCell(k, h, mask);
+        P[k * 3 + 1] = y;
+        const t = Math.pow(Math.min(1, h[k] / refMax), 0.6);
+        tmpC.copy(NEUTRAL).lerp(HIGH, t);
+        const g = regionCell && L ? L.groups[regionCell[k]] : null;
+        if (g) {
+          if (tinted && g.type) tmpC.lerp(new THREE.Color(colorOf(g.type)), 0.18);
+          else tmpC.offsetHSL(0, 0, ((regionCell[k] % 3) - 1) * 0.05); // neighbors differ slightly, so borders read
+        }
+        tmpC.lerp(SEAC, 1 - mask[k]);
+        colors[k * 3] = tmpC.r; colors[k * 3 + 1] = tmpC.g; colors[k * 3 + 2] = tmpC.b;
+      }
+      geo.attributes.position.needsUpdate = true;
+      geo.attributes.color.needsUpdate = true;
+      geo.computeVertexNormals();
+      // Pins sit on the ground; sized by papers in the chosen years (hidden at zero).
+      const m4 = new THREE.Matrix4();
+      nodes.forEach((n, idx) => {
+        const [wx, wz] = posMap.get(n.id), c = counts.get(n.id);
+        const r = c ? 0.7 + Math.sqrt(c) * 0.2 : 0;
+        m4.makeScale(r, r, r).setPosition(wx, groundY(wx, wz) + r + 0.4, wz);
+        pins.setMatrixAt(idx, m4);
+      });
+      pins.instanceMatrix.needsUpdate = true;
+      return { h, counts };
+    }
+    function groundY(wx, wz) {
+      const i = Math.max(0, Math.min(NX - 1, Math.round((wx - X0) / DX))), j = Math.max(0, Math.min(NZ - 1, Math.round((wz - Z0) / DZ)));
+      return geo.attributes.position.array[vIndex(i, j) * 3 + 1];
+    }
+    // Region outlines are left out (on hilly ground they read as scribbles); neighboring regions differ in shade instead.
+    function drawBorders(L) {
+      borders.children.slice().forEach((c) => { c.geometry.dispose(); borders.remove(c); });
+      return;
+      const mat = new THREE.LineBasicMaterial({ color: "#cfd8ec", transparent: true, opacity: 0.28 });
+      L.groups.forEach((g) => {
+        const pts = d3.range(0, 1.0001, 1 / 120).map((t) => {
+          const path = g.hull;
+          const f = t * path.length, a = path[Math.floor(f) % path.length], b = path[(Math.floor(f) + 1) % path.length], u = f - Math.floor(f);
+          const [wx, wz] = toWorld([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]);
+          return new THREE.Vector3(wx, groundY(wx, wz) + 0.6, wz);
+        });
+        borders.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+      });
+    }
+    function setMode(mode, animate) {
+      state.mode = mode;
+      try { localStorage.setItem("atlas-map-mode", mode); } catch {}
+      const L = atlas.layout(mode);
+      const target = { L, pos: posFrom(L), mask: landMask(L), regionCell: regionOfCells(L) };
+      // Scale heights to the all-years maximum for this mode, so Grow and the year filter compare fairly.
+      const hf = splat((id) => target.pos.get(id), fullCounts());
+      refMax = d3.max(hf) || 1;
+      renderHead();
+      const from = cur;
+      if (!animate || !from || REDUCED) { cur = target; Object.assign(cur, paint(cur.pos, cur.mask, cur.regionCell, L)); drawBorders(L); afterChange(); return; }
+      borders.visible = false;
+      const t0 = performance.now(), dur = 1000;
+      const mix = new Float32Array(NX * NZ);
+      morph = (now) => {
+        const t = Math.min(1, (now - t0) / dur), e = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+        const p = new Map(nodes.map((n) => { const a = from.pos.get(n.id), b = target.pos.get(n.id); return [n.id, [a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e]]; }));
+        for (let k = 0; k < mix.length; k++) mix[k] = from.mask[k] * (1 - e) + target.mask[k] * e;
+        paint(p, mix, e < 0.5 ? from.regionCell : target.regionCell, e < 0.5 ? from.L : L);
+        if (t >= 1) { morph = null; cur = target; Object.assign(cur, paint(cur.pos, cur.mask, cur.regionCell, L)); drawBorders(L); borders.visible = true; afterChange(); }
+      };
+    }
+    let morph = null;
+    function refreshHeights() { if (!cur) return; Object.assign(cur, paint(cur.pos, cur.mask, cur.regionCell, cur.L)); drawBorders(cur.L); afterChange(); }
+    function afterChange() { findGaps(); renderYears(); labelsDirty = true; }
+
+    // ---------- "Little studied (possible gap)" ----------
+    // Inside each region, the concept with the fewest papers in the chosen years, if it has 2 or fewer.
+    let gaps = [];
+    function findGaps() {
+      gaps = cur.L.groups.map((g) => {
+        const low = g.members.map((id) => ({ id, c: cur.counts.get(id) })).sort((a, b) => a.c - b.c)[0];
+        return low && low.c <= 2 && g.members.length >= 3 ? { g, id: low.id } : null;
+      }).filter(Boolean);
+    }
+
+    // ---------- Labels: region names always; nearby concepts and gaps only where they fit ----------
+    const labelLayer = $("labels");
+    let labelsDirty = true;
+    const v3 = new THREE.Vector3();
+    function project(wx, y, wz) {
+      v3.set(wx, y, wz).project(camera);
+      const r = canvas.getBoundingClientRect();
+      return { x: (v3.x * 0.5 + 0.5) * r.width, y: (-v3.y * 0.5 + 0.5) * r.height, z: v3.z };
+    }
+    const measure = document.createElement("canvas").getContext("2d");
+    const tw = (t, f) => { measure.font = f; return measure.measureText(t).width; };
+    function placeLabels() {
+      if (!cur) return;
+      const W = innerWidth, H = innerHeight, boxes = [];
+      const hit = (b) => boxes.some((o) => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
+      // Keep labels off the panels.
+      document.querySelectorAll("header, .legend:not(.collapsed), .years, #mode-line").forEach((el) => { const r = el.getBoundingClientRect(); if (r.width) boxes.push({ x: r.left, y: r.top, w: r.width, h: r.height }); });
+      const html = [];
+      const fam = state.mode === "families";
+      if (fam) TYPES.forEach((t) => {
+        const hull = cur.L.groups.filter((g) => g.type === t).flatMap((g) => g.hull.map(toWorld));
+        if (!hull.length) return;
+        const cx = d3.mean(hull, (p) => p[0]), top = d3.min(hull, (p) => p[1]);
+        const p = project(cx, 8, top);
+        const text = plural(t), w = tw(text, "800 19px IBM Plex Sans") + 10;
+        const b = { x: p.x - w / 2, y: p.y - 24, w, h: 24 };
+        if (p.z < 1 && !hit(b)) { boxes.push(b); html.push(`<div class="lab region super" style="left:${p.x}px;top:${p.y}px;color:${colorOf(t)}">${esc(text)}</div>`); }
+      });
+      cur.L.groups.slice().sort((a, b) => b.papers - a.papers).forEach((g) => {
+        const [cx, cz] = toWorld(g.centroid);
+        const peak = d3.max(g.members, (id) => groundY(...cur.pos.get(id)));
+        const small = fam || g.members.length < 4, fs = small ? 14 : 17;
+        const text = g.name, w = tw(text, `800 ${fs}px IBM Plex Sans`) + 10;
+        // Try spots above and below the region's peak, then a smaller size; if none is free the name waits for
+        // more room (zoom in), so names never overlap.
+        const p = project(cx, peak + 10, cz);
+        if (p.z >= 1) return;
+        for (const [size, cls] of [[fs, small ? "small" : ""], [13, "small"]]) {
+          const ww = tw(text, `800 ${size}px IBM Plex Sans`) + 10;
+          for (const dy of [0, -18, 18, -36, 36, -54, 54]) {
+            const b = { x: p.x - ww / 2 - 2, y: p.y - size * 1.2 - 2 + dy, w: ww + 4, h: size * 1.2 + 4 };
+            if (!hit(b)) { boxes.push(b); html.push(`<div class="lab region ${cls}" style="left:${p.x}px;top:${p.y + dy}px;font-size:${size}px">${esc(text)}</div>`); return; }
+          }
+        }
+      });
+      if (state.picked) {
+        const n = byId.get(state.picked), [wx, wz] = cur.pos.get(n.id), p = project(wx, groundY(wx, wz) + 3, wz);
+        boxes.push({ x: p.x, y: p.y - 10, w: 260, h: 20 });
+        html.push(`<div class="lab concept picked" style="left:${p.x}px;top:${p.y}px"><span class="dot" style="background:${colorOf(n.type)}"></span>${esc(cap(n.label))} · ${cur.counts.get(n.id)} papers<a href="redesign-v2.html#/concept/${encodeURIComponent(n.id)}">Open its page →</a></div>`);
+      }
+      gaps.forEach(({ id }) => {
+        const [wx, wz] = cur.pos.get(id), p = project(wx, groundY(wx, wz) + 1, wz);
+        const text = "little studied (possible gap)", w = tw(text, "italic 12px IBM Plex Sans") + 8;
+        const b = { x: p.x - w / 2 - 2, y: p.y + 2, w: w + 4, h: 20 };
+        if (p.z < 1 && p.x > 0 && p.x < W && p.y > 0 && p.y < H && !hit(b)) { boxes.push(b); html.push(`<div class="lab gap" style="left:${p.x}px;top:${p.y + 4}px" title="${esc(cap(byId.get(id).label))}: ${cur.counts.get(id)} papers in ${state.y0}–${state.y1}">${text}</div>`); }
+      });
+      // Concept names only for concepts near the middle of the view, and only once zoomed in a little.
+      const dist = camera.position.distanceTo(controls.target);
+      if (dist < 300) {
+        const near = 0.36 * Math.min(W, H) * (300 / dist);
+        nodes.slice().sort((a, b) => cur.counts.get(b.id) - cur.counts.get(a.id)).forEach((n) => {
+          const c = cur.counts.get(n.id);
+          if (!c || n.id === state.picked) return;
+          const [wx, wz] = cur.pos.get(n.id), p = project(wx, groundY(wx, wz) + 2, wz);
+          if (p.z >= 1 || Math.hypot(p.x - W / 2, p.y - H / 2) > near) return;
+          const text = cap(n.label), w = tw(text, "12px IBM Plex Sans") + 22;
+          const b = { x: p.x + 6, y: p.y - 10, w: w + 2, h: 20 };
+          if (!hit(b)) { boxes.push(b); html.push(`<div class="lab concept" style="left:${p.x}px;top:${p.y}px"><span class="dot" style="background:${colorOf(n.type)}"></span>${esc(text)}</div>`); }
+        });
+      }
+      labelLayer.innerHTML = html.join("");
+    }
+
+    // ---------- Head, legend, years ----------
+    function renderHead() {
+      $("modes").innerHTML = AtlasMap.MODES.map((m) => `<button type="button" data-mode="${m.key}" class="${m.key === state.mode ? "on" : ""}" aria-pressed="${m.key === state.mode}" ${modeOk(m.key) ? "" : "disabled"}>${esc(m.label)}</button>`).join("");
+      const m = AtlasMap.MODES.find((x) => x.key === state.mode);
+      $("mode-line").innerHTML = `${esc(m.line)}${state.mode === "families" ? `<span class="sugg">Suggested groups</span>` : ""}`;
+      $("back").href = `redesign-v2.html#/map/${state.mode}`;
+      const collapsed = $("legend").classList.contains("collapsed");
+      $("legend").innerHTML = `
+        <button type="button" class="toggle" id="legend-toggle">${collapsed ? "Legend" : "Hide legend"}</button>
+        <div>${word(WORDS.dot)} · ${word(WORDS.color)} · ${word(WORDS.size)} in the chosen years</div>
+        <div><b>Land</b> = the same regions as the Map (${esc(m.label)})${state.mode === "families" ? ", suggested" : ""}</div>
+        <div><b>Height</b> = higher where the concepts there have more papers in the chosen years (smoothed; scaled to all years, so Grow rises toward full height)</div>
+        <div><b>Position</b>: ${esc(AtlasMap.POSITION[state.mode])} The sea between regions only separates groups.</div>
+        <div><span class="gapkey">little studied (possible gap)</span> = the concept with the fewest papers in its region, when that is 2 or fewer in the chosen years</div>
+        <div class="how">Drag to move · scroll to zoom · click a pin to see it · tilt is fixed</div>
+        <a href="redesign-v2.html#/overview/scope">What’s included shapes what you see →</a>`;
+    }
+    $("legend").addEventListener("click", (e) => {
+      if (!e.target.closest("#legend-toggle")) return;
+      const c = $("legend").classList.toggle("collapsed");
+      e.target.textContent = c ? "Legend" : "Hide legend";
+      labelsDirty = true;
+    });
+    $("modes").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-mode]");
+      if (!b || b.disabled || b.dataset.mode === state.mode) return;
+      const u = new URL(location.href); u.searchParams.set("group", b.dataset.mode); history.replaceState(null, "", u);
+      setMode(b.dataset.mode, true);
+    });
+
+    const y0 = $("y0"), y1 = $("y1");
+    [y0, y1].forEach((el) => { el.min = Y0; el.max = Y1; el.step = 1; });
+    y0.value = Y0; y1.value = Y1;
+    function renderYears() {
+      $("year-text").textContent = state.y0 === state.y1 ? `${state.y0}` : `${state.y0}–${state.y1}`;
+      const f = (y) => ((y - Y0) / (Y1 - Y0)) * 100;
+      $("fill").style.left = `${f(state.y0)}%`; $("fill").style.right = `${100 - f(state.y1)}%`;
+    }
+    let yearTimer = null;
+    function onYears() {
+      let a = +y0.value, b = +y1.value;
+      if (a > b) [a, b] = [b, a];
+      state.y0 = a; state.y1 = b;
+      renderYears();
+      clearTimeout(yearTimer);
+      yearTimer = setTimeout(refreshHeights, 40);
+    }
+    y0.addEventListener("input", () => { stopPlay(); onYears(); });
+    y1.addEventListener("input", () => { stopPlay(); onYears(); });
+
+    // Grow: the land builds up year by year, from 1989 to 2025.
+    let playTimer = null;
+    function stopPlay() { if (playTimer) clearInterval(playTimer); playTimer = null; state.playing = false; $("play").textContent = "▶ Grow 1989→2025"; }
+    $("play").addEventListener("click", () => {
+      if (state.playing) { stopPlay(); return; }
+      state.playing = true; $("play").textContent = "❚❚ Pause";
+      y0.value = Y0; y1.value = Y0; onYears();
+      playTimer = setInterval(() => {
+        const next = +y1.value + 1;
+        if (next > Y1) { stopPlay(); return; }
+        y1.value = next; state.y1 = next; renderYears(); refreshHeights();
+      }, REDUCED ? 60 : 260);
+    });
+
+    // ---------- Search ----------
+    const search = $("search"), results = $("results");
+    let active = -1, matches = [];
+    function renderResults() {
+      const q = search.value.trim().toLowerCase();
+      matches = q ? nodes.filter((n) => n.label.toLowerCase().includes(q)).sort((a, b) => b.paperCount - a.paperCount).slice(0, 10) : [];
+      results.hidden = !matches.length;
+      results.innerHTML = matches.map((n, i) => `<button type="button" data-id="${esc(n.id)}" class="${i === active ? "active" : ""}"><span class="dot" style="background:${colorOf(n.type)}"></span>${esc(cap(n.label))}<span class="n">${n.paperCount}</span></button>`).join("");
+    }
+    search.addEventListener("input", () => { active = 0; renderResults(); });
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { active = Math.min(matches.length - 1, active + 1); renderResults(); e.preventDefault(); }
+      else if (e.key === "ArrowUp") { active = Math.max(0, active - 1); renderResults(); e.preventDefault(); }
+      else if (e.key === "Enter" && matches[active]) pick(matches[active].id);
+      else if (e.key === "Escape") { results.hidden = true; search.blur(); }
+    });
+    results.addEventListener("click", (e) => { const b = e.target.closest("[data-id]"); if (b) pick(b.dataset.id); });
+    document.addEventListener("keydown", (e) => { if (e.key === "/" && document.activeElement !== search) { e.preventDefault(); search.focus(); } });
+
+    // Fly to a concept and mark it, with a link to its page.
+    let fly = null;
+    function pick(id) {
+      state.picked = id; results.hidden = true; search.value = ""; search.blur();
+      const [wx, wz] = cur.pos.get(id);
+      const to = new THREE.Vector3(wx, 0, wz), off = HOME.pos.clone().sub(HOME.target).multiplyScalar(0.45);
+      fly = { t0: performance.now(), dur: REDUCED ? 0 : 900, fromT: controls.target.clone(), toT: to, fromP: camera.position.clone(), toP: to.clone().add(off) };
+      labelsDirty = true;
+    }
+
+    // ---------- Hover and click on pins ----------
+    function nearestPin(ev) {
+      const r = canvas.getBoundingClientRect();
+      let best = null, bd = 16;
+      nodes.forEach((n) => {
+        const c = cur.counts.get(n.id);
+        if (!c) return;
+        const [wx, wz] = cur.pos.get(n.id), p = project(wx, groundY(wx, wz) + 1, wz);
+        const d = Math.hypot(p.x - (ev.clientX - r.left), p.y - (ev.clientY - r.top));
+        if (d < bd) { bd = d; best = n; }
+      });
+      return best;
+    }
+    let down = null;
+    canvas.addEventListener("pointerdown", (e) => { down = [e.clientX, e.clientY]; });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!cur || morph) return;
+      const n = nearestPin(e), tip = $("tip");
+      if (!n) { tip.hidden = true; canvas.style.cursor = ""; return; }
+      canvas.style.cursor = "pointer";
+      const g = cur.L.groupOf.get(n.id);
+      tip.innerHTML = `<div class="t"><span class="dot" style="background:${colorOf(n.type)}"></span> ${esc(cap(n.label))}</div><div class="s">${cur.counts.get(n.id)} papers in ${state.y0}–${state.y1} · ${esc(g?.name || "")}</div><div class="s">Click to mark it and get a link to its page.</div>`;
+      tip.hidden = false; tip.style.left = `${e.clientX + 14}px`; tip.style.top = `${e.clientY + 14}px`;
+    });
+    canvas.addEventListener("pointerleave", () => { $("tip").hidden = true; });
+    canvas.addEventListener("click", (e) => {
+      if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 4) return;
+      const n = nearestPin(e);
+      state.picked = n ? n.id : null; labelsDirty = true;
+    });
+    controls.addEventListener("change", () => { labelsDirty = true; });
+
+    // ---------- Run ----------
+    function resize() {
+      const w = innerWidth, h = innerHeight;
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); labelsDirty = true;
+    }
+    addEventListener("resize", resize);
+    resize();
+    setMode(state.mode, false);
+    $("loading").remove();
+    renderer.setAnimationLoop((now) => {
+      if (morph) { morph(now); labelsDirty = true; }
+      if (fly) {
+        const t = fly.dur ? Math.min(1, (now - fly.t0) / fly.dur) : 1, e = 1 - (1 - t) ** 3;
+        controls.target.lerpVectors(fly.fromT, fly.toT, e); camera.position.lerpVectors(fly.fromP, fly.toP, e);
+        if (t >= 1) fly = null;
+        labelsDirty = true;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+      if (labelsDirty) { labelsDirty = false; placeLabels(); }
+    });
+    window.__terrain = { state, setMode, pick, get gaps() { return gaps; } };
+  </script>
+</body>
+</html>

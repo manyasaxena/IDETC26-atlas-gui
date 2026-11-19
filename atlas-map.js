@@ -7,6 +7,18 @@
 // Layouts are deterministic: the same data always gives the same map. Needs d3 v7.
 (function () {
   const W = 1000, H = 700;
+  // The plain words for reading the map: used by the home page, every legend in the Atlas, and the terrain.
+  const WORDS = {
+    dot: ["Dot", "a concept"],
+    size: ["Size", "number of papers"],
+    color: ["Color", "concept type"],
+    line: ["Line", "studied in the same papers; thicker and brighter = more papers"],
+    close: ["Closer", "roughly, studied together more often"],
+    // Matches updateOrbit(): neighbors ranked by overlap (shared ÷ papers with either), split into thirds.
+    rings: ["Rings", "how much a concept’s papers overlap with the center’s (shared papers ÷ papers with either one). The top third sits on the inner ring"],
+    caveat: "A line means “studied together,” not “proven related.”"
+  };
+
   const MODES = [
     { key: "type", label: "Type", line: "Type: concepts sit in four regions, one for each kind of concept." },
     { key: "together", label: "Studied together", line: "Studied together: neighborhoods of concepts that share many papers." },
@@ -149,5 +161,5 @@
     };
   }
 
-  window.AtlasMap = { build, MODES, POSITION, W, H };
+  window.AtlasMap = { build, MODES, POSITION, WORDS, W, H };
 })();
